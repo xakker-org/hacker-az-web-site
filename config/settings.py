@@ -1,0 +1,146 @@
+from pathlib import Path
+from decouple import config
+from datetime import timedelta
+
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+SECRET_KEY = config("SECRET_KEY", default="change-me-in-production")
+DEBUG = config("DEBUG", default=True, cast=bool)
+
+
+def get_list_env(name, default):
+    value = config(name, default=default)
+    return [item.strip() for item in value.split(",") if item.strip()]
+
+ALLOWED_HOSTS = [
+    *get_list_env(
+        "ALLOWED_HOSTS",
+        "127.0.0.1,localhost,localhost.xakker.org,xakker.org,www.xakker.org,self-study.xakker.org",
+    ),
+]
+
+INSTALLED_APPS = [
+    "django_hosts",
+    "jazzmin",
+    "django.contrib.admin",
+    "django.contrib.auth",
+    "django.contrib.contenttypes",
+    "django.contrib.sessions",
+    "django.contrib.messages",
+    "django.contrib.staticfiles",
+
+    "rest_framework",
+    "corsheaders",
+
+    "accounts",
+    "courses",
+]
+
+MIDDLEWARE = [
+    "django_hosts.middleware.HostsRequestMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
+    "django.middleware.security.SecurityMiddleware",
+    "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.middleware.common.CommonMiddleware",
+    "django.middleware.csrf.CsrfViewMiddleware",
+    "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "django.contrib.messages.middleware.MessageMiddleware",
+    "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "django_hosts.middleware.HostsResponseMiddleware",
+]
+
+ROOT_HOSTCONF = "config.hosts"
+DEFAULT_HOST = "platform"
+
+TEMPLATES = [
+    {
+        "BACKEND": "django.template.backends.django.DjangoTemplates",
+        "DIRS": [BASE_DIR / "frontend" / "html"],
+        "APP_DIRS": True,
+        "OPTIONS": {
+            "context_processors": [
+                "django.template.context_processors.request",
+                "django.contrib.auth.context_processors.auth",
+                "django.contrib.messages.context_processors.messages",
+            ],
+        },
+    },
+]
+
+WSGI_APPLICATION = "config.wsgi.application"
+
+DATABASES = {
+    "default": {}
+}
+
+DB_ENGINE = config("DB_ENGINE", default="sqlite")
+if DB_ENGINE == "postgres":
+    DATABASES["default"] = {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": config("POSTGRES_DB", default="xakker_db"),
+        "USER": config("POSTGRES_USER", default="xakker_user"),
+        "PASSWORD": config("POSTGRES_PASSWORD", default="xakker_password"),
+        "HOST": config("POSTGRES_HOST", default="127.0.0.1"),
+        "PORT": config("POSTGRES_PORT", default="5432"),
+    }
+else:
+    DATABASES["default"] = {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": BASE_DIR / "db.sqlite3",
+    }
+
+AUTH_PASSWORD_VALIDATORS = [
+    {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
+    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
+    {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
+    {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
+]
+
+LANGUAGE_CODE = "en-us"
+TIME_ZONE = "Asia/Baku"
+USE_I18N = True
+USE_TZ = True
+
+ROOT_URLCONF = "config.urls_platform"
+
+STATIC_URL = "/static/"
+STATIC_ROOT = BASE_DIR / "staticfiles"
+STATICFILES_DIRS = [BASE_DIR / "frontend"]
+
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+CORS_ALLOW_ALL_ORIGINS = True
+
+CORS_ALLOWED_ORIGINS = [
+    *get_list_env(
+        "CORS_ALLOWED_ORIGINS",
+        "https://xakker.org,https://self-study.xakker.org,http://xakker.org:8000,http://self-study.xakker.org:8000,http://localhost:5173,http://localhost:8000,http://127.0.0.1:8000",
+    ),
+]
+
+CSRF_TRUSTED_ORIGINS = [
+    *get_list_env(
+        "CSRF_TRUSTED_ORIGINS",
+        "https://xakker.org,https://self-study.xakker.org,http://xakker.org:8000,http://self-study.xakker.org:8000,http://localhost:5173,http://localhost:8000,http://127.0.0.1:8000",
+    ),
+]
+
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+    ),
+    "DEFAULT_PERMISSION_CLASSES": (
+        "rest_framework.permissions.AllowAny",
+    ),
+}
+
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=60),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
+}
+
+if not DEBUG:
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_BROWSER_XSS_FILTER = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
