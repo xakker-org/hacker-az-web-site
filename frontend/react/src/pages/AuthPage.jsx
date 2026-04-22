@@ -8,13 +8,13 @@ export default function AuthPage() {
   const navigate = useNavigate();
   const { mode = "login" } = useParams();
   const [activeTab, setActiveTab] = useState(mode || "login");
+  const [logoSrc, setLogoSrc] = useState("/static/logo/xakkerLogoWhite2.png");
 
   const [form, setForm] = useState({
     username: "",
     email: "",
     password: "",
     confirmPassword: "",
-    role: "beginner",
   });
 
   const [loading, setLoading] = useState(false);
@@ -22,6 +22,10 @@ export default function AuthPage() {
   const [success, setSuccess] = useState("");
 
   const isLogin = activeTab === "login";
+
+  const handleLogoError = () => {
+    setLogoSrc("/static/logo/xakkerLogoWhite2.png");
+  };
 
   const title = useMemo(
     () => (isLogin ? "Welcome Back, Hacker" : "Start Your Security Journey"),
@@ -74,14 +78,16 @@ export default function AuthPage() {
         setSuccess("Account created! Logging you in...");
         setTimeout(() => {
           setActiveTab("login");
-          setForm({ username: form.username, password: form.password, email: "", confirmPassword: "", role: "beginner" });
+          setForm({ username: form.username, password: form.password, email: "", confirmPassword: "" });
         }, 1000);
       }
     } catch (requestError) {
+      const responseMessage = requestError?.response?.data?.detail || requestError?.response?.data?.non_field_errors?.[0];
       setError(
-        isLogin
-          ? "Invalid username or password"
-          : "Registration failed. Username may already exist."
+        responseMessage ||
+          (isLogin
+            ? "Invalid username or password"
+            : "Registration failed. Username may already exist.")
       );
     } finally {
       setLoading(false);
@@ -102,8 +108,12 @@ export default function AuthPage() {
         <div className="auth-left">
           <div className="auth-left-content">
             <div className="auth-logo">
-              <span className="logo-icon">⚔️</span>
-              <span className="logo-text">Xakker</span>
+              <img
+                src={logoSrc}
+                alt="Xakker logo"
+                className="auth-logo-image"
+                onError={handleLogoError}
+              />
             </div>
 
             <h1>Xakker Self-Study</h1>
@@ -228,17 +238,8 @@ export default function AuthPage() {
               {/* Role Selection (Register Only) */}
               {!isLogin && (
                 <div className="form-group">
-                  <label htmlFor="role">Select Your Path</label>
-                  <select
-                    id="role"
-                    name="role"
-                    value={form.role}
-                    onChange={onChange}
-                  >
-                    <option value="beginner">🎯 Beginner - Start from Basics</option>
-                    <option value="red_team">⚔️ Red Team - Offensive Security</option>
-                    <option value="blue_team">🛡️ Blue Team - Defensive Security</option>
-                  </select>
+                  <label>Account type</label>
+                  <input value="Client account" disabled readOnly />
                 </div>
               )}
 

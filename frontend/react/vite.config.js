@@ -4,7 +4,7 @@ import react from "@vitejs/plugin-react";
 export default defineConfig({
   plugins: [react()],
   build: {
-    outDir: "../js/spa",
+    outDir: "../../static/js/spa",
     emptyOutDir: true,
     cssCodeSplit: false,
     rollupOptions: {

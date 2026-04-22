@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import LandingPage from "./pages/LandingPage";
 import AuthPage from "./pages/AuthPage";
 import DashboardPage from "./pages/DashboardPage";
+import ExamAttemptPage from "./pages/ExamAttemptPage";
 
 export default function App() {
   return (
@@ -17,6 +18,8 @@ export default function App() {
         
         {/* Dashboard */}
         <Route path="/dashboard" element={<DashboardPage />} />
+        <Route path="/dashboard/exams/:slug" element={<ExamAttemptPage />} />
+        <Route path="/exams/:slug" element={<ExamAttemptPage />} />
         
         {/* Catch-all */}
         <Route path="*" element={<Navigate to="/" replace />} />

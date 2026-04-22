@@ -18,9 +18,12 @@
   </head>
   <body>
     <div class="bg-layer"></div>
+    <div class="noise-layer"></div>
 
     <header class="site-header">
-      <div class="brand">Xakker.org</div>
+      <a class="brand" href="/" aria-label="Xakker ana sehife">
+        <img src="/static/logo/xakkerLogoWhite2.png" alt="Xakker logo" />
+      </a>
       <nav>
         <a href="http://self-study.xakker.org:8000/auth/login" target="_blank" rel="noreferrer">Login</a>
         <a href="http://self-study.xakker.org:8000/auth/register" target="_blank" rel="noreferrer">Register</a>
@@ -31,25 +34,67 @@
     </header>
 
     <main>
-      <section class="hero">
-        <p class="tag">Azerbaycan Cyber Security Ecosystem</p>
-        <h1>
-          Nese oyrenmek ucun yox,
-          <span>real defense bacarigi</span>
-          qazanmaq ucun platforma.
-        </h1>
-        <p class="subtext">
-          SOC, red team, web pentest, cloud security ve incident response uzre
-          strukturlesdirilmis, Azerbaycan auditoriyasina uygun self-study yol
-          xeritesi.
-        </p>
-        <div class="cta-group">
-          <a class="btn primary" href="http://self-study.xakker.org:8000" target="_blank" rel="noreferrer">Platformaya kec</a>
-          <a class="btn ghost" href="http://self-study.xakker.org:8000/auth/register" target="_blank" rel="noreferrer">Register</a>
-        </div>
+      <section class="hero reveal">
+        <article class="hero-copy">
+          <p class="tag">Azerbaycan Cyber Security Ecosystem</p>
+          <h1>
+            Nese oyrenmek ucun yox,
+            <span>real defense bacarigi</span>
+            qazanmaq ucun platforma.
+          </h1>
+          <p class="subtext">
+            SOC, red team, web pentest, cloud security ve incident response uzre
+            strukturlesdirilmis, Azerbaycan auditoriyasina uygun self-study yol
+            xeritesi.
+          </p>
+          <div class="cta-group">
+            <a class="btn primary" href="http://self-study.xakker.org:8000" target="_blank" rel="noreferrer">Platformaya kec</a>
+            <a class="btn ghost" href="http://self-study.xakker.org:8000/auth/register" target="_blank" rel="noreferrer">Register</a>
+          </div>
+        </article>
+
+        <aside class="hero-panel">
+          <h2>Live Skill Radar</h2>
+          <ul>
+            <li><span>Blue Team Readiness</span><strong>74%</strong></li>
+            <li><span>Web App Attack Surface</span><strong>61%</strong></li>
+            <li><span>Cloud Hardening Track</span><strong>53%</strong></li>
+          </ul>
+          <p>
+            Mini-lab mentiqi ile tekce teoriya yox, emeliyyat orientasiyali flow.
+          </p>
+        </aside>
       </section>
 
-      <section id="tracks" class="tracks">
+      <section class="stats reveal" aria-label="platform statistics">
+        <article>
+          <p class="value">12+</p>
+          <p class="label">Practical modules</p>
+        </article>
+        <article>
+          <p class="value">4</p>
+          <p class="label">Core learning paths</p>
+        </article>
+        <article>
+          <p class="value">100%</p>
+          <p class="label">Self-paced workflow</p>
+        </article>
+        <article>
+          <p class="value">24/7</p>
+          <p class="label">Portal access</p>
+        </article>
+      </section>
+
+      <section class="signal reveal">
+        <p>Threat modeling</p>
+        <p>SIEM workflow</p>
+        <p>OWASP practice</p>
+        <p>Incident response</p>
+        <p>Cloud controls</p>
+        <p>Adversary simulation</p>
+      </section>
+
+      <section id="tracks" class="tracks reveal">
         <article>
           <h3>Blue Team Path</h3>
           <p>SIEM, log analysis, threat hunting, incident workflow.</p>
@@ -62,9 +107,13 @@
           <h3>AppSec Path</h3>
           <p>OWASP Top 10, secure code review, API hardening.</p>
         </article>
+        <article>
+          <h3>CloudSec Path</h3>
+          <p>Identity boundaries, workload defense, detection and response.</p>
+        </article>
       </section>
 
-      <section class="strategy">
+      <section class="strategy reveal">
         <article>
           <h3>What You Build</h3>
           <p>
@@ -81,7 +130,7 @@
         </article>
       </section>
 
-      <section class="cta-wide">
+      <section class="cta-wide reveal">
         <h2>Ready to start your path?</h2>
         <p>
           Enter self-study portal and continue from dedicated login/register

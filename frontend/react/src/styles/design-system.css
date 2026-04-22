@@ -11,40 +11,40 @@
 
 :root {
   /* Core Colors */
-  --black: #0b0b0b;
-  --dark-navy: #0f172a;
-  --surface-dark: #1a1f3a;
-  --surface-light: rgba(26, 31, 58, 0.5);
+  --black: #10161d;
+  --dark-navy: #172130;
+  --surface-dark: #1a2330;
+  --surface-light: rgba(26, 35, 48, 0.56);
   
   /* Accent Colors */
-  --blue: #00c2ff;
-  --blue-dark: #0099cc;
-  --blue-light: #66e6ff;
-  --red: #ff2d55;
-  --red-dark: #cc1a3d;
-  --red-light: #ff5a7a;
+  --blue: #8ed8e8;
+  --blue-dark: #5aaec2;
+  --blue-light: #bfeef6;
+  --red: #f29aa7;
+  --red-dark: #cf7383;
+  --red-light: #ffbcc6;
   
   /* Text Colors */
-  --text-primary: #f5f7fa;
-  --text-secondary: #b0b8c4;
-  --text-tertiary: #7a8496;
+  --text-primary: #f5f2ec;
+  --text-secondary: #c0c8d2;
+  --text-tertiary: #8693a3;
   
   /* Borders & Dividers */
-  --border-light: rgba(0, 194, 255, 0.12);
-  --border-medium: rgba(0, 194, 255, 0.25);
-  --border-red: rgba(255, 45, 85, 0.15);
+  --border-light: rgba(199, 215, 227, 0.12);
+  --border-medium: rgba(199, 215, 227, 0.24);
+  --border-red: rgba(242, 154, 167, 0.16);
   
   /* Shadows */
-  --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.3);
-  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.4);
-  --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.5);
-  --shadow-xl: 0 24px 56px rgba(0, 0, 0, 0.6);
+  --shadow-sm: 0 4px 12px rgba(5, 9, 14, 0.22);
+  --shadow-md: 0 8px 24px rgba(5, 9, 14, 0.28);
+  --shadow-lg: 0 16px 40px rgba(5, 9, 14, 0.34);
+  --shadow-xl: 0 24px 56px rgba(5, 9, 14, 0.42);
   
   /* Glows */
-  --glow-blue: 0 0 20px rgba(0, 194, 255, 0.3);
-  --glow-red: 0 0 20px rgba(255, 45, 85, 0.3);
-  --glow-blue-sm: 0 0 10px rgba(0, 194, 255, 0.15);
-  --glow-red-sm: 0 0 10px rgba(255, 45, 85, 0.15);
+  --glow-blue: 0 0 20px rgba(142, 216, 232, 0.22);
+  --glow-red: 0 0 20px rgba(242, 154, 167, 0.2);
+  --glow-blue-sm: 0 0 10px rgba(142, 216, 232, 0.12);
+  --glow-red-sm: 0 0 10px rgba(242, 154, 167, 0.12);
   
   /* Spacing Scale */
   --space-xs: 4px;

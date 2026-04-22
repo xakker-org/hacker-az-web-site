@@ -1,15 +1,20 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import "../styles/landing.css";
 
 export default function LandingPage() {
   const [scrollY, setScrollY] = useState(0);
+  const [logoSrc, setLogoSrc] = useState("/static/logo/xakkerLogoWhite2.png");
 
   useEffect(() => {
     const handleScroll = () => setScrollY(window.scrollY);
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  const handleLogoError = () => {
+    setLogoSrc("/static/logo/xakkerLogoWhite2.png");
+  };
 
   const courses = [
     {
@@ -87,17 +92,31 @@ export default function LandingPage() {
   return (
     <div className="landing-page">
       {/* Hero Section */}
-      <section className="hero" style={{ backgroundPositionY: `${scrollY * 0.5}px` }}>
+      <section className="hero" id="hero" style={{ backgroundPositionY: `${scrollY * 0.5}px` }}>
         <div className="hero-content container">
+          <div className="hero-brand">
+            <div className="hero-brand-mark">
+              <img
+                src={logoSrc}
+                alt="Xakker logo"
+                className="brand-mark-image"
+                onError={handleLogoError}
+              />
+            </div>
+            <div className="hero-brand-copy">
+              <span className="hero-brand-kicker">Xakker Self Study</span>
+              <p>Black, navy and ice-blue cybersecurity training.</p>
+            </div>
+          </div>
           <div className="hero-text">
             <h1 className="slide-up">
-              Master Cybersecurity <span className="text-gradient">Like a Real Hacker</span>
+              Master Cybersecurity <span className="text-gradient">With a Clean, Dark Edge</span>
             </h1>
             <p className="hero-subtitle">
-              Red Team. Blue Team. Real Skills. Real Future.
+              Black. Dark Navy. White. Light Blue.
             </p>
             <p className="hero-description">
-              Hands-on labs, structured roadmaps, and real-world cyber skills. Learn from industry professionals and build your security career.
+              Hands-on labs, structured roadmaps, and real-world cyber skills wrapped in a sharp, high-contrast interface that keeps the focus on learning.
             </p>
             <div className="hero-actions">
               <Link to="/auth/register" className="btn btn-primary btn-lg">
@@ -112,16 +131,22 @@ export default function LandingPage() {
             </p>
           </div>
           <div className="hero-visual">
-            <div className="dashboard-mockup">
-              <div className="mockup-header">
-                <div className="mockup-dot"></div>
-                <div className="mockup-dot"></div>
-                <div className="mockup-dot"></div>
+            <div className="logo-showcase">
+              <div className="logo-orb">
+                <img
+                  src={logoSrc}
+                  alt="Xakker logo"
+                  className="logo-orb-mark"
+                  onError={handleLogoError}
+                />
               </div>
-              <div className="mockup-content">
-                <div className="mockup-line short"></div>
-                <div className="mockup-line"></div>
-                <div className="mockup-line short"></div>
+              <div className="floating-card floating-card-top">
+                <span className="floating-card-label">Live labs</span>
+                <strong>250+ cyber scenarios</strong>
+              </div>
+              <div className="floating-card floating-card-bottom">
+                <span className="floating-card-label">Learning paths</span>
+                <strong>Red, Blue, and hybrid tracks</strong>
               </div>
             </div>
           </div>
@@ -146,7 +171,7 @@ export default function LandingPage() {
       </section>
 
       {/* Why Xakker */}
-      <section className="why-xakker py-section">
+      <section className="why-xakker py-section" id="features">
         <div className="container">
           <div className="section-header">
             <h2>Why Choose Xakker</h2>
@@ -200,12 +225,12 @@ export default function LandingPage() {
       </section>
 
       {/* Red Team vs Blue Team */}
-      <section className="comparison-section py-section">
+      <section className="comparison-section py-section" id="about">
         <div className="container">
           <h2 className="text-center mb-2xl">Red vs Blue: Choose Your Path</h2>
           <div className="comparison-grid">
-            <div className="comparison-card card-red">
-              <h3 className="text-red">Red Team</h3>
+            <div className="comparison-card comparison-card-dark">
+              <h3 className="text-accent">Red Team</h3>
               <p className="text-small">Offensive Security Expert</p>
               <ul className="comparison-list">
                 <li>🎯 Penetration Testing</li>
@@ -218,7 +243,7 @@ export default function LandingPage() {
                 Join Red Team →
               </Link>
             </div>
-            <div className="comparison-card card">
+            <div className="comparison-card comparison-card-accent card">
               <h3 className="text-blue">Blue Team</h3>
               <p className="text-small">Defensive Security Expert</p>
               <ul className="comparison-list">
@@ -237,7 +262,7 @@ export default function LandingPage() {
       </section>
 
       {/* Stats Section */}
-      <section className="stats-section py-section">
+      <section className="stats-section py-section" id="stats">
         <div className="container">
           <div className="stats-grid">
             {stats.map((stat, idx) => (
@@ -251,7 +276,7 @@ export default function LandingPage() {
       </section>
 
       {/* Testimonials */}
-      <section className="testimonials-section py-section">
+      <section className="testimonials-section py-section" id="testimonials">
         <div className="container">
           <div className="section-header">
             <h2>What Our Students Say</h2>
@@ -277,7 +302,7 @@ export default function LandingPage() {
       </section>
 
       {/* Pricing Section */}
-      <section className="pricing-section py-section">
+      <section className="pricing-section py-section" id="pricing">
         <div className="container">
           <div className="section-header">
             <h2>Simple, Transparent Pricing</h2>
@@ -326,7 +351,7 @@ export default function LandingPage() {
       </section>
 
       {/* FAQ Section */}
-      <section className="faq-section py-section">
+      <section className="faq-section py-section" id="faq">
         <div className="container container-sm">
           <div className="section-header text-center">
             <h2>Frequently Asked Questions</h2>
@@ -353,7 +378,7 @@ export default function LandingPage() {
       </section>
 
       {/* Final CTA */}
-      <section className="final-cta py-section">
+      <section className="final-cta py-section" id="contact">
         <div className="container text-center">
           <h2>Ready to Master Cybersecurity?</h2>
           <p>Join thousands of professionals building elite security skills with Xakker today</p>
@@ -368,7 +393,15 @@ export default function LandingPage() {
         <div className="container">
           <div className="footer-grid">
             <div className="footer-col">
-              <h4>Xakker.org</h4>
+              <h4 className="footer-brand">
+                <img
+                  src={logoSrc}
+                  alt="Xakker logo"
+                  className="footer-brand-mark"
+                  onError={handleLogoError}
+                />
+                <span>Xakker.org</span>
+              </h4>
               <p className="text-small">Elite cybersecurity education and training platform.</p>
             </div>
             <div className="footer-col">
@@ -383,15 +416,15 @@ export default function LandingPage() {
               <p className="footer-title">Company</p>
               <ul className="footer-links">
                 <li><a href="#about">About</a></li>
-                <li><a href="#blog">Blog</a></li>
-                <li><a href="#careers">Careers</a></li>
+                <li><a href="#testimonials">Blog</a></li>
+                <li><a href="#contact">Careers</a></li>
               </ul>
             </div>
             <div className="footer-col">
               <p className="footer-title">Legal</p>
               <ul className="footer-links">
-                <li><a href="#privacy">Privacy</a></li>
-                <li><a href="#terms">Terms</a></li>
+                <li><a href="#faq">Privacy</a></li>
+                <li><a href="#faq">Terms</a></li>
                 <li><a href="#contact">Contact</a></li>
               </ul>
             </div>

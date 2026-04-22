@@ -140,15 +140,13 @@ hacker-az-web-site/
 │   │   │   ├── LandingPage.jsx      # Premium landing (xakker.org)
 │   │   │   ├── AuthPage.jsx         # Login/Register
 │   │   │   ├── DashboardPage.jsx    # Student dashboard
-│   │   │   └── CoursesPage.jsx      # Course listing
-│   │   ├── components/
-│   │   │   ├── AuthPortal.jsx       # Auth component
-│   │   │   └── NavBar.jsx
+│   │   │   └── ExamAttemptPage.jsx  # Exam attempt workflow
 │   │   ├── styles/
 │   │   │   ├── app.css              # Premium design system
 │   │   │   ├── landing.css
 │   │   │   ├── auth.css
-│   │   │   └── dashboard.css
+│   │   │   ├── dashboard.css
+│   │   │   └── exam.css
 │   │   ├── services/
 │   │   │   └── api.js               # Axios config + JWT handling
 │   │   ├── utils/
@@ -159,6 +157,16 @@ hacker-az-web-site/
 │   ├── package.json
 │   ├── vite.config.js
 │   └── Dockerfile
+├── static/                    # Django static assets
+│   ├── logo/
+│   │   └── logoXakker.png
+│   ├── css/
+│   │   └── landing.css
+│   └── js/
+│       ├── landing.js
+│       └── spa/
+│           ├── app.js
+│           └── app.css
 ├── docker-compose.yml
 ├── requirements.txt
 ├── LOCAL_SETUP.md             # This file
