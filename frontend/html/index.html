@@ -3,6 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/png" href="/static/logo/logoXakker.png" />
+
     <title>Xakker.org | Azerbaijan Cyber Security</title>
     <meta
       name="description"
@@ -11,140 +13,574 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Sora:wght@500;600;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@500;600;700;800&display=swap"
       rel="stylesheet"
     />
     <link rel="stylesheet" href="/static/css/landing.css" />
   </head>
   <body>
-    <div class="bg-layer"></div>
-    <div class="noise-layer"></div>
+    <div class="bg-grid" aria-hidden="true"></div>
+    <div class="bg-glow bg-glow-a" aria-hidden="true"></div>
+    <div class="bg-glow bg-glow-b" aria-hidden="true"></div>
 
     <header class="site-header">
-      <a class="brand" href="/" aria-label="Xakker ana sehife">
-        <img src="/static/logo/xakkerLogoWhite2.png" alt="Xakker logo" />
-      </a>
-      <nav>
-        <a href="http://self-study.xakker.org:8000/auth/login" target="_blank" rel="noreferrer">Login</a>
-        <a href="http://self-study.xakker.org:8000/auth/register" target="_blank" rel="noreferrer">Register</a>
-        <a href="#about">Haqqimizda</a>
-        <a href="#tracks">Telimler</a>
-        <a href="http://self-study.xakker.org:8000" target="_blank" rel="noreferrer">Self Study</a>
-      </nav>
+      <div class="site-header-inner">
+        <a class="brand" href="/" aria-label="Xakker home">
+          <img src="/static/logo/xakkerLogoWhite2.png" alt="Xakker" />
+        </a>
+        <nav class="primary-nav" aria-label="Primary">
+          <a href="#features">Platforma</a>
+          <a href="#showcase">Product</a>
+          <a href="#process">Process</a>
+          <a href="#testimonials">Feedback</a>
+          <a href="#faq">FAQ</a>
+        </nav>
+        <div class="header-actions">
+          <a class="link-quiet" href="http://self-study.xakker.org:8000/auth/login" target="_blank" rel="noreferrer">Login</a>
+          <a class="btn btn-primary btn-sm" href="http://self-study.xakker.org:8000/auth/register" target="_blank" rel="noreferrer">Get started</a>
+        </div>
+      </div>
     </header>
 
     <main>
+      <!-- 1. HERO -->
       <section class="hero reveal">
-        <article class="hero-copy">
-          <p class="tag">Azerbaycan Cyber Security Ecosystem</p>
-          <h1>
-            Nese oyrenmek ucun yox,
-            <span>real defense bacarigi</span>
-            qazanmaq ucun platforma.
+        <div class="container hero-inner">
+          <span class="eyebrow">Azerbaijan Cyber Security Ecosystem</span>
+          <h1 class="display">
+            Nazariyye yox,
+            <span class="accent">real defense</span>
+            bacarigi qazan.
           </h1>
-          <p class="subtext">
-            SOC, red team, web pentest, cloud security ve incident response uzre
-            strukturlesdirilmis, Azerbaycan auditoriyasina uygun self-study yol
-            xeritesi.
+          <p class="lede">
+            SOC, red team, cloud security ve appsec uzre praktik self-study flow.
+            Her modul real senari, mentor feedback ve challenge tabanli iralileme
+            mentiqi ile qurulub.
           </p>
-          <div class="cta-group">
-            <a class="btn primary" href="http://self-study.xakker.org:8000" target="_blank" rel="noreferrer">Platformaya kec</a>
-            <a class="btn ghost" href="http://self-study.xakker.org:8000/auth/register" target="_blank" rel="noreferrer">Register</a>
+          <div class="cta-row">
+            <a class="btn btn-primary" href="http://self-study.xakker.org:8000" target="_blank" rel="noreferrer">
+              Platformaya kec
+              <span class="btn-arrow" aria-hidden="true">&rarr;</span>
+            </a>
+            <a class="btn btn-ghost" href="#showcase">Demo gor</a>
           </div>
-        </article>
 
-        <aside class="hero-panel">
-          <h2>Live Skill Radar</h2>
-          <ul>
-            <li><span>Blue Team Readiness</span><strong>74%</strong></li>
-            <li><span>Web App Attack Surface</span><strong>61%</strong></li>
-            <li><span>Cloud Hardening Track</span><strong>53%</strong></li>
-          </ul>
-          <p>
-            Mini-lab mentiqi ile tekce teoriya yox, emeliyyat orientasiyali flow.
-          </p>
-        </aside>
+          <div class="hero-mockup" aria-hidden="true">
+            <div class="mockup-chrome">
+              <div class="chrome-dots">
+                <span></span><span></span><span></span>
+              </div>
+              <div class="chrome-address">self-study.xakker.org / defender</div>
+            </div>
+            <div class="mockup-body">
+              <aside class="mockup-sidebar">
+                <div class="sidebar-brand">X</div>
+                <ul class="sidebar-nav">
+                  <li class="is-active"><i></i>Dashboard</li>
+                  <li><i></i>Paths</li>
+                  <li><i></i>Labs</li>
+                  <li><i></i>Reports</li>
+                  <li><i></i>Mentor</li>
+                </ul>
+              </aside>
+              <div class="mockup-main">
+                <div class="mockup-header">
+                  <div>
+                    <p class="muted-label">Current mission</p>
+                    <h3>Incident Response &middot; Tier 2</h3>
+                  </div>
+                  <div class="chip-live">Live</div>
+                </div>
+                <div class="mockup-grid">
+                  <div class="mockup-card mockup-card-lg">
+                    <p class="muted-label">Threat level</p>
+                    <div class="score-visual">
+                      <svg viewBox="0 0 120 120" class="score-ring">
+                        <circle cx="60" cy="60" r="50" class="ring-bg" />
+                        <circle cx="60" cy="60" r="50" class="ring-fg" />
+                      </svg>
+                      <div class="score-value">76<span>%</span></div>
+                    </div>
+                    <div class="score-meta">
+                      <span>Containment</span>
+                      <span>Escalation ready</span>
+                    </div>
+                  </div>
+                  <div class="mockup-card">
+                    <p class="muted-label">Defender feed</p>
+                    <ul class="feed-list">
+                      <li><b>12:04</b> Anomaly from 10.0.4.18</li>
+                      <li><b>12:07</b> Sandbox detonation queued</li>
+                      <li><b>12:11</b> Mentor review requested</li>
+                      <li><b>12:15</b> Report draft v2 saved</li>
+                    </ul>
+                  </div>
+                  <div class="mockup-card">
+                    <p class="muted-label">Next lab</p>
+                    <h4>Lateral movement</h4>
+                    <div class="progress"><span style="width: 62%"></span></div>
+                    <p class="muted-small">Step 4 of 7</p>
+                  </div>
+                  <div class="mockup-card">
+                    <p class="muted-label">Skills unlocked</p>
+                    <div class="skill-chips">
+                      <span>SIEM</span><span>EDR</span><span>OSINT</span><span>IR Playbooks</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </section>
 
-      <section class="stats reveal" aria-label="platform statistics">
-        <article>
-          <p class="value">12+</p>
-          <p class="label">Practical modules</p>
-        </article>
-        <article>
-          <p class="value">4</p>
-          <p class="label">Core learning paths</p>
-        </article>
-        <article>
-          <p class="value">100%</p>
-          <p class="label">Self-paced workflow</p>
-        </article>
-        <article>
-          <p class="value">24/7</p>
-          <p class="label">Portal access</p>
-        </article>
+      <!-- 2. TRUST / SOCIAL PROOF -->
+      <section class="trust reveal" aria-label="Trusted by">
+        <div class="container">
+          <p class="trust-title">Azerbaycan techno ecosystem ile birlikde qurulur</p>
+          <div class="trust-logos">
+            <span class="trust-logo">SABAH Hub</span>
+            <span class="trust-logo">Innoland</span>
+            <span class="trust-logo">Azercell Lab</span>
+            <span class="trust-logo">Kapital CERT</span>
+            <span class="trust-logo">PASHA Tech</span>
+            <span class="trust-logo">SOCAR Digital</span>
+          </div>
+          <div class="trust-stats">
+            <div>
+              <p class="stat-value">10k+</p>
+              <p class="stat-label">Active learners</p>
+            </div>
+            <div>
+              <p class="stat-value">95%</p>
+              <p class="stat-label">Mission completion</p>
+            </div>
+            <div>
+              <p class="stat-value">4.9<small>/5</small></p>
+              <p class="stat-label">Mentor rating</p>
+            </div>
+            <div>
+              <p class="stat-value">30+</p>
+              <p class="stat-label">Live challenges</p>
+            </div>
+          </div>
+        </div>
       </section>
 
-      <section class="signal reveal">
-        <p>Threat modeling</p>
-        <p>SIEM workflow</p>
-        <p>OWASP practice</p>
-        <p>Incident response</p>
-        <p>Cloud controls</p>
-        <p>Adversary simulation</p>
+      <!-- 3. FEATURES -->
+      <section class="features reveal" id="features">
+        <div class="container">
+          <div class="section-head">
+            <span class="eyebrow">Platform</span>
+            <h2 class="section-title">Hardan bawla, nece inkisaf et.</h2>
+            <p class="section-sub">
+              Oyrenmek ucun lazim olan her sey bir yerde &mdash; praktik lablar,
+              mentor feedback, simulasiyalar ve portfolio hazirligi.
+            </p>
+          </div>
+
+          <div class="feature-grid">
+            <article class="feature-card">
+              <div class="feature-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                  <path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7l8-4z" />
+                </svg>
+              </div>
+              <h3>Real-world scenarios</h3>
+              <p>Hedefli simulation ve istifadeci rollarina uygun tapshiriqlarla real tehdid modelini oyren.</p>
+            </article>
+            <article class="feature-card">
+              <div class="feature-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                  <path d="M4 7h16M4 12h10M4 17h16" />
+                  <circle cx="18" cy="12" r="2" />
+                </svg>
+              </div>
+              <h3>Expert mentorship</h3>
+              <p>Mentor review ve individual feedback ile suretli, istiqametli irelileme metodikasi.</p>
+            </article>
+            <article class="feature-card">
+              <div class="feature-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                  <path d="M3 12l4-4 4 4 4-6 6 6" />
+                  <path d="M3 19h18" />
+                </svg>
+              </div>
+              <h3>Career roadmap</h3>
+              <p>Portfolio yonumlu tasklar ve cert roadmap fokuslu seviye-seviye irelileme.</p>
+            </article>
+            <article class="feature-card">
+              <div class="feature-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                  <rect x="3" y="4" width="18" height="12" rx="2" />
+                  <path d="M8 20h8M12 16v4" />
+                </svg>
+              </div>
+              <h3>Hands-on labs</h3>
+              <p>Browser icinde isleyen, iso-lyrilmis mohit ile kodla, skan et, investigate et.</p>
+            </article>
+            <article class="feature-card">
+              <div class="feature-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                  <circle cx="12" cy="12" r="9" />
+                  <path d="M12 7v5l3 2" />
+                </svg>
+              </div>
+              <h3>Time-boxed missions</h3>
+              <p>Live challenge saatleri &mdash; gercek incident-response tempini hissi.</p>
+            </article>
+            <article class="feature-card">
+              <div class="feature-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                  <path d="M4 6h16v12H4z" />
+                  <path d="M4 10h16" />
+                  <circle cx="8" cy="14" r="1.2" />
+                </svg>
+              </div>
+              <h3>Community &amp; CTF</h3>
+              <p>Azerbaycan komandalari ile komanda-qarshi challenges ve heftelik meetups.</p>
+            </article>
+          </div>
+        </div>
       </section>
 
-      <section id="tracks" class="tracks reveal">
-        <article>
-          <h3>Blue Team Path</h3>
-          <p>SIEM, log analysis, threat hunting, incident workflow.</p>
-        </article>
-        <article>
-          <h3>Red Team Path</h3>
-          <p>Recon, exploitation logic, report writing, adversary simulation.</p>
-        </article>
-        <article>
-          <h3>AppSec Path</h3>
-          <p>OWASP Top 10, secure code review, API hardening.</p>
-        </article>
-        <article>
-          <h3>CloudSec Path</h3>
-          <p>Identity boundaries, workload defense, detection and response.</p>
-        </article>
+      <!-- 4. SHOWCASE / PRODUCT DEMO -->
+      <section class="showcase reveal" id="showcase">
+        <div class="container showcase-inner">
+          <div class="showcase-copy">
+            <span class="eyebrow">Product</span>
+            <h2 class="section-title">Bir workspace-de butun defense stack-in.</h2>
+            <p class="section-sub">
+              Mission briefing, live lab mohiti, mentor review ve report drafting
+              &mdash; hamisi bir ekranda. Context switching yoxdur, real work flow var.
+            </p>
+            <ul class="checklist">
+              <li>Guided missions with contextual hints</li>
+              <li>Integrated terminal &amp; note-taking</li>
+              <li>Automated scoring and mentor escalation</li>
+              <li>Exportable incident reports</li>
+            </ul>
+            <a class="btn btn-primary" href="http://self-study.xakker.org:8000" target="_blank" rel="noreferrer">
+              Explore the platform
+              <span class="btn-arrow" aria-hidden="true">&rarr;</span>
+            </a>
+          </div>
+
+          <div class="showcase-visual">
+            <div class="terminal-card">
+              <div class="terminal-head">
+                <span></span><span></span><span></span>
+                <em>~ operator@xakker</em>
+              </div>
+<pre class="terminal-body">
+<span class="t-muted">$</span> <span class="t-cmd">nmap -sV target.local</span>
+PORT     STATE SERVICE  VERSION
+22/tcp   open  ssh      OpenSSH 8.9
+80/tcp   open  http     nginx 1.25
+443/tcp  open  https    TLS 1.3
+
+<span class="t-ok">[+]</span> foothold established
+<span class="t-ok">[+]</span> privilege check complete
+<span class="t-warn">[!]</span> suspicious cron observed
+<span class="t-ok">[+]</span> report draft attached to mission
+</pre>
+            </div>
+            <div class="floating-card">
+              <p class="muted-label">Mentor feedback</p>
+              <p class="quote-text">"Report-in struktur yaxshidir. IOC section-i genishlendir ve MITRE map elave et."</p>
+              <div class="mentor-row">
+                <div class="avatar avatar-sm"></div>
+                <div>
+                  <p class="mentor-name">Elvin M.</p>
+                  <p class="mentor-role">Senior SOC Analyst</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </section>
 
-      <section class="strategy reveal">
-        <article>
-          <h3>What You Build</h3>
-          <p>
-            Security mindset, practical workflows, and repeatable methods to
-            investigate, detect, and harden systems.
-          </p>
-        </article>
-        <article>
-          <h3>How You Learn</h3>
-          <p>
-            Short focused modules, guided tasks, and API-backed progress flow
-            in self-study portal.
-          </p>
-        </article>
+      <!-- 5. BENEFITS / WHY CHOOSE US -->
+      <section class="benefits reveal" id="benefits">
+        <div class="container">
+          <div class="section-head">
+            <span class="eyebrow">Why Xakker</span>
+            <h2 class="section-title">Neden mekteb yox, mission workspace.</h2>
+            <p class="section-sub">
+              Klassik kurslarin yerine, is yerinde istifade edilen real metodika.
+            </p>
+          </div>
+
+          <div class="benefit-grid">
+            <article class="benefit-card">
+              <div class="benefit-index">01</div>
+              <h3>Outcome-focused</h3>
+              <p>
+                Her module sonunda hazır portfolio deliverable &mdash; report,
+                playbook, lab write-up. CV-ye elave edilen ashkar neticeler.
+              </p>
+            </article>
+            <article class="benefit-card">
+              <div class="benefit-index">02</div>
+              <h3>Built for local market</h3>
+              <p>
+                Azerbaycan senayesine uygun senari &mdash; bank, telecom, public
+                sector threat model-leri ile oyrenme.
+              </p>
+            </article>
+            <article class="benefit-card">
+              <div class="benefit-index">03</div>
+              <h3>Mentor-on-demand</h3>
+              <p>
+                Stuck olduqda 24 saat icinde mentor review. Self-study amma tek
+                deyil &mdash; daim feedback loop ile.
+              </p>
+            </article>
+            <article class="benefit-card">
+              <div class="benefit-index">04</div>
+              <h3>Cert &amp; career aligned</h3>
+              <p>
+                CompTIA, OSCP, CEH, CCSP yonleri ile uyqunlasdirilmis roadmap.
+                Hiring partners ile referral path.
+              </p>
+            </article>
+          </div>
+        </div>
       </section>
 
-      <section class="cta-wide reveal">
-        <h2>Ready to start your path?</h2>
-        <p>
-          Enter self-study portal and continue from dedicated login/register
-          page with modern secure flow.
-        </p>
-        <div class="cta-group">
-          <a class="btn primary" href="http://self-study.xakker.org:8000/auth/login" target="_blank" rel="noreferrer">Login</a>
-          <a class="btn ghost" href="http://self-study.xakker.org:8000/auth/register" target="_blank" rel="noreferrer">Register</a>
+      <!-- 6. PROCESS / HOW IT WORKS -->
+      <section class="process reveal" id="process">
+        <div class="container">
+          <div class="section-head">
+            <span class="eyebrow">How it works</span>
+            <h2 class="section-title">Zero-dan hero-ya, 4 adimda.</h2>
+          </div>
+
+          <div class="process-grid">
+            <article class="process-step">
+              <div class="step-num">1</div>
+              <h3>Foundation</h3>
+              <p>Core networking, Linux, web basics ve security mindset.</p>
+            </article>
+            <article class="process-step">
+              <div class="step-num">2</div>
+              <h3>Specialize</h3>
+              <p>Blue team, red team, appsec veya cloudsec secimleri.</p>
+            </article>
+            <article class="process-step">
+              <div class="step-num">3</div>
+              <h3>Live missions</h3>
+              <p>Time-boxed practice senarileri ve response tasklari.</p>
+            </article>
+            <article class="process-step">
+              <div class="step-num">4</div>
+              <h3>Certify</h3>
+              <p>Roadmap prep ve portfolio-backed competency proof.</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <!-- 7. TESTIMONIALS -->
+      <section class="testimonials reveal" id="testimonials">
+        <div class="container">
+          <div class="section-head">
+            <span class="eyebrow">Feedback</span>
+            <h2 class="section-title">Platformu qurmus learner-lerden.</h2>
+          </div>
+
+          <div class="testimonial-grid">
+            <article class="testimonial-card">
+              <div class="stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+              <p class="quote">
+                "Red-team fundamentals cox daha anlasilan oldu. Praktik tasklar
+                gercek environment-de isleyen seylerdir &mdash; bos nazariyye
+                deyil."
+              </p>
+              <div class="testimonial-meta">
+                <div class="avatar"></div>
+                <div>
+                  <p class="name">Samir T.</p>
+                  <p class="role">SOC Analyst &middot; PASHA</p>
+                </div>
+              </div>
+            </article>
+            <article class="testimonial-card">
+              <div class="stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+              <p class="quote">
+                "Mentor feedback ile ilk incident reportumu professional
+                seviyyeye catdirdim. CV-de fark yaratan deliverable-ler aldim."
+              </p>
+              <div class="testimonial-meta">
+                <div class="avatar"></div>
+                <div>
+                  <p class="name">Aysu D.</p>
+                  <p class="role">Blue Team &middot; Kapital</p>
+                </div>
+              </div>
+            </article>
+            <article class="testimonial-card">
+              <div class="stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+              <p class="quote">
+                "CloudSec path menim ucun birbasha production defense mentiqi
+                verdi. Azure ve AWS tarafinda gercek risk modelleri oyrendim."
+              </p>
+              <div class="testimonial-meta">
+                <div class="avatar"></div>
+                <div>
+                  <p class="name">Vugar A.</p>
+                  <p class="role">Cloud Engineer &middot; Azercell</p>
+                </div>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <!-- 8. FAQ -->
+      <section class="faq reveal" id="faq">
+        <div class="container faq-inner">
+          <div class="faq-side">
+            <span class="eyebrow">FAQ</span>
+            <h2 class="section-title">Hele suallariniz var.</h2>
+            <p class="section-sub">
+              Platforma, onboarding ve mentor axini haqda en cox sorulanlar.
+              Cavabi tapmadiqsa bizimle elaqe saxlayin.
+            </p>
+            <a class="btn btn-ghost btn-sm" href="mailto:hi@xakker.org">Contact support</a>
+          </div>
+
+          <div class="faq-list">
+            <details class="faq-item" open>
+              <summary>
+                Platforma kim ucun uygundur?
+                <span class="faq-icon" aria-hidden="true"></span>
+              </summary>
+              <p>
+                Yeni baslayandan senior defender-a qeder butun seviyyeler ucun
+                path-lar var. Onboarding qisa diagnostika ile size en uygun
+                baslanqici teklif edir.
+              </p>
+            </details>
+            <details class="faq-item">
+              <summary>
+                Sertifikat verilir mi?
+                <span class="faq-icon" aria-hidden="true"></span>
+              </summary>
+              <p>
+                Beli. Her path-in sonunda completion certificate veriltir ve
+                onlyine verifiable link ile paylashila biler. Hemcinin OSCP,
+                CompTIA kimi industry cert-lere hazirliq roadmap-i var.
+              </p>
+            </details>
+            <details class="faq-item">
+              <summary>
+                Mentor feedback nece islyir?
+                <span class="faq-icon" aria-hidden="true"></span>
+              </summary>
+              <p>
+                Mission submit etdikden sonra 24 saat icinde senior defender
+                review qaytarir. Video ve mətn formatinda &mdash; concrete,
+                action-oriented feedback.
+              </p>
+            </details>
+            <details class="faq-item">
+              <summary>
+                Lablar local kompyuterimde iswleyir?
+                <span class="faq-icon" aria-hidden="true"></span>
+              </summary>
+              <p>
+                Yox. Butun labs browser-de isleyen iso-lyrilmis cloud environment
+                uzerindedir. Heç ne install etmek lazim deyil.
+              </p>
+            </details>
+            <details class="faq-item">
+              <summary>
+                Cmd qiymet ne qederdir?
+                <span class="faq-icon" aria-hidden="true"></span>
+              </summary>
+              <p>
+                Starter path pulsuzdur. Pro ve team plan-larinin detali pricing
+                sehifesinde &mdash; istenilen vaxt deyisdirmek olar.
+              </p>
+            </details>
+          </div>
+        </div>
+      </section>
+
+      <!-- 9. FINAL CTA -->
+      <section class="final-cta reveal">
+        <div class="container">
+          <div class="final-cta-card">
+            <h2 class="section-title">Sadece oyrenme. Bacariq qazan.</h2>
+            <p class="section-sub">
+              Bu gun baslayin &mdash; ilk mission 10 deqiqede bitir. Karta data
+              istemir, hesabi istenilen vaxt sistemdan cixara bilersiniz.
+            </p>
+            <div class="cta-row center">
+              <a class="btn btn-primary" href="http://self-study.xakker.org:8000/auth/register" target="_blank" rel="noreferrer">
+                Qeydiyyatdan kec
+                <span class="btn-arrow" aria-hidden="true">&rarr;</span>
+              </a>
+              <a class="btn btn-ghost" href="#features">Platformu gor</a>
+            </div>
+          </div>
         </div>
       </section>
     </main>
 
-    <footer id="about" class="site-footer">
-      <p>Build with precision. Learn with discipline. Defend with confidence.</p>
+    <!-- 10. FOOTER -->
+    <footer class="site-footer">
+      <div class="container">
+        <div class="footer-grid">
+          <div class="footer-brand">
+            <img src="/static/logo/xakkerLogoWhite2.png" alt="Xakker" />
+            <p>Azerbaycan ucun modern cyber security self-study ekosistemi.</p>
+            <div class="footer-social">
+              <a href="#" aria-label="Twitter">Tw</a>
+              <a href="#" aria-label="LinkedIn">In</a>
+              <a href="#" aria-label="Github">Gh</a>
+            </div>
+          </div>
+          <div class="footer-col">
+            <h5>Platform</h5>
+            <a href="#features">Features</a>
+            <a href="#showcase">Product</a>
+            <a href="#process">Process</a>
+            <a href="http://self-study.xakker.org:8000" target="_blank" rel="noreferrer">Self-study</a>
+          </div>
+          <div class="footer-col">
+            <h5>Learn</h5>
+            <a href="#">Docs</a>
+            <a href="#">Resources</a>
+            <a href="#">Community</a>
+            <a href="#">Changelog</a>
+          </div>
+          <div class="footer-col">
+            <h5>Company</h5>
+            <a href="#">About</a>
+            <a href="#">Careers</a>
+            <a href="#">Legal</a>
+            <a href="#">Contact</a>
+          </div>
+          <div class="footer-col newsletter">
+            <h5>Newsletter</h5>
+            <p>Monthly updates on new missions and tools.</p>
+            <form class="newsletter-form" onsubmit="event.preventDefault()">
+              <input type="email" placeholder="you@email.com" aria-label="Email" />
+              <button type="submit" class="btn btn-primary btn-sm">Go</button>
+            </form>
+          </div>
+        </div>
+        <div class="footer-bottom">
+          <p>&copy; 2025 Xakker Studios. All rights reserved.</p>
+          <div class="footer-legal">
+            <a href="#">Privacy</a>
+            <a href="#">Terms</a>
+            <a href="#">Cookies</a>
+          </div>
+        </div>
+      </div>
     </footer>
 
     <script src="/static/js/landing.js"></script>
