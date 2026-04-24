@@ -23,7 +23,7 @@
     <div class="bg-glow bg-glow-a" aria-hidden="true"></div>
     <div class="bg-glow bg-glow-b" aria-hidden="true"></div>
 
-    <header class="site-header">
+    <header class="site-header" id="site-header">
       <div class="site-header-inner">
         <a class="brand" href="/" aria-label="Xakker home">
           <img src="/static/logo/xakkerLogoWhite2.png" alt="Xakker" />
@@ -38,6 +38,24 @@
         <div class="header-actions">
           <a class="link-quiet" href="http://self-study.xakker.org:8000/auth/login" target="_blank" rel="noreferrer">Login</a>
           <a class="btn btn-primary btn-sm" href="http://self-study.xakker.org:8000/auth/register" target="_blank" rel="noreferrer">Get started</a>
+          <button class="nav-toggle" aria-label="Menyu" aria-expanded="false" aria-controls="mobile-nav">
+            <span></span>
+            <span></span>
+            <span></span>
+          </button>
+        </div>
+      </div>
+      <div class="mobile-nav" id="mobile-nav" aria-hidden="true">
+        <nav aria-label="Mobile">
+          <a href="#features">Platforma</a>
+          <a href="#showcase">Product</a>
+          <a href="#process">Process</a>
+          <a href="#testimonials">Feedback</a>
+          <a href="#faq">FAQ</a>
+        </nav>
+        <div class="mobile-nav-actions">
+          <a class="btn btn-ghost btn-block" href="http://self-study.xakker.org:8000/auth/login" target="_blank" rel="noreferrer">Login</a>
+          <a class="btn btn-primary btn-block" href="http://self-study.xakker.org:8000/auth/register" target="_blank" rel="noreferrer">Get started</a>
         </div>
       </div>
     </header>
@@ -45,31 +63,28 @@
     <main>
       <!-- 1. HERO -->
       <section class="hero reveal">
-        <div class="container hero-inner">
-          <div class="hero-copy">
-            <span class="eyebrow">Azerbaijan Cyber Security Ecosystem</span>
-            <h1 class="display">
-              Nazariyye yox,
-              <span class="accent">real defense</span>
-              bacarigi qazan.
-            </h1>
-            <p class="lede">
-              SOC, red team, cloud security ve appsec uzre praktik self-study flow.
-              Her modul real senari, mentor feedback ve challenge tabanli iralileme
-              mentiqi ile qurulub.
-            </p>
-            <div class="cta-row">
-              <a class="btn btn-primary" href="http://self-study.xakker.org:8000" target="_blank" rel="noreferrer">
-                Platformaya kec
-                <span class="btn-arrow" aria-hidden="true">&rarr;</span>
-              </a>
-              <a class="btn btn-ghost" href="#showcase">Demo gor</a>
-            </div>
-          </div>
+        <div class="hero-az-bg" aria-hidden="true">
+          <img src="/static/logo/azerbaijan_map.png" alt="" />
+        </div>
 
-          <div class="hero-map" aria-hidden="true">
-            <div class="hero-map-glow"></div>
-            <img src="/static/logo/azerbaijan_map.png" alt="" class="hero-map-img" />
+        <div class="container hero-inner">
+          <span class="eyebrow">Azerbaijan Cyber Security Ecosystem</span>
+          <h1 class="display">
+            Nazariyye yox,
+            <span class="accent">real defense</span>
+            bacarigi qazan.
+          </h1>
+          <p class="lede">
+            SOC, red team, cloud security ve appsec uzre praktik self-study flow.
+            Her modul real senari, mentor feedback ve challenge tabanli iralileme
+            mentiqi ile qurulub.
+          </p>
+          <div class="cta-row center">
+            <a class="btn btn-primary" href="http://self-study.xakker.org:8000" target="_blank" rel="noreferrer">
+              Platformaya kec
+              <span class="btn-arrow" aria-hidden="true">&rarr;</span>
+            </a>
+            <a class="btn btn-ghost" href="#showcase">Demo gor</a>
           </div>
         </div>
 
