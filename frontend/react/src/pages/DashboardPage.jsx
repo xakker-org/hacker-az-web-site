@@ -1,26 +1,36 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import api from "../services/api";
+import AppShell from "../components/AppShell";
+import { endpoints } from "../services/endpoints";
 import { clearTokens, getAccessToken } from "../utils/tokens";
-import "../styles/dashboard.css";
 
 const emptyCabinet = {
   username: "Hacker",
   email: "",
-  account_type: "client",
-  is_staff: false,
-  is_superuser: false,
   enrolled_courses: [],
   plans: [],
+  rooms: [],
+  recommended_rooms: [],
   exams: [],
-  question_type_breakdown: {},
-  question_level_breakdown: {},
+  recent_activity: [],
+  profile: {
+    xp: 0,
+    rank: "Recruit",
+    streak_days: 0,
+    rank_progress: 0,
+    next_rank: null,
+    xp_to_next: 0,
+  },
   stats: {
     active_courses: 0,
-    total_lessons: 0,
     active_plans: 0,
+    available_rooms: 0,
     available_exams: 0,
-    course_threads: 0,
+    tasks_completed: 0,
+    rooms_completed: 0,
+    xp: 0,
+    rank: "Recruit",
+    streak: 0,
   },
 };
 
@@ -33,14 +43,9 @@ const levelLabels = {
 export default function DashboardPage() {
   const navigate = useNavigate();
   const [cabinet, setCabinet] = useState(emptyCabinet);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [brandLogoSrc, setBrandLogoSrc] = useState("/static/logo/xakkerLogoWhite2.png");
+  const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-
-  const handleBrandLogoError = () => {
-    setBrandLogoSrc("/static/logo/xakkerLogoWhite2.png");
-  };
 
   useEffect(() => {
     if (!getAccessToken()) {
@@ -49,316 +54,375 @@ export default function DashboardPage() {
     }
 
     let mounted = true;
-
-    const fetchCabinet = async () => {
-      try {
-        const { data } = await api.get("/courses/cabinet/");
-        if (mounted) {
-          if (data?.is_staff || data?.is_superuser || data?.account_type === "admin") {
-            clearTokens();
-            window.location.href = "/admin/";
-            return;
-          }
-          setCabinet(data);
+    endpoints
+      .cabinet()
+      .then(({ data }) => {
+        if (!mounted) return;
+        setCabinet((current) => ({
+          ...current,
+          ...data,
+          profile: { ...current.profile, ...(data?.profile || {}) },
+          stats: { ...current.stats, ...(data?.stats || {}) },
+        }));
+      })
+      .catch((requestError) => {
+        if (!mounted) return;
+        const status = requestError?.response?.status;
+        if (status === 401 || status === 403) {
+          clearTokens();
+          navigate("/auth/login");
+          return;
         }
-      } catch (requestError) {
-        if (mounted) {
-          setError("Kabinet məlumatları yüklənmədi. Yenidən daxil ol.");
-        }
-        clearTokens();
-        navigate("/auth/login");
-      } finally {
-        if (mounted) {
-          setLoading(false);
-        }
-      }
-    };
-
-    fetchCabinet();
+        setError("Kabinet yüklənmədi. Backend bağlantısını yoxla.");
+      })
+      .finally(() => {
+        if (mounted) setLoading(false);
+      });
 
     return () => {
       mounted = false;
     };
   }, [navigate]);
 
-  const handleLogout = () => {
-    clearTokens();
-    navigate("/auth/login");
-  };
+  const query = searchTerm.trim().toLowerCase();
+
+  const filteredRooms = useMemo(() => {
+    if (!query) return cabinet.rooms || [];
+    return (cabinet.rooms || []).filter((room) =>
+      `${room.title} ${room.summary} ${room.course?.title || ""} ${room.level}`.toLowerCase().includes(query)
+    );
+  }, [cabinet.rooms, query]);
+
+  const filteredPlans = useMemo(() => {
+    if (!query) return cabinet.plans || [];
+    return (cabinet.plans || []).filter((plan) =>
+      `${plan.title} ${plan.summary} ${plan.level}`.toLowerCase().includes(query)
+    );
+  }, [cabinet.plans, query]);
+
+  const filteredExams = useMemo(() => {
+    if (!query) return cabinet.exams || [];
+    return (cabinet.exams || []).filter((exam) =>
+      `${exam.title} ${exam.description} ${exam.course?.title || ""}`.toLowerCase().includes(query)
+    );
+  }, [cabinet.exams, query]);
+
+  const recentActivity = cabinet.recent_activity || [];
+  const profile = cabinet.profile || emptyCabinet.profile;
+  const stats = cabinet.stats || emptyCabinet.stats;
 
   if (loading) {
     return (
-      <div className="dashboard">
-        <div className="loading">Kabinet yüklənir...</div>
-      </div>
+      <AppShell title="Dashboard">
+        <div className="loading-block">Kabinet hazırlanır...</div>
+      </AppShell>
     );
   }
 
-  const enrolledCourses = cabinet.enrolled_courses || [];
-  const plans = cabinet.plans || [];
-  const exams = cabinet.exams || [];
-  const questionTypeBreakdown = cabinet.question_type_breakdown || {};
-  const questionLevelBreakdown = cabinet.question_level_breakdown || {};
-  const stats = cabinet.stats || emptyCabinet.stats;
-  const welcomeMessage = `Salam, ${cabinet.username || "Hacker"}`;
-
   return (
-    <div className="dashboard">
-      <aside className={`sidebar ${sidebarOpen ? "open" : "closed"}`}>
-        <div className="sidebar-header">
-          <div className="sidebar-brand">
-            <img
-              src={brandLogoSrc}
-              alt="Xakker logo"
-              className="brand-icon"
-              onError={handleBrandLogoError}
-            />
-            <span className="brand-name">Kabinet</span>
-          </div>
-          <button className="sidebar-toggle" onClick={() => setSidebarOpen(!sidebarOpen)}>
-            ☰
-          </button>
-        </div>
+    <AppShell
+      title="Dashboard"
+      searchPlaceholder="Kurs, plan, room, exam axtar..."
+      onSearch={setSearchTerm}
+      extraTopbar={
+        <>
+          <span className="topbar-chip">
+            <strong>{profile.rank}</strong>
+          </span>
+          <span className="topbar-chip">
+            <strong>{profile.streak_days || 0}</strong> day streak
+          </span>
+        </>
+      }
+    >
+      {error && <div className="alert alert-error">{error}</div>}
 
-        <nav className="sidebar-nav">
-          <a href="#overview" className="nav-item active">
-            <span className="nav-icon">◌</span>
-            <span className="nav-label">Overview</span>
-          </a>
-          <a href="#plans" className="nav-item">
-            <span className="nav-icon">🧭</span>
-            <span className="nav-label">Learning Plans</span>
-          </a>
-          <a href="#courses" className="nav-item">
-            <span className="nav-icon">📚</span>
-            <span className="nav-label">Courses</span>
-          </a>
-          <a href="#questions" className="nav-item">
-            <span className="nav-icon">🧪</span>
-            <span className="nav-label">Questions</span>
-          </a>
-          <a href="#exam-room" className="nav-item">
-            <span className="nav-icon">⌨️</span>
-            <span className="nav-label">Exam Room</span>
-          </a>
-        </nav>
-
-        <div className="sidebar-footer">
-          <button className="logout-btn" onClick={handleLogout}>
-            <span className="nav-icon">↩</span>
-            <span className="nav-label">Logout</span>
-          </button>
-        </div>
-      </aside>
-
-      <div className="dashboard-main">
-        <div className="dashboard-navbar">
-          <button className="mobile-menu-btn" onClick={() => setSidebarOpen(!sidebarOpen)}>
-            ☰
-          </button>
-
-          <div className="navbar-search">
-            <input
-              type="text"
-              placeholder="Plan, course və imtahan axtar..."
-              className="search-input"
-            />
-          </div>
-
-          <div className="navbar-controls">
-            <Link to="/" className="icon-btn notification-btn">
-              ⤴
+      <section className="dash-hero">
+        <div className="dash-hero-main">
+          <span className="dash-hero-eyebrow">Self-study cabinet</span>
+          <h1>Welcome back, {cabinet.username || "Hacker"}.</h1>
+          <p>
+            Bütün data backend-dən gəlir: enrolled courses, learning plans, rooms, exams və profile
+            status bir yerdə toplanır.
+          </p>
+          <div className="dash-hero-ctas">
+            <Link to="/rooms" className="btn btn-primary btn-sm">
+              Explore rooms
             </Link>
-            <Link to="/auth/login" className="icon-btn messages-btn">
-              ⟲
+            <Link to="/plans" className="btn btn-secondary btn-sm">
+              View plans
             </Link>
-            <div className="user-profile">
-              <div className="avatar">{cabinet.username?.[0]?.toUpperCase() || "K"}</div>
-              <span className="username">{cabinet.username}</span>
-            </div>
           </div>
         </div>
 
-        <div className="dashboard-content container">
-          {error && <div className="dashboard-alert">{error}</div>}
-
-          <section id="overview" className="hero-section card soft-card">
-            <div className="hero-text">
-              <span className="eyebrow">Self-study kabinet</span>
-              <h1>{welcomeMessage}</h1>
-              <p>
-                Bütün kurslar, planlar və imtahanlar backenddən gəlir. Kabinet indi real
-                learning flow kimi işləyir.
-              </p>
-            </div>
-            <div className="hero-stats">
-              <div className="stat">
-                <div className="stat-value">{stats.active_courses || 0}</div>
-                <div className="stat-label">Active Courses</div>
-              </div>
-              <div className="stat">
-                <div className="stat-value">{stats.total_lessons || 0}</div>
-                <div className="stat-label">Lessons</div>
-              </div>
-              <div className="stat">
-                <div className="stat-value">{stats.available_exams || 0}</div>
-                <div className="stat-label">Exams</div>
+        <aside className="dash-hero-aside">
+          <div className="dash-rank-row">
+            <div>
+              <div className="dash-rank-big">{profile.rank}</div>
+              <div className="dash-rank-next">
+                {profile.next_rank ? `Next: ${profile.next_rank}` : "Max rank reached"}
               </div>
             </div>
-          </section>
+            <span className="chip chip-accent">{profile.xp} XP</span>
+          </div>
+          <div className="progress">
+            <div className="progress-track">
+              <div className="progress-fill blue" style={{ width: `${profile.rank_progress || 0}%` }} />
+            </div>
+            <div className="progress-meta">
+              <span>{profile.xp_to_next || 0} XP to next</span>
+              <span>{profile.rank_progress || 0}%</span>
+            </div>
+          </div>
+          <div className="dash-stat-row">
+            <div className="dash-stat">
+              <div className="dash-stat-value">{stats.active_courses || 0}</div>
+              <div className="dash-stat-label">Courses</div>
+            </div>
+            <div className="dash-stat">
+              <div className="dash-stat-value">{stats.available_rooms || 0}</div>
+              <div className="dash-stat-label">Rooms</div>
+            </div>
+            <div className="dash-stat">
+              <div className="dash-stat-value">{stats.available_exams || 0}</div>
+              <div className="dash-stat-label">Exams</div>
+            </div>
+          </div>
+        </aside>
+      </section>
 
-          <section className="progress-section">
+      <section className="panel" style={{ marginBottom: 22 }}>
+        <div className="panel-title">
+          <div>
             <h2>Progress</h2>
-            <div className="progress-grid">
-              <div className="progress-card card soft-card">
-                <div className="progress-label">Active Plans</div>
-                <div className="progress-value">{stats.active_plans || 0}</div>
-                <div className="progress-meta">Backend plan sayı</div>
-              </div>
-              <div className="progress-card card soft-card">
-                <div className="progress-label">Exam Queue</div>
-                <div className="progress-value">{stats.available_exams || 0}</div>
-                <div className="progress-meta">Backend exam sayı</div>
-              </div>
-              <div className="progress-card card soft-card">
-                <div className="progress-label">Study Threads</div>
-                <div className="progress-value">{stats.course_threads || 0}</div>
-                <div className="progress-meta">Exam bağlı kurslar</div>
-              </div>
-              <div className="progress-card card soft-card">
-                <div className="progress-label">Lessons</div>
-                <div className="progress-value">{stats.total_lessons || 0}</div>
-                <div className="progress-meta">Backend lesson sayı</div>
-              </div>
-            </div>
-          </section>
-
-          <section id="plans" className="learning-paths-section">
-            <h2>Learning Plans</h2>
-            <div className="paths-grid">
-              {plans.map((plan) => (
-                <article key={plan.id} className="path-card card soft-card">
-                  <div className="path-topline">
-                    <span className="pill pill-soft">{levelLabels[plan.level] || plan.level}</span>
-                    {plan.is_featured && <span className="pill pill-accent">Featured</span>}
-                  </div>
-                  <div className="path-icon">🧭</div>
-                  <h3>{plan.title}</h3>
-                  <p>{plan.summary}</p>
-                  <div className="course-stack">
-                    {(plan.courses || []).map((entry) => (
-                      <div key={entry.id} className="mini-course-row">
-                        <span>{entry.course.title}</span>
-                        <span>{entry.course.category || "General"}</span>
-                      </div>
-                    ))}
-                  </div>
-                </article>
-              ))}
-            </div>
-          </section>
-
-          <section id="courses" className="continue-learning-section">
-            <h2>Your Courses</h2>
-            <div className="course-cards">
-              {enrolledCourses.length > 0 ? (
-                enrolledCourses.map((course) => (
-                  <article key={course.id} className="course-card card soft-card">
-                    <div className="course-icon">📘</div>
-                    <h3>{course.title}</h3>
-                    <div className="course-status">{course.category || "General"}</div>
-                    <p>{course.description}</p>
-                  </article>
-                ))
-              ) : (
-                <div className="empty-state card soft-card">
-                  <h3>Hələ kurs yoxdur</h3>
-                  <p>Cabinetdə kurs görünməsi üçün backenddə enrollment data lazımdır.</p>
-                  <Link to="/" className="btn btn-secondary btn-sm">
-                    Browse landing
-                  </Link>
-                </div>
-              )}
-            </div>
-          </section>
-
-          <section id="questions" className="practice-labs-section">
-            <h2>Question Statistics</h2>
-            <div className="labs-grid assessment-grid">
-              <div className="lab-card card soft-card">
-                <div className="lab-header">
-                  <h4>Type: Closed</h4>
-                  <span className="difficulty beginner">Auto</span>
-                </div>
-                <p>{questionTypeBreakdown.closed || 0} sual</p>
-              </div>
-              <div className="lab-card card soft-card">
-                <div className="lab-header">
-                  <h4>Type: Open</h4>
-                  <span className="difficulty intermediate">Review</span>
-                </div>
-                <p>{questionTypeBreakdown.open || 0} sual</p>
-              </div>
-              <div className="lab-card card soft-card">
-                <div className="lab-header">
-                  <h4>Type: Terminal</h4>
-                  <span className="difficulty advanced">Code</span>
-                </div>
-                <p>{questionTypeBreakdown.terminal || 0} sual</p>
-              </div>
-              <div className="lab-card card soft-card">
-                <div className="lab-header">
-                  <h4>Level: Beginner</h4>
-                  <span className="difficulty beginner">L1</span>
-                </div>
-                <p>{questionLevelBreakdown.beginner || 0} sual</p>
-              </div>
-              <div className="lab-card card soft-card">
-                <div className="lab-header">
-                  <h4>Level: Intermediate</h4>
-                  <span className="difficulty intermediate">L2</span>
-                </div>
-                <p>{questionLevelBreakdown.intermediate || 0} sual</p>
-              </div>
-              <div className="lab-card card soft-card">
-                <div className="lab-header">
-                  <h4>Level: Advanced</h4>
-                  <span className="difficulty advanced">L3</span>
-                </div>
-                <p>{questionLevelBreakdown.advanced || 0} sual</p>
-              </div>
-            </div>
-          </section>
-
-          <section id="exam-room" className="upcoming-sessions-section">
-            <h2>Exam Room</h2>
-            <div className="sessions-grid">
-              {exams.length > 0 ? (
-                exams.map((exam) => (
-                  <article key={exam.id} className="session-card card soft-card">
-                    <div className="session-time">{levelLabels[exam.level] || exam.level}</div>
-                    <h4>{exam.title}</h4>
-                    <p className="session-instructor">{exam.course?.title}</p>
-                    <p>{exam.description}</p>
-                    <div className="exam-meta">
-                      <span>{exam.question_count} questions</span>
-                      <span>{exam.time_limit_minutes} min</span>
-                    </div>
-                    <Link to={`/dashboard/exams/${exam.slug}`} className="btn btn-primary btn-sm">
-                      Start Exam
-                    </Link>
-                  </article>
-                ))
-              ) : (
-                <div className="empty-state card soft-card">
-                  <h3>Aktiv imtahan yoxdur</h3>
-                  <p>Enrolled course-lar üçün published exam əlavə olunanda burada görünəcək.</p>
-                </div>
-              )}
-            </div>
-          </section>
+            <div className="panel-title-sub">Backend summary snapshot</div>
+          </div>
         </div>
-      </div>
-    </div>
+        <div className="progress-grid">
+          <div className="progress-card panel">
+            <div className="progress-label">Courses completed</div>
+            <div className="progress-value">{stats.active_courses || 0}</div>
+            <div className="progress-meta">Active enrollments</div>
+          </div>
+          <div className="progress-card panel">
+            <div className="progress-label">Rooms completed</div>
+            <div className="progress-value">{stats.rooms_completed || 0}</div>
+            <div className="progress-meta">Backend room progress</div>
+          </div>
+          <div className="progress-card panel">
+            <div className="progress-label">Tasks completed</div>
+            <div className="progress-value">{stats.tasks_completed || 0}</div>
+            <div className="progress-meta">Practice flow</div>
+          </div>
+          <div className="progress-card panel">
+            <div className="progress-label">Streak days</div>
+            <div className="progress-value">{profile.streak_days || stats.streak || 0}</div>
+            <div className="progress-meta">Keep the run alive</div>
+          </div>
+        </div>
+      </section>
+
+      <section style={{ marginBottom: 22 }}>
+        <div className="panel-title">
+          <div>
+            <h2>Continue Learning</h2>
+            <div className="panel-title-sub">Your active backend content</div>
+          </div>
+        </div>
+        <div className="grid-rooms">
+          {filteredRooms.map((room) => (
+            <Link
+              key={room.id}
+              to={`/rooms/${room.slug}`}
+              className="room-card"
+              style={{ "--room-tint": room.cover_color || "rgba(255, 86, 114, 0.22)" }}
+            >
+              <div className="room-card-top">
+                <div className="room-card-icon">{room.icon || "◈"}</div>
+                <div className="room-card-chips">
+                  <span className="chip chip-level">{levelLabels[room.level] || room.level}</span>
+                  <span className="chip chip-blue">{room.course?.title}</span>
+                </div>
+              </div>
+              <h3>{room.title}</h3>
+              <p>{room.summary}</p>
+              <div className="progress">
+                <div className="progress-track">
+                  <div className="progress-fill blue" style={{ width: `${room.progress_percent || 0}%` }} />
+                </div>
+                <div className="progress-meta">
+                  <span>{room.progress_percent || 0}% done</span>
+                  <span>{room.task_count || 0} tasks</span>
+                </div>
+              </div>
+              <div className="room-card-meta">
+                <span>{room.estimated_minutes || 0} min</span>
+                <span className="lb-xp">{room.points || 0} XP</span>
+              </div>
+            </Link>
+          ))}
+          {filteredRooms.length === 0 && <div className="empty-state panel">No rooms match the search.</div>}
+        </div>
+      </section>
+
+      <section style={{ marginBottom: 22 }}>
+        <div className="panel-title">
+          <div>
+            <h2>Learning Paths</h2>
+            <div className="panel-title-sub">Structured courses from backend plans</div>
+          </div>
+        </div>
+        <div className="grid" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))" }}>
+          {filteredPlans.map((plan) => (
+            <div key={plan.id} className="plan-card" style={{ "--plan-tint": "rgba(91, 139, 255, 0.22)" }}>
+              <div className="plan-card-head">
+                <div className="plan-card-icon">{plan.icon || "↗"}</div>
+                <span className="chip chip-accent">{levelLabels[plan.level] || plan.level}</span>
+              </div>
+              <h3>{plan.title}</h3>
+              <p>{plan.summary}</p>
+              <div className="plan-courses">
+                {(plan.courses || []).map((entry, index) => (
+                  <div key={entry.id} className="plan-course-row">
+                    <span>
+                      <span className="idx">{index + 1}</span>
+                      {entry.course.title}
+                    </span>
+                    <span>{entry.course.category || "General"}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="room-card-meta">
+                <span>{plan.room_count || 0} rooms</span>
+                <span className="lb-xp">{plan.estimated_hours || 0}h</span>
+              </div>
+            </div>
+          ))}
+          {filteredPlans.length === 0 && <div className="empty-state panel">No plans match the search.</div>}
+        </div>
+      </section>
+
+      <section style={{ marginBottom: 22 }}>
+        <div className="panel-title">
+          <div>
+            <h2>Exam Room</h2>
+            <div className="panel-title-sub">Quick access to published exams</div>
+          </div>
+        </div>
+        <div className="grid" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))" }}>
+          {filteredExams.map((exam) => (
+            <article key={exam.id} className="room-card" style={{ "--room-tint": "rgba(91, 139, 255, 0.2)" }}>
+              <div className="room-card-top">
+                <div className="room-card-icon">⌨</div>
+                <div className="room-card-chips">
+                  <span className="chip chip-level">{levelLabels[exam.level] || exam.level}</span>
+                  <span className="chip chip-blue">{exam.time_limit_minutes} min</span>
+                </div>
+              </div>
+              <h3>{exam.title}</h3>
+              <p>{exam.description}</p>
+              <div className="room-card-meta">
+                <span>{exam.course?.title}</span>
+                <span className="lb-xp">{exam.question_count || 0} questions</span>
+              </div>
+              <Link to={`/dashboard/exams/${exam.slug}`} className="btn btn-primary btn-sm">
+                Start exam
+              </Link>
+            </article>
+          ))}
+          {filteredExams.length === 0 && <div className="empty-state panel">No exams match the search.</div>}
+        </div>
+      </section>
+
+      <section style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr", gap: 22, marginBottom: 22 }}>
+        <div className="panel">
+          <div className="panel-title">
+            <div>
+              <h2>Recent Activity</h2>
+              <div className="panel-title-sub">Pulled from backend activity log</div>
+            </div>
+          </div>
+          <div className="activity-list">
+            {recentActivity.length > 0 ? (
+              recentActivity.map((item) => (
+                <div key={item.id} className="activity-item">
+                  <div className="activity-icon">{item.kind === "exam_submit" ? "⌨" : "★"}</div>
+                  <div className="activity-body">
+                    <div className="activity-title">{item.title}</div>
+                    <div className="activity-meta">{item.detail}</div>
+                  </div>
+                  <div className={`activity-xp ${item.xp_delta < 0 ? "negative" : ""}`}>
+                    {item.xp_delta > 0 ? `+${item.xp_delta}` : item.xp_delta}
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="empty-state">No recent activity yet.</div>
+            )}
+          </div>
+        </div>
+
+        <div className="panel">
+          <div className="panel-title">
+            <div>
+              <h2>Profile Snapshot</h2>
+              <div className="panel-title-sub">Rank and progress state</div>
+            </div>
+          </div>
+          <div className="profile-hero" style={{ gridTemplateColumns: "1fr", marginBottom: 0 }}>
+            <div className="profile-avatar" style={{ margin: "0 auto" }}>
+              {cabinet.username?.[0]?.toUpperCase() || "H"}
+            </div>
+            <div className="profile-meta" style={{ textAlign: "center" }}>
+              <h1 style={{ fontSize: "28px" }}>{cabinet.username}</h1>
+              <p>{cabinet.email}</p>
+              <div className="profile-meta-row" style={{ justifyContent: "center" }}>
+                <span className="chip chip-accent">{profile.rank}</span>
+                <span className="chip">{profile.streak_days || 0} day streak</span>
+              </div>
+            </div>
+            <div className="progress">
+              <div className="progress-track">
+                <div className="progress-fill blue" style={{ width: `${profile.rank_progress || 0}%` }} />
+              </div>
+              <div className="progress-meta">
+                <span>{profile.xp || 0} XP</span>
+                <span>{profile.xp_to_next || 0} to next rank</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="panel" style={{ marginBottom: 22 }}>
+        <div className="panel-title">
+          <div>
+            <h2>Recent Self-Study Activity</h2>
+            <div className="panel-title-sub">Quick view of your latest question activity</div>
+          </div>
+          <Link to="/self-study" className="btn btn-secondary btn-sm">
+            Open Self-Study
+          </Link>
+        </div>
+        <div className="activity-list">
+          {recentActivity.length > 0 ? (
+            recentActivity.slice(0, 5).map((item) => (
+              <div key={`study-${item.id}`} className="activity-item">
+                <div className="activity-icon">◍</div>
+                <div className="activity-body">
+                  <div className="activity-title">{item.title}</div>
+                  <div className="activity-meta">{item.detail || "Self-study update"}</div>
+                </div>
+                <div className={`activity-xp ${item.xp_delta < 0 ? "negative" : ""}`}>
+                  {item.xp_delta > 0 ? `+${item.xp_delta}` : item.xp_delta}
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="empty-state">No self-study activity yet.</div>
+          )}
+        </div>
+      </section>
+    </AppShell>
   );
 }

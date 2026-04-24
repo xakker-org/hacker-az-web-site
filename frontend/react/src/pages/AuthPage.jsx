@@ -1,5 +1,5 @@
-import { useState, useMemo } from "react";
-import { useNavigate, useParams, Link } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import api from "../services/api";
 import { setTokens } from "../utils/tokens";
 import "../styles/auth.css";
@@ -7,7 +7,8 @@ import "../styles/auth.css";
 export default function AuthPage() {
   const navigate = useNavigate();
   const { mode = "login" } = useParams();
-  const [activeTab, setActiveTab] = useState(mode || "login");
+  const normalizeMode = (value) => (value === "register" ? "register" : "login");
+  const [activeTab, setActiveTab] = useState(normalizeMode(mode));
   const [logoSrc, setLogoSrc] = useState("/static/logo/xakkerLogoWhite2.png");
 
   const [form, setForm] = useState({
@@ -23,8 +24,59 @@ export default function AuthPage() {
 
   const isLogin = activeTab === "login";
 
+  useEffect(() => {
+    document.body.classList.add("self-study-body");
+    return () => document.body.classList.remove("self-study-body");
+  }, []);
+
+  useEffect(() => {
+    const normalized = normalizeMode(mode);
+    if (normalized !== activeTab) {
+      setActiveTab(normalized);
+    }
+  }, [mode, activeTab]);
+
   const handleLogoError = () => {
-    setLogoSrc("/static/logo/xakkerLogoWhite2.png");
+    setLogoSrc("/static/logo/logoXakker.png");
+  };
+
+  const switchMode = (nextMode) => {
+    const normalized = normalizeMode(nextMode);
+    setActiveTab(normalized);
+    setError("");
+    setSuccess("");
+    setForm((prev) => ({
+      ...prev,
+      password: "",
+      confirmPassword: "",
+    }));
+    navigate(`/auth/${normalized}`, { replace: true });
+  };
+
+  const getRequestErrorMessage = (requestError, fallback) => {
+    const payload = requestError?.response?.data;
+    if (!payload) {
+      return fallback;
+    }
+
+    if (typeof payload === "string") {
+      return payload;
+    }
+
+    if (payload.detail) {
+      return payload.detail;
+    }
+
+    if (Array.isArray(payload.non_field_errors) && payload.non_field_errors[0]) {
+      return payload.non_field_errors[0];
+    }
+
+    const firstFieldError = Object.values(payload).find((value) => Array.isArray(value) && value[0]);
+    if (firstFieldError) {
+      return firstFieldError[0];
+    }
+
+    return fallback;
   };
 
   const title = useMemo(
@@ -75,19 +127,23 @@ export default function AuthPage() {
           password: form.password,
         });
 
-        setSuccess("Account created! Logging you in...");
-        setTimeout(() => {
-          setActiveTab("login");
-          setForm({ username: form.username, password: form.password, email: "", confirmPassword: "" });
-        }, 1000);
+        const { data } = await api.post("/auth/login/", {
+          username: form.username,
+          password: form.password,
+        });
+        setTokens(data.access, data.refresh);
+
+        setSuccess("Account created! Redirecting to dashboard...");
+        setTimeout(() => navigate("/dashboard"), 900);
       }
     } catch (requestError) {
-      const responseMessage = requestError?.response?.data?.detail || requestError?.response?.data?.non_field_errors?.[0];
       setError(
-        responseMessage ||
-          (isLogin
+        getRequestErrorMessage(
+          requestError,
+          isLogin
             ? "Invalid username or password"
-            : "Registration failed. Username may already exist.")
+            : "Registration failed. Username may already exist."
+        )
       );
     } finally {
       setLoading(false);
@@ -178,23 +234,15 @@ export default function AuthPage() {
             <div className="auth-tabs">
               <button
                 className={`tab ${activeTab === "login" ? "active" : ""}`}
-                onClick={() => {
-                  setActiveTab("login");
-                  setError("");
-                  setSuccess("");
-                  setForm({ ...form, password: "", email: "", confirmPassword: "" });
-                }}
+                type="button"
+                onClick={() => switchMode("login")}
               >
                 Login
               </button>
               <button
                 className={`tab ${activeTab === "register" ? "active" : ""}`}
-                onClick={() => {
-                  setActiveTab("register");
-                  setError("");
-                  setSuccess("");
-                  setForm({ ...form, password: "", email: "" });
-                }}
+                type="button"
+                onClick={() => switchMode("register")}
               >
                 Register
               </button>
@@ -278,7 +326,7 @@ export default function AuthPage() {
               {/* Forgot Password Link (Login Only) */}
               {isLogin && (
                 <div className="forgot-password">
-                  <Link to="/forgot-password">Forgot your password?</Link>
+                  <span>Account recovery is handled by support for now.</span>
                 </div>
               )}
 
@@ -301,26 +349,11 @@ export default function AuthPage() {
                     : "Create Account"}
               </button>
 
-              {/* Social Auth (Optional) */}
-              <div className="social-divider">
-                <span>or continue with</span>
-              </div>
-
-              <div className="social-buttons">
-                <button type="button" className="social-btn">
-                  <span>Google</span>
-                </button>
-                <button type="button" className="social-btn">
-                  <span>GitHub</span>
-                </button>
-              </div>
-
               {/* Terms & Conditions (Register Only) */}
               {!isLogin && (
                 <p className="terms-text">
-                  By creating an account, you agree to our{" "}
-                  <a href="/terms">Terms of Service</a> and{" "}
-                  <a href="/privacy">Privacy Policy</a>
+                  By creating an account, you confirm the profile will be used only for self-study access,
+                  progress tracking, and exam workflows.
                 </p>
               )}
 
@@ -330,7 +363,7 @@ export default function AuthPage() {
                 <button
                   type="button"
                   className="switch-btn"
-                  onClick={() => setActiveTab(isLogin ? "register" : "login")}
+                  onClick={() => switchMode(isLogin ? "register" : "login")}
                 >
                   {isLogin ? "Register now" : "Sign in"}
                 </button>

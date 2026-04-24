@@ -20,6 +20,11 @@ export default function ExamAttemptPage() {
   const [error, setError] = useState("");
   const [result, setResult] = useState(null);
 
+  const isAuthError = (requestError) => {
+    const status = requestError?.response?.status;
+    return status === 401 || status === 403;
+  };
+
   useEffect(() => {
     if (!getAccessToken()) {
       navigate("/auth/login");
@@ -57,9 +62,13 @@ export default function ExamAttemptPage() {
         if (!mounted) {
           return;
         }
-        setError("İmtahan açılmadı. Sessiyanı yenilə və ya yenidən daxil ol.");
-        clearTokens();
-        navigate("/auth/login");
+        if (isAuthError(requestError)) {
+          setError("Sessiya bitib. Yenidən daxil ol.");
+          clearTokens();
+          navigate("/auth/login");
+        } else {
+          setError("İmtahan açılmadı. İnterneti yoxla və yenidən cəhd et.");
+        }
       } finally {
         if (mounted) {
           setLoading(false);
@@ -85,6 +94,14 @@ export default function ExamAttemptPage() {
 
     return () => window.clearInterval(timer);
   }, [exam]);
+
+  useEffect(() => {
+    if (secondsLeft === 0 && exam && attempt && !result) {
+      submitExam();
+    }
+    // submitExam dependency intentionally omitted to prevent timer loop
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [secondsLeft, exam, attempt, result]);
 
   const questionEntries = exam?.questions || [];
   const activeEntry = questionEntries[activeQuestionIndex];

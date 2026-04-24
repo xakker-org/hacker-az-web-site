@@ -1,11 +1,27 @@
 from django.urls import path
 from rest_framework_simplejwt.views import TokenRefreshView
 
-from .views import ClientTokenObtainPairView, MeView, RegisterView
+from .views import (
+    BadgeListView,
+    ClientTokenObtainPairView,
+    LeaderboardView,
+    MeView,
+    MyActivityView,
+    MyBadgesView,
+    MyProfileView,
+    PublicProfileView,
+    RegisterView,
+)
 
 urlpatterns = [
     path("register/", RegisterView.as_view(), name="register"),
     path("login/", ClientTokenObtainPairView.as_view(), name="token_obtain_pair"),
     path("refresh/", TokenRefreshView.as_view(), name="token_refresh"),
     path("me/", MeView.as_view(), name="me"),
+    path("profile/", MyProfileView.as_view(), name="my-profile"),
+    path("profile/<str:username>/", PublicProfileView.as_view(), name="public-profile"),
+    path("activity/", MyActivityView.as_view(), name="my-activity"),
+    path("badges/", BadgeListView.as_view(), name="badges"),
+    path("badges/mine/", MyBadgesView.as_view(), name="my-badges"),
+    path("leaderboard/", LeaderboardView.as_view(), name="leaderboard"),
 ]

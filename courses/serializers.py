@@ -1,6 +1,7 @@
 from rest_framework import serializers
+
 from .models import (
-    AttemptStatusChoices,
+    Category,
     Course,
     Exam,
     ExamAttempt,
@@ -11,8 +12,33 @@ from .models import (
     LearningPlanCourse,
     Lesson,
     Question,
+    QuestionAttempt,
     QuestionChoice,
+    Room,
+    RoomTag,
+    Task,
+    TaskQuestion,
+    TaskQuestionChoice,
+    UserQuestionAttempt,
+    UserTaskProgress,
 )
+
+
+# ----- Shared primitives -----
+
+class CategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Category
+        fields = ["id", "name", "slug", "icon", "color", "description"]
+
+
+class RoomTagSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = RoomTag
+        fields = ["id", "name", "slug"]
+
+
+# ----- Courses / plans / lessons -----
 
 class LessonSerializer(serializers.ModelSerializer):
     class Meta:
@@ -25,7 +51,7 @@ class CourseSummarySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Course
-        fields = ["id", "title", "slug", "description", "category"]
+        fields = ["id", "title", "slug", "description", "category", "icon"]
 
 
 class LearningPlanCourseSerializer(serializers.ModelSerializer):
@@ -38,15 +64,234 @@ class LearningPlanCourseSerializer(serializers.ModelSerializer):
 
 class LearningPlanSerializer(serializers.ModelSerializer):
     courses = serializers.SerializerMethodField()
+    room_count = serializers.SerializerMethodField()
 
     class Meta:
         model = LearningPlan
-        fields = ["id", "title", "slug", "summary", "level", "is_featured", "courses"]
+        fields = [
+            "id",
+            "title",
+            "slug",
+            "summary",
+            "description",
+            "icon",
+            "level",
+            "estimated_hours",
+            "is_featured",
+            "courses",
+            "room_count",
+        ]
 
     def get_courses(self, obj):
         items = obj.learningplancourse_set.select_related("course", "course__category").order_by("order", "id")
         return LearningPlanCourseSerializer(items, many=True).data
 
+    def get_room_count(self, obj):
+        return Room.objects.filter(course__learning_plans=obj, is_published=True).distinct().count()
+
+
+# ----- Rooms / tasks -----
+
+class TaskQuestionChoicePublicSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TaskQuestionChoice
+        fields = ["id", "text", "order"]
+
+
+class TaskQuestionPublicSerializer(serializers.ModelSerializer):
+    choices = TaskQuestionChoicePublicSerializer(many=True, read_only=True)
+    has_hint = serializers.SerializerMethodField()
+    user_state = serializers.SerializerMethodField()
+
+    class Meta:
+        model = TaskQuestion
+        fields = [
+            "id",
+            "prompt",
+            "kind",
+            "points",
+            "order",
+            "hint_cost",
+            "has_hint",
+            "choices",
+            "user_state",
+        ]
+
+    def get_has_hint(self, obj):
+        return bool(obj.hint)
+
+    def get_user_state(self, obj):
+        user = self.context.get("request").user if self.context.get("request") else None
+        if not user or not user.is_authenticated:
+            return None
+        last = (
+            UserQuestionAttempt.objects.filter(user=user, question=obj)
+            .order_by("-attempted_at")
+            .first()
+        )
+        if not last:
+            return None
+        return {
+            "is_correct": last.is_correct,
+            "submitted_answer": last.submitted_answer,
+            "awarded_points": last.awarded_points,
+            "hint_used": last.hint_used,
+            "attempted_at": last.attempted_at,
+        }
+
+
+class TaskListSerializer(serializers.ModelSerializer):
+    question_count = serializers.IntegerField(source="questions.count", read_only=True)
+    completed = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Task
+        fields = ["id", "title", "slug", "order", "points", "question_count", "completed"]
+
+    def get_completed(self, obj):
+        user = self.context.get("request").user if self.context.get("request") else None
+        if not user or not user.is_authenticated:
+            return False
+        progress = next((p for p in getattr(obj, "_progress_prefetch", []) if p.user_id == user.id), None)
+        if progress:
+            return progress.completed
+        return UserTaskProgress.objects.filter(user=user, task=obj, completed=True).exists()
+
+
+class TaskDetailSerializer(serializers.ModelSerializer):
+    questions = TaskQuestionPublicSerializer(many=True, read_only=True)
+    completed = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Task
+        fields = ["id", "title", "slug", "content", "order", "points", "questions", "completed"]
+
+    def get_completed(self, obj):
+        user = self.context.get("request").user if self.context.get("request") else None
+        if not user or not user.is_authenticated:
+            return False
+        return UserTaskProgress.objects.filter(user=user, task=obj, completed=True).exists()
+
+
+class RoomListSerializer(serializers.ModelSerializer):
+    course = CourseSummarySerializer(read_only=True)
+    tags = RoomTagSerializer(many=True, read_only=True)
+    task_count = serializers.IntegerField(source="tasks.count", read_only=True)
+    progress_percent = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Room
+        fields = [
+            "id",
+            "title",
+            "slug",
+            "summary",
+            "icon",
+            "cover_color",
+            "level",
+            "estimated_minutes",
+            "points",
+            "is_premium",
+            "course",
+            "tags",
+            "task_count",
+            "progress_percent",
+        ]
+
+    def get_progress_percent(self, obj):
+        user = self.context.get("request").user if self.context.get("request") else None
+        if not user or not user.is_authenticated:
+            return 0
+        total = obj.tasks.count()
+        if not total:
+            return 0
+        done = UserTaskProgress.objects.filter(user=user, task__room=obj, completed=True).count()
+        return round((done / total) * 100)
+
+
+class RoomDetailSerializer(serializers.ModelSerializer):
+    course = CourseSummarySerializer(read_only=True)
+    tags = RoomTagSerializer(many=True, read_only=True)
+    tasks = serializers.SerializerMethodField()
+    progress_percent = serializers.SerializerMethodField()
+    completed_tasks = serializers.SerializerMethodField()
+    total_points = serializers.SerializerMethodField()
+    earned_points = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Room
+        fields = [
+            "id",
+            "title",
+            "slug",
+            "summary",
+            "description",
+            "icon",
+            "cover_color",
+            "level",
+            "estimated_minutes",
+            "points",
+            "is_premium",
+            "course",
+            "tags",
+            "tasks",
+            "progress_percent",
+            "completed_tasks",
+            "total_points",
+            "earned_points",
+        ]
+
+    def get_tasks(self, obj):
+        tasks = obj.tasks.prefetch_related("questions", "questions__choices").all()
+        return TaskListSerializer(tasks, many=True, context=self.context).data
+
+    def _user_progress_qs(self, obj):
+        user = self.context.get("request").user if self.context.get("request") else None
+        if not user or not user.is_authenticated:
+            return UserTaskProgress.objects.none()
+        return UserTaskProgress.objects.filter(user=user, task__room=obj)
+
+    def get_progress_percent(self, obj):
+        total = obj.tasks.count()
+        if not total:
+            return 0
+        done = self._user_progress_qs(obj).filter(completed=True).count()
+        return round((done / total) * 100)
+
+    def get_completed_tasks(self, obj):
+        return self._user_progress_qs(obj).filter(completed=True).count()
+
+    def get_total_points(self, obj):
+        return sum(task.points for task in obj.tasks.all()) + sum(
+            q.points for task in obj.tasks.all() for q in task.questions.all()
+        )
+
+    def get_earned_points(self, obj):
+        return sum(p.earned_points for p in self._user_progress_qs(obj))
+
+
+# ----- Task answer submission -----
+
+class TaskAnswerSubmitSerializer(serializers.Serializer):
+    question_id = serializers.IntegerField()
+    answer = serializers.CharField(allow_blank=True, required=False, default="")
+    selected_choice = serializers.IntegerField(required=False, allow_null=True)
+    use_hint = serializers.BooleanField(required=False, default=False)
+
+
+class TaskAnswerResultSerializer(serializers.Serializer):
+    is_correct = serializers.BooleanField(allow_null=True)
+    awarded_points = serializers.IntegerField()
+    xp_delta = serializers.IntegerField()
+    explanation = serializers.CharField(allow_blank=True)
+    hint = serializers.CharField(allow_blank=True, required=False)
+    task_completed = serializers.BooleanField()
+    room_completed = serializers.BooleanField()
+    badges_earned = serializers.ListField(child=serializers.DictField(), required=False)
+    new_rank = serializers.CharField(allow_null=True, required=False)
+
+
+# ----- Legacy Question/Exam serializers -----
 
 class QuestionChoiceSerializer(serializers.ModelSerializer):
     class Meta:
@@ -71,6 +316,98 @@ class QuestionSerializer(serializers.ModelSerializer):
             "explanation",
             "choices",
         ]
+
+
+class QuestionListSerializer(serializers.ModelSerializer):
+    course = CourseSummarySerializer(read_only=True)
+    user_status = serializers.SerializerMethodField()
+    attempt_count = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Question
+        fields = ["id", "title", "question_type", "level", "points", "course", "user_status", "attempt_count"]
+
+    def get_user_status(self, obj):
+        request = self.context.get("request")
+        user = getattr(request, "user", None)
+        if not user or not user.is_authenticated:
+            return "pending"
+        attempts = QuestionAttempt.objects.filter(user=user, question=obj)
+        if not attempts.exists():
+            return "pending"
+        if attempts.filter(is_correct=True).exists():
+            return "correct"
+        return "wrong"
+
+    def get_attempt_count(self, obj):
+        request = self.context.get("request")
+        user = getattr(request, "user", None)
+        if not user or not user.is_authenticated:
+            return 0
+        return QuestionAttempt.objects.filter(user=user, question=obj).count()
+
+
+class QuestionDetailSerializer(serializers.ModelSerializer):
+    course = CourseSummarySerializer(read_only=True)
+    choices = QuestionChoiceSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Question
+        fields = [
+            "id",
+            "title",
+            "prompt",
+            "question_type",
+            "level",
+            "points",
+            "course",
+            "starter_code",
+            "explanation",
+            "choices",
+        ]
+
+
+class QuestionAttemptSerializer(serializers.ModelSerializer):
+    question = serializers.PrimaryKeyRelatedField(read_only=True)
+
+    class Meta:
+        model = QuestionAttempt
+        fields = [
+            "id",
+            "question",
+            "submitted_answer",
+            "is_correct",
+            "points_awarded",
+            "attempt_number",
+            "hint_used",
+            "attempted_at",
+        ]
+
+
+class UserProgressSerializer(serializers.Serializer):
+    total_questions = serializers.IntegerField()
+    answered_questions = serializers.IntegerField()
+    correct_answers = serializers.IntegerField()
+    total_attempts = serializers.IntegerField()
+    total_points_earned = serializers.IntegerField()
+    accuracy_percent = serializers.FloatField()
+
+
+class QuestionAnswerSubmitSerializer(serializers.Serializer):
+    answer_text = serializers.CharField(required=False, allow_blank=True, default="")
+    selected_choice_id = serializers.IntegerField(required=False, allow_null=True)
+    selected_choice_ids = serializers.ListField(
+        child=serializers.IntegerField(), required=False, allow_empty=True
+    )
+    hint_used = serializers.BooleanField(required=False, default=False)
+
+    def validate(self, attrs):
+        has_text = bool((attrs.get("answer_text") or "").strip())
+        has_single = attrs.get("selected_choice_id") is not None
+        has_many = bool(attrs.get("selected_choice_ids"))
+        if not (has_text or has_single or has_many):
+            raise serializers.ValidationError("Provide answer_text or selected_choice_id(s).")
+        return attrs
 
 
 class ExamQuestionSerializer(serializers.ModelSerializer):
@@ -165,6 +502,8 @@ class ExamAttemptSerializer(serializers.ModelSerializer):
         ]
 
 
+# ----- Cabinet / course list / enrollment -----
+
 class CabinetSummarySerializer(serializers.Serializer):
     username = serializers.CharField()
     email = serializers.CharField(allow_blank=True)
@@ -173,27 +512,38 @@ class CabinetSummarySerializer(serializers.Serializer):
     is_superuser = serializers.BooleanField()
     enrolled_courses = CourseSummarySerializer(many=True)
     plans = LearningPlanSerializer(many=True)
+    rooms = RoomListSerializer(many=True)
+    recommended_rooms = RoomListSerializer(many=True)
     exams = ExamListSerializer(many=True)
+    profile = serializers.DictField()
+    recent_activity = serializers.ListField(child=serializers.DictField())
     stats = serializers.DictField()
-    question_type_breakdown = serializers.DictField()
-    question_level_breakdown = serializers.DictField()
+
 
 class CourseListSerializer(serializers.ModelSerializer):
     category = serializers.StringRelatedField()
+    room_count = serializers.IntegerField(source="rooms.count", read_only=True)
 
     class Meta:
         model = Course
-        fields = ["id", "title", "slug", "description", "category"]
+        fields = ["id", "title", "slug", "description", "category", "icon", "room_count"]
+
 
 class CourseDetailSerializer(serializers.ModelSerializer):
     lessons = LessonSerializer(many=True, read_only=True)
     category = serializers.StringRelatedField()
     exams = ExamListSerializer(many=True, read_only=True)
     learning_plans = LearningPlanSerializer(many=True, read_only=True)
+    rooms = serializers.SerializerMethodField()
 
     class Meta:
         model = Course
-        fields = ["id", "title", "slug", "description", "category", "lessons", "exams", "learning_plans"]
+        fields = ["id", "title", "slug", "description", "category", "icon", "lessons", "exams", "learning_plans", "rooms"]
+
+    def get_rooms(self, obj):
+        rooms = obj.rooms.filter(is_published=True).prefetch_related("tags").order_by("order", "id")
+        return RoomListSerializer(rooms, many=True, context=self.context).data
+
 
 class EnrollmentSerializer(serializers.ModelSerializer):
     class Meta:
