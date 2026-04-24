@@ -94,52 +94,52 @@ export default function LandingPage() {
       {/* Hero Section */}
       <section className="hero" id="hero" style={{ backgroundPositionY: `${scrollY * 0.5}px` }}>
         <div className="hero-content container">
-          <div className="hero-brand">
-            <div className="hero-brand-mark">
-              <img
-                src={logoSrc}
-                alt="Xakker logo"
-                className="brand-mark-image"
-                onError={handleLogoError}
-              />
-            </div>
-            <div className="hero-brand-copy">
-              <span className="hero-brand-kicker">Xakker Self Study</span>
-              <p>Black, navy and ice-blue cybersecurity training.</p>
-            </div>
-          </div>
-          <div className="hero-text">
-            <h1 className="slide-up">
-              Master Cybersecurity <span className="text-gradient">With a Clean, Dark Edge</span>
-            </h1>
-            <p className="hero-subtitle">
-              Black. Dark Navy. White. Light Blue.
-            </p>
-            <p className="hero-description">
-              Hands-on labs, structured roadmaps, and real-world cyber skills wrapped in a sharp, high-contrast interface that keeps the focus on learning.
-            </p>
-            <div className="hero-actions">
-              <Link to="/auth/register" className="btn btn-primary btn-lg">
-                Start Learning
-              </Link>
-              <Link to="#courses" className="btn btn-outline btn-lg">
-                Explore Programs
-              </Link>
-            </div>
-            <p className="hero-meta">
-              ✓ No credit card required • ✓ 7-day free trial • ✓ Certification included
-            </p>
-          </div>
-          <div className="hero-visual">
-            <div className="logo-showcase">
-              <div className="logo-orb">
+          <div className="hero-left">
+            <div className="hero-brand">
+              <div className="hero-brand-mark">
                 <img
                   src={logoSrc}
                   alt="Xakker logo"
-                  className="logo-orb-mark"
+                  className="brand-mark-image"
                   onError={handleLogoError}
                 />
               </div>
+              <div className="hero-brand-copy">
+                <span className="hero-brand-kicker">Xakker Self Study</span>
+                <p>Black, navy and ice-blue cybersecurity training.</p>
+              </div>
+            </div>
+            <div className="hero-text">
+              <h1 className="slide-up">
+                Master Cybersecurity <span className="text-gradient">With a Clean, Dark Edge</span>
+              </h1>
+              <p className="hero-subtitle">
+                Black. Dark Navy. White. Light Blue.
+              </p>
+              <p className="hero-description">
+                Hands-on labs, structured roadmaps, and real-world cyber skills wrapped in a sharp, high-contrast interface that keeps the focus on learning.
+              </p>
+              <div className="hero-actions">
+                <Link to="/auth/register" className="btn btn-primary btn-lg">
+                  Start Learning
+                </Link>
+                <Link to="#courses" className="btn btn-outline btn-lg">
+                  Explore Programs
+                </Link>
+              </div>
+              <p className="hero-meta">
+                ✓ No credit card required • ✓ 7-day free trial • ✓ Certification included
+              </p>
+            </div>
+          </div>
+          <div className="hero-visual">
+            <div className="az-map-wrap">
+              <div className="az-map-glow" />
+              <img
+                src="/static/logo/azerbaijan_map.png"
+                alt="Azerbaijan"
+                className="az-map-img"
+              />
               <div className="floating-card floating-card-top">
                 <span className="floating-card-label">Live labs</span>
                 <strong>250+ cyber scenarios</strong>

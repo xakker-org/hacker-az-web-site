@@ -55,14 +55,17 @@
   z-index: 2;
 }
 
+.hero-left {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xl);
+}
+
 .hero-brand {
-  grid-column: 1 / -1;
   display: flex;
   align-items: center;
   gap: var(--space-lg);
-  max-width: 560px;
   padding: var(--space-lg) var(--space-xl);
-  margin-bottom: var(--space-lg);
   border: 1px solid rgba(159, 232, 255, 0.18);
   border-radius: var(--radius-xl);
   background: rgba(5, 10, 18, 0.58);
@@ -151,7 +154,7 @@
 
 .hero-visual {
   position: relative;
-  height: 400px;
+  min-height: 420px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -245,6 +248,45 @@
 .floating-card-bottom {
   bottom: 18px;
   left: 0;
+}
+
+/* Azerbaijan map showcase */
+.az-map-wrap {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.az-map-glow {
+  position: absolute;
+  inset: -20%;
+  background: radial-gradient(ellipse at center, rgba(0, 194, 255, 0.18) 0%, rgba(53, 103, 168, 0.12) 45%, transparent 75%);
+  filter: blur(40px);
+  z-index: 0;
+  pointer-events: none;
+}
+
+.az-map-img {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 580px;
+  height: auto;
+  opacity: 0.48;
+  filter:
+    drop-shadow(0 0 36px rgba(0, 194, 255, 0.6))
+    drop-shadow(0 0 80px rgba(159, 232, 255, 0.3))
+    brightness(1.5)
+    saturate(0.25);
+  animation: mapPulse 6s ease-in-out infinite;
+}
+
+@keyframes mapPulse {
+  0%, 100% { opacity: 0.48; filter: drop-shadow(0 0 36px rgba(0, 194, 255, 0.6)) drop-shadow(0 0 80px rgba(159, 232, 255, 0.3)) brightness(1.5) saturate(0.25); }
+  50%       { opacity: 0.60; filter: drop-shadow(0 0 52px rgba(0, 194, 255, 0.8)) drop-shadow(0 0 110px rgba(159, 232, 255, 0.45)) brightness(1.7) saturate(0.3); }
 }
 
 .hero-glow {
@@ -822,16 +864,17 @@
     gap: var(--space-2xl);
   }
 
+  .hero-left {
+    gap: var(--space-lg);
+  }
+
   .hero-visual {
-    height: 250px;
+    min-height: 280px;
   }
 
-  .logo-showcase {
-    min-height: 260px;
-  }
-
-  .logo-orb {
-    width: min(100%, 310px);
+  .az-map-img {
+    max-width: 320px;
+    opacity: 0.25;
   }
 
   .comparison-grid {
