@@ -444,6 +444,44 @@ h5 {
   background: rgba(255, 255, 255, 0.06);
 }
 
+/* Language toggle */
+.lang-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.04);
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.lang-toggle:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+.lang-label {
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: rgba(255, 255, 255, 0.35);
+  transition: color 0.2s;
+}
+
+.lang-label.is-active {
+  color: #fff;
+}
+
+.lang-toggle-sep {
+  width: 1px;
+  height: 11px;
+  background: rgba(255, 255, 255, 0.18);
+  flex-shrink: 0;
+}
+
 /* Hamburger toggle */
 .nav-toggle {
   display: none;
@@ -596,6 +634,11 @@ h5 {
   gap: 28px;
   position: relative;
   z-index: 2;
+  padding-left: clamp(0px, 10vw, 140px);
+  padding-right: clamp(0px, 4vw, 60px);
+  max-width: 860px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .hero .eyebrow {
@@ -609,6 +652,7 @@ h5 {
 .hero .lede {
   margin: 0;
   text-align: center;
+  max-width: 560px;
 }
 
 .cta-row {
@@ -625,25 +669,29 @@ h5 {
 /* Azerbaijan map — tam arxa plan */
 .hero-az-bg {
   position: absolute;
-  inset: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   z-index: 1;
   display: flex;
   align-items: flex-start;
   justify-content: center;
   pointer-events: none;
-  padding-top: 0%;
-  margin-top: -6%;
+  /* Header altında şəffaf, sonra görünür, aşağıda yox olur */
   -webkit-mask-image: linear-gradient(to bottom,
-    transparent 0%,
-    black 10%,
-    black 48%,
-    transparent 78%
+    transparent 0px,
+    transparent 70px,
+    black 130px,
+    black 55%,
+    transparent 82%
   );
   mask-image: linear-gradient(to bottom,
-    transparent 0%,
-    black 10%,
-    black 48%,
-    transparent 78%
+    transparent 0px,
+    transparent 70px,
+    black 130px,
+    black 55%,
+    transparent 82%
   );
 }
 
@@ -1873,6 +1921,28 @@ h5 {
 
   .mobile-nav {
     border-radius: 18px;
+  }
+
+  .hero-az-bg {
+    -webkit-mask-image: linear-gradient(to bottom,
+      transparent 0px,
+      transparent 60px,
+      black 110px,
+      black 55%,
+      transparent 80%
+    );
+    mask-image: linear-gradient(to bottom,
+      transparent 0px,
+      transparent 60px,
+      black 110px,
+      black 55%,
+      transparent 80%
+    );
+  }
+
+  .hero-inner {
+    padding-left: 0;
+    padding-right: 0;
   }
 
   .feature-grid {

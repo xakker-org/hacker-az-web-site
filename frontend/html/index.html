@@ -5,17 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" type="image/png" href="/static/logo/logoXakker.png" />
 
-    <title>Xakker.org | Azerbaijan Cyber Security</title>
-    <meta
-      name="description"
-      content="Azerbaycan ucun modern cyber security self-study platformasi"
-    />
+    <title data-i18n-title-az="Xakker.org | Azərbaycan Kibertəhlükəsizliyi" data-i18n-title-en="Xakker.org | Azerbaijan Cyber Security">Xakker.org | Azərbaycan Kibertəhlükəsizliyi</title>
+    <meta name="description" content="Azərbaycan üçün müasir kibertəhlükəsizlik self-study platforması" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@500;600;700;800&display=swap"
-      rel="stylesheet"
-    />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@500;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="/static/css/landing.css" />
   </head>
   <body>
@@ -29,15 +23,20 @@
           <img src="/static/logo/xakkerLogoWhite2.png" alt="Xakker" />
         </a>
         <nav class="primary-nav" aria-label="Primary">
-          <a href="#features">Platforma</a>
-          <a href="#showcase">Product</a>
-          <a href="#process">Process</a>
-          <a href="#testimonials">Feedback</a>
+          <a href="#features"   data-i18n="nav-platform">Platforma</a>
+          <a href="#showcase"   data-i18n="nav-product">Məhsul</a>
+          <a href="#process"    data-i18n="nav-process">Proses</a>
+          <a href="#testimonials" data-i18n="nav-feedback">Rəylər</a>
           <a href="#faq">FAQ</a>
         </nav>
         <div class="header-actions">
-          <a class="link-quiet" href="http://self-study.xakker.org:8000/auth/login" target="_blank" rel="noreferrer">Login</a>
-          <a class="btn btn-primary btn-sm" href="http://self-study.xakker.org:8000/auth/register" target="_blank" rel="noreferrer">Get started</a>
+          <button class="lang-toggle" id="lang-toggle" aria-label="Dili dəyiş">
+            <span class="lang-label lang-az-label is-active">AZ</span>
+            <span class="lang-toggle-sep"></span>
+            <span class="lang-label lang-en-label">EN</span>
+          </button>
+          <a class="link-quiet" href="http://self-study.xakker.org:8000/auth/login" target="_blank" rel="noreferrer" data-i18n="nav-login">Daxil ol</a>
+          <a class="btn btn-primary btn-sm" href="http://self-study.xakker.org:8000/auth/register" target="_blank" rel="noreferrer" data-i18n="nav-getstarted">Başla</a>
           <button class="nav-toggle" aria-label="Menyu" aria-expanded="false" aria-controls="mobile-nav">
             <span></span>
             <span></span>
@@ -47,15 +46,15 @@
       </div>
       <div class="mobile-nav" id="mobile-nav" aria-hidden="true">
         <nav aria-label="Mobile">
-          <a href="#features">Platforma</a>
-          <a href="#showcase">Product</a>
-          <a href="#process">Process</a>
-          <a href="#testimonials">Feedback</a>
+          <a href="#features"     data-i18n="nav-platform">Platforma</a>
+          <a href="#showcase"     data-i18n="nav-product">Məhsul</a>
+          <a href="#process"      data-i18n="nav-process">Proses</a>
+          <a href="#testimonials" data-i18n="nav-feedback">Rəylər</a>
           <a href="#faq">FAQ</a>
         </nav>
         <div class="mobile-nav-actions">
-          <a class="btn btn-ghost btn-block" href="http://self-study.xakker.org:8000/auth/login" target="_blank" rel="noreferrer">Login</a>
-          <a class="btn btn-primary btn-block" href="http://self-study.xakker.org:8000/auth/register" target="_blank" rel="noreferrer">Get started</a>
+          <a class="btn btn-ghost btn-block" href="http://self-study.xakker.org:8000/auth/login" target="_blank" rel="noreferrer" data-i18n="nav-login">Daxil ol</a>
+          <a class="btn btn-primary btn-block" href="http://self-study.xakker.org:8000/auth/register" target="_blank" rel="noreferrer" data-i18n="nav-getstarted">Başla</a>
         </div>
       </div>
     </header>
@@ -68,23 +67,23 @@
         </div>
 
         <div class="container hero-inner">
-          <span class="eyebrow">Azerbaijan Cyber Security Ecosystem</span>
-          <h1 class="display">
-            Nazariyye yox,
+          <span class="eyebrow" data-i18n="hero-eyebrow">Azərbaycan Kibertəhlükəsizlik Ekosistemi</span>
+          <h1 class="display" data-i18n="hero-h1">
+            Nəzəriyyə yox,
             <span class="accent">real defense</span>
-            bacarigi qazan.
+            bacarığı qazan.
           </h1>
-          <p class="lede">
-            SOC, red team, cloud security ve appsec uzre praktik self-study flow.
-            Her modul real senari, mentor feedback ve challenge tabanli iralileme
-            mentiqi ile qurulub.
+          <p class="lede" data-i18n="hero-lede">
+            SOC, red team, cloud security və appsec üzrə praktik self-study axını.
+            Hər modul real ssenari, mentor rəyi və challenge əsaslı irəliləmə
+            məntiqi ilə qurulub.
           </p>
           <div class="cta-row center">
-            <a class="btn btn-primary" href="http://self-study.xakker.org:8000" target="_blank" rel="noreferrer">
-              Platformaya kec
+            <a class="btn btn-primary" href="http://self-study.xakker.org:8000" target="_blank" rel="noreferrer" data-i18n="hero-cta1">
+              Platformaya keç
               <span class="btn-arrow" aria-hidden="true">&rarr;</span>
             </a>
-            <a class="btn btn-ghost" href="#showcase">Demo gor</a>
+            <a class="btn btn-ghost" href="#showcase" data-i18n="hero-cta2">Demonu gör</a>
           </div>
         </div>
 
@@ -158,10 +157,10 @@
         </div>
       </section>
 
-      <!-- 2. TRUST / SOCIAL PROOF -->
+      <!-- 2. TRUST -->
       <section class="trust reveal" aria-label="Trusted by">
         <div class="container">
-          <p class="trust-title">Azerbaycan techno ecosystem ile birlikde qurulur</p>
+          <p class="trust-title" data-i18n="trust-title">Azərbaycan texno ekosistemi ilə birlikdə qurulur</p>
           <div class="trust-logos">
             <span class="trust-logo">SABAH Hub</span>
             <span class="trust-logo">Innoland</span>
@@ -173,19 +172,19 @@
           <div class="trust-stats">
             <div>
               <p class="stat-value">10k+</p>
-              <p class="stat-label">Active learners</p>
+              <p class="stat-label" data-i18n="stat1">Aktiv öyrənən</p>
             </div>
             <div>
               <p class="stat-value">95%</p>
-              <p class="stat-label">Mission completion</p>
+              <p class="stat-label" data-i18n="stat2">Mission tamamlama</p>
             </div>
             <div>
               <p class="stat-value">4.9<small>/5</small></p>
-              <p class="stat-label">Mentor rating</p>
+              <p class="stat-label" data-i18n="stat3">Mentor reytinqi</p>
             </div>
             <div>
               <p class="stat-value">30+</p>
-              <p class="stat-label">Live challenges</p>
+              <p class="stat-label" data-i18n="stat4">Canlı challenge</p>
             </div>
           </div>
         </div>
@@ -195,11 +194,11 @@
       <section class="features reveal" id="features">
         <div class="container">
           <div class="section-head">
-            <span class="eyebrow">Platform</span>
-            <h2 class="section-title">Hardan bawla, nece inkisaf et.</h2>
-            <p class="section-sub">
-              Oyrenmek ucun lazim olan her sey bir yerde &mdash; praktik lablar,
-              mentor feedback, simulasiyalar ve portfolio hazirligi.
+            <span class="eyebrow" data-i18n="feat-eyebrow">Platforma</span>
+            <h2 class="section-title" data-i18n="feat-h2">Hardan başla, necə inkişaf et.</h2>
+            <p class="section-sub" data-i18n="feat-sub">
+              Öyrənmək üçün lazım olan hər şey bir yerdə — praktik laboratoriyalar,
+              mentor rəyi, simulasiyalar və portfolio hazırlığı.
             </p>
           </div>
 
@@ -210,8 +209,8 @@
                   <path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7l8-4z" />
                 </svg>
               </div>
-              <h3>Real-world scenarios</h3>
-              <p>Hedefli simulation ve istifadeci rollarina uygun tapshiriqlarla real tehdid modelini oyren.</p>
+              <h3 data-i18n="feat1-h3">Real-world ssenarilər</h3>
+              <p data-i18n="feat1-p">Hədəfli simulasiya və istifadəçi rollarına uyğun tapşırıqlarla real təhdid modelini öyrən.</p>
             </article>
             <article class="feature-card">
               <div class="feature-icon">
@@ -220,8 +219,8 @@
                   <circle cx="18" cy="12" r="2" />
                 </svg>
               </div>
-              <h3>Expert mentorship</h3>
-              <p>Mentor review ve individual feedback ile suretli, istiqametli irelileme metodikasi.</p>
+              <h3 data-i18n="feat2-h3">Ekspert mentorluq</h3>
+              <p data-i18n="feat2-p">Mentor rəyi və fərdi feedback ilə sürətli, istiqamətli irəliləmə metodikası.</p>
             </article>
             <article class="feature-card">
               <div class="feature-icon">
@@ -230,8 +229,8 @@
                   <path d="M3 19h18" />
                 </svg>
               </div>
-              <h3>Career roadmap</h3>
-              <p>Portfolio yonumlu tasklar ve cert roadmap fokuslu seviye-seviye irelileme.</p>
+              <h3 data-i18n="feat3-h3">Karyera yol xəritəsi</h3>
+              <p data-i18n="feat3-p">Portfolio yönümlü tapşırıqlar və sertifikat roadmap fokuslu səviyyə-səviyyə irəliləmə.</p>
             </article>
             <article class="feature-card">
               <div class="feature-icon">
@@ -240,8 +239,8 @@
                   <path d="M8 20h8M12 16v4" />
                 </svg>
               </div>
-              <h3>Hands-on labs</h3>
-              <p>Browser icinde isleyen, iso-lyrilmis mohit ile kodla, skan et, investigate et.</p>
+              <h3 data-i18n="feat4-h3">Hands-on laboratoriyalar</h3>
+              <p data-i18n="feat4-p">Brauzerdə işləyən izolyasiya edilmiş mühitdə kodla, skan et, araşdır.</p>
             </article>
             <article class="feature-card">
               <div class="feature-icon">
@@ -250,8 +249,8 @@
                   <path d="M12 7v5l3 2" />
                 </svg>
               </div>
-              <h3>Time-boxed missions</h3>
-              <p>Live challenge saatleri &mdash; gercek incident-response tempini hissi.</p>
+              <h3 data-i18n="feat5-h3">Vaxt məhdudlu missiyalar</h3>
+              <p data-i18n="feat5-p">Canlı challenge saatları — gerçək incident-response tempini hiss et.</p>
             </article>
             <article class="feature-card">
               <div class="feature-icon">
@@ -261,31 +260,31 @@
                   <circle cx="8" cy="14" r="1.2" />
                 </svg>
               </div>
-              <h3>Community &amp; CTF</h3>
-              <p>Azerbaycan komandalari ile komanda-qarshi challenges ve heftelik meetups.</p>
+              <h3 data-i18n="feat6-h3">İcma &amp; CTF</h3>
+              <p data-i18n="feat6-p">Azərbaycan komandaları ilə komanda-qarşı challenges və həftəlik meetuplar.</p>
             </article>
           </div>
         </div>
       </section>
 
-      <!-- 4. SHOWCASE / PRODUCT DEMO -->
+      <!-- 4. SHOWCASE -->
       <section class="showcase reveal" id="showcase">
         <div class="container showcase-inner">
           <div class="showcase-copy">
-            <span class="eyebrow">Product</span>
-            <h2 class="section-title">Bir workspace-de butun defense stack-in.</h2>
-            <p class="section-sub">
-              Mission briefing, live lab mohiti, mentor review ve report drafting
-              &mdash; hamisi bir ekranda. Context switching yoxdur, real work flow var.
+            <span class="eyebrow" data-i18n="show-eyebrow">Məhsul</span>
+            <h2 class="section-title" data-i18n="show-h2">Bir workspace-də bütün defense stack-i.</h2>
+            <p class="section-sub" data-i18n="show-sub">
+              Mission briefing, canlı lab mühiti, mentor rəyi və report hazırlığı
+              — hamısı bir ekranda. Context keçidi yoxdur, real iş axını var.
             </p>
             <ul class="checklist">
-              <li>Guided missions with contextual hints</li>
-              <li>Integrated terminal &amp; note-taking</li>
-              <li>Automated scoring and mentor escalation</li>
-              <li>Exportable incident reports</li>
+              <li data-i18n="show-li1">Kontekstual ipucları ilə istiqamətləndirilmiş missiyalar</li>
+              <li data-i18n="show-li2">İnteqrasiya edilmiş terminal &amp; qeyd alma</li>
+              <li data-i18n="show-li3">Avtomatik qiymətləndirmə və mentor eskalasiyası</li>
+              <li data-i18n="show-li4">İxrac edilə bilən insidentlər haqqında hesabatlar</li>
             </ul>
-            <a class="btn btn-primary" href="http://self-study.xakker.org:8000" target="_blank" rel="noreferrer">
-              Explore the platform
+            <a class="btn btn-primary" href="http://self-study.xakker.org:8000" target="_blank" rel="noreferrer" data-i18n="show-cta">
+              Platformu araşdır
               <span class="btn-arrow" aria-hidden="true">&rarr;</span>
             </a>
           </div>
@@ -310,13 +309,13 @@ PORT     STATE SERVICE  VERSION
 </pre>
             </div>
             <div class="floating-card">
-              <p class="muted-label">Mentor feedback</p>
-              <p class="quote-text">"Report-in struktur yaxshidir. IOC section-i genishlendir ve MITRE map elave et."</p>
+              <p class="muted-label" data-i18n="show-card-label">Mentor rəyi</p>
+              <p class="quote-text" data-i18n="show-card-quote">"Reportun strukturu yaxşıdır. IOC bölməsini genişləndir və MITRE xəritəsini əlavə et."</p>
               <div class="mentor-row">
                 <div class="avatar avatar-sm"></div>
                 <div>
                   <p class="mentor-name">Elvin M.</p>
-                  <p class="mentor-role">Senior SOC Analyst</p>
+                  <p class="mentor-role" data-i18n="show-card-role">Baş SOC Analitiki</p>
                 </div>
               </div>
             </div>
@@ -324,82 +323,82 @@ PORT     STATE SERVICE  VERSION
         </div>
       </section>
 
-      <!-- 5. BENEFITS / WHY CHOOSE US -->
+      <!-- 5. BENEFITS -->
       <section class="benefits reveal" id="benefits">
         <div class="container">
           <div class="section-head">
-            <span class="eyebrow">Why Xakker</span>
-            <h2 class="section-title">Neden mekteb yox, mission workspace.</h2>
-            <p class="section-sub">
-              Klassik kurslarin yerine, is yerinde istifade edilen real metodika.
+            <span class="eyebrow" data-i18n="ben-eyebrow">Niyə Xakker</span>
+            <h2 class="section-title" data-i18n="ben-h2">Niyə məktəb deyil, mission workspace.</h2>
+            <p class="section-sub" data-i18n="ben-sub">
+              Klassik kursların yerinə, iş yerində istifadə edilən real metodika.
             </p>
           </div>
 
           <div class="benefit-grid">
             <article class="benefit-card">
               <div class="benefit-index">01</div>
-              <h3>Outcome-focused</h3>
-              <p>
-                Her module sonunda hazır portfolio deliverable &mdash; report,
-                playbook, lab write-up. CV-ye elave edilen ashkar neticeler.
+              <h3 data-i18n="ben1-h3">Nəticə yönümlü</h3>
+              <p data-i18n="ben1-p">
+                Hər modulun sonunda hazır portfolio çıxarışı — report,
+                playbook, lab yazısı. CV-yə əlavə edilən aşkar nəticələr.
               </p>
             </article>
             <article class="benefit-card">
               <div class="benefit-index">02</div>
-              <h3>Built for local market</h3>
-              <p>
-                Azerbaycan senayesine uygun senari &mdash; bank, telecom, public
-                sector threat model-leri ile oyrenme.
+              <h3 data-i18n="ben2-h3">Yerli bazara uyğun</h3>
+              <p data-i18n="ben2-p">
+                Azərbaycan sənayesinə uyğun ssenarilər — bank, telekommunikasiya,
+                dövlət sektoru təhdid modelləri ilə öyrənmə.
               </p>
             </article>
             <article class="benefit-card">
               <div class="benefit-index">03</div>
-              <h3>Mentor-on-demand</h3>
-              <p>
-                Stuck olduqda 24 saat icinde mentor review. Self-study amma tek
-                deyil &mdash; daim feedback loop ile.
+              <h3 data-i18n="ben3-h3">Tələbdə mentor</h3>
+              <p data-i18n="ben3-p">
+                Çıxılmaz vəziyyətdə 24 saat ərzində mentor rəyi. Self-study,
+                amma tək deyil — daim feedback dövrəsi ilə.
               </p>
             </article>
             <article class="benefit-card">
               <div class="benefit-index">04</div>
-              <h3>Cert &amp; career aligned</h3>
-              <p>
-                CompTIA, OSCP, CEH, CCSP yonleri ile uyqunlasdirilmis roadmap.
-                Hiring partners ile referral path.
+              <h3 data-i18n="ben4-h3">Sertifikat &amp; karyeraya uyğun</h3>
+              <p data-i18n="ben4-p">
+                CompTIA, OSCP, CEH, CCSP istiqamətləri ilə uyğunlaşdırılmış
+                roadmap. Hiring partnerləri ilə referral yolu.
               </p>
             </article>
           </div>
         </div>
       </section>
 
-      <!-- 6. PROCESS / HOW IT WORKS -->
+      <!-- 6. PROCESS -->
       <section class="process reveal" id="process">
         <div class="container">
           <div class="section-head">
-            <span class="eyebrow">How it works</span>
-            <h2 class="section-title">Zero-dan hero-ya, 4 adimda.</h2>
+            <span class="eyebrow" data-i18n="proc-eyebrow">Necə işləyir</span>
+            <h2 class="section-title" data-i18n="proc-h2">Sıfırdan hero-ya, 4 addımda.</h2>
           </div>
 
           <div class="process-grid">
             <article class="process-step">
               <div class="step-num">1</div>
-              <h3>Foundation</h3>
-              <p>Core networking, Linux, web basics ve security mindset.</p>
+              <h3 data-i18n="proc1-h3">Təməl</h3>
+              <p data-i18n="proc1-p">Core networking, Linux, web əsasları və security mindset.</p>
             </article>
             <article class="process-step">
               <div class="step-num">2</div>
-              <h3>Specialize</h3>
-              <p>Blue team, red team, appsec veya cloudsec secimleri.</p>
+              <h3 data-i18n="proc2-h3">İxtisaslaş</h3>
+              <p data-i18n="proc2-p">Blue team, red team, appsec və ya cloudsec seçimləri.</p>
             </article>
             <article class="process-step">
               <div class="step-num">3</div>
-              <h3>Live missions</h3>
-              <p>Time-boxed practice senarileri ve response tasklari.</p>
+              <h3 data-i18n="proc3-h3">Canlı missiyalar</h3>
+              <p data-i18n="proc3-p">Vaxt məhdudlu praktika ssenarilər və response tapşırıqları.</p>
             </article>
             <article class="process-step">
               <div class="step-num">4</div>
-              <h3>Certify</h3>
-              <p>Roadmap prep ve portfolio-backed competency proof.</p>
+              <h3 data-i18n="proc4-h3">Sertifikatlaş</h3>
+              <p data-i18n="proc4-p">Roadmap hazırlığı və portfolio dəstəkli kompetensiya sübutu.</p>
             </article>
           </div>
         </div>
@@ -409,51 +408,50 @@ PORT     STATE SERVICE  VERSION
       <section class="testimonials reveal" id="testimonials">
         <div class="container">
           <div class="section-head">
-            <span class="eyebrow">Feedback</span>
-            <h2 class="section-title">Platformu qurmus learner-lerden.</h2>
+            <span class="eyebrow" data-i18n="test-eyebrow">Rəylər</span>
+            <h2 class="section-title" data-i18n="test-h2">Platformu quran öyrənənlərdən.</h2>
           </div>
 
           <div class="testimonial-grid">
             <article class="testimonial-card">
               <div class="stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
-              <p class="quote">
-                "Red-team fundamentals cox daha anlasilan oldu. Praktik tasklar
-                gercek environment-de isleyen seylerdir &mdash; bos nazariyye
-                deyil."
+              <p class="quote" data-i18n="test1-quote">
+                "Red-team əsasları çox daha anlaşılan oldu. Praktik tapşırıqlar
+                gerçək mühitdə işləyən şeylərdir — boş nəzəriyyə deyil."
               </p>
               <div class="testimonial-meta">
                 <div class="avatar"></div>
                 <div>
                   <p class="name">Samir T.</p>
-                  <p class="role">SOC Analyst &middot; PASHA</p>
+                  <p class="role" data-i18n="test1-role">SOC Analitiki &middot; PASHA</p>
                 </div>
               </div>
             </article>
             <article class="testimonial-card">
               <div class="stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
-              <p class="quote">
-                "Mentor feedback ile ilk incident reportumu professional
-                seviyyeye catdirdim. CV-de fark yaratan deliverable-ler aldim."
+              <p class="quote" data-i18n="test2-quote">
+                "Mentor rəyi ilə ilk insident reportumu professional səviyyəyə
+                çatdırdım. CV-də fərq yaradan çıxarışlar aldım."
               </p>
               <div class="testimonial-meta">
                 <div class="avatar"></div>
                 <div>
                   <p class="name">Aysu D.</p>
-                  <p class="role">Blue Team &middot; Kapital</p>
+                  <p class="role" data-i18n="test2-role">Blue Team &middot; Kapital</p>
                 </div>
               </div>
             </article>
             <article class="testimonial-card">
               <div class="stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
-              <p class="quote">
-                "CloudSec path menim ucun birbasha production defense mentiqi
-                verdi. Azure ve AWS tarafinda gercek risk modelleri oyrendim."
+              <p class="quote" data-i18n="test3-quote">
+                "CloudSec path mənim üçün birbaşa production defense məntiqi
+                verdi. Azure və AWS tərəfində gerçək risk modellərini öyrəndim."
               </p>
               <div class="testimonial-meta">
                 <div class="avatar"></div>
                 <div>
                   <p class="name">Vugar A.</p>
-                  <p class="role">Cloud Engineer &middot; Azercell</p>
+                  <p class="role" data-i18n="test3-role">Cloud Mühəndisi &middot; Azercell</p>
                 </div>
               </div>
             </article>
@@ -465,67 +463,67 @@ PORT     STATE SERVICE  VERSION
       <section class="faq reveal" id="faq">
         <div class="container faq-inner">
           <div class="faq-side">
-            <span class="eyebrow">FAQ</span>
-            <h2 class="section-title">Hele suallariniz var.</h2>
-            <p class="section-sub">
-              Platforma, onboarding ve mentor axini haqda en cox sorulanlar.
-              Cavabi tapmadiqsa bizimle elaqe saxlayin.
+            <span class="eyebrow" data-i18n="faq-eyebrow">FAQ</span>
+            <h2 class="section-title" data-i18n="faq-h2">Hələ suallarınız var?</h2>
+            <p class="section-sub" data-i18n="faq-sub">
+              Platforma, onboarding və mentor axını haqqında ən çox sorulanlar.
+              Cavabı tapmadıqsa bizimlə əlaqə saxlayın.
             </p>
-            <a class="btn btn-ghost btn-sm" href="mailto:hi@xakker.org">Contact support</a>
+            <a class="btn btn-ghost btn-sm" href="mailto:hi@xakker.org" data-i18n="faq-support">Dəstəklə əlaqə</a>
           </div>
 
           <div class="faq-list">
             <details class="faq-item" open>
               <summary>
-                Platforma kim ucun uygundur?
+                <span data-i18n="faq1-q">Platforma kim üçün uyğundur?</span>
                 <span class="faq-icon" aria-hidden="true"></span>
               </summary>
-              <p>
-                Yeni baslayandan senior defender-a qeder butun seviyyeler ucun
-                path-lar var. Onboarding qisa diagnostika ile size en uygun
-                baslanqici teklif edir.
+              <p data-i18n="faq1-a">
+                Yeni başlayanlardan senior defender-ə qədər bütün səviyyələr üçün
+                yollar var. Onboarding qısa diaqnostika ilə sizə ən uyğun
+                başlanğıcı təklif edir.
               </p>
             </details>
             <details class="faq-item">
               <summary>
-                Sertifikat verilir mi?
+                <span data-i18n="faq2-q">Sertifikat verilirmi?</span>
                 <span class="faq-icon" aria-hidden="true"></span>
               </summary>
-              <p>
-                Beli. Her path-in sonunda completion certificate veriltir ve
-                onlyine verifiable link ile paylashila biler. Hemcinin OSCP,
-                CompTIA kimi industry cert-lere hazirliq roadmap-i var.
+              <p data-i18n="faq2-a">
+                Bəli. Hər yolun sonunda tamamlama sertifikatı verilir və onlayn
+                yoxlanıla bilən link ilə paylaşıla bilər. Həmçinin OSCP,
+                CompTIA kimi sənaye sertifikatlarına hazırlıq roadmap-i var.
               </p>
             </details>
             <details class="faq-item">
               <summary>
-                Mentor feedback nece islyir?
+                <span data-i18n="faq3-q">Mentor rəyi necə işləyir?</span>
                 <span class="faq-icon" aria-hidden="true"></span>
               </summary>
-              <p>
-                Mission submit etdikden sonra 24 saat icinde senior defender
-                review qaytarir. Video ve mətn formatinda &mdash; concrete,
-                action-oriented feedback.
+              <p data-i18n="faq3-a">
+                Mission təqdim edildikdən sonra 24 saat ərzində senior defender
+                rəyi qaytarır. Video və mətn formatında — konkret,
+                fəaliyyət yönümlü rəy.
               </p>
             </details>
             <details class="faq-item">
               <summary>
-                Lablar local kompyuterimde iswleyir?
+                <span data-i18n="faq4-q">Laboratoriyalar local kompüterimdə işləyirmi?</span>
                 <span class="faq-icon" aria-hidden="true"></span>
               </summary>
-              <p>
-                Yox. Butun labs browser-de isleyen iso-lyrilmis cloud environment
-                uzerindedir. Heç ne install etmek lazim deyil.
+              <p data-i18n="faq4-a">
+                Xeyr. Bütün laboratoriyalar brauzerdə işləyən izolyasiya edilmiş
+                cloud mühitindədir. Heç nə install etmək lazım deyil.
               </p>
             </details>
             <details class="faq-item">
               <summary>
-                Cmd qiymet ne qederdir?
+                <span data-i18n="faq5-q">Qiymət nə qədərdir?</span>
                 <span class="faq-icon" aria-hidden="true"></span>
               </summary>
-              <p>
-                Starter path pulsuzdur. Pro ve team plan-larinin detali pricing
-                sehifesinde &mdash; istenilen vaxt deyisdirmek olar.
+              <p data-i18n="faq5-a">
+                Starter yol pulsuzdur. Pro və team planlarının detalı pricing
+                səhifəsindədir — istənilən vaxt dəyişdirmək olar.
               </p>
             </details>
           </div>
@@ -536,17 +534,17 @@ PORT     STATE SERVICE  VERSION
       <section class="final-cta reveal">
         <div class="container">
           <div class="final-cta-card">
-            <h2 class="section-title">Sadece oyrenme. Bacariq qazan.</h2>
-            <p class="section-sub">
-              Bu gun baslayin &mdash; ilk mission 10 deqiqede bitir. Karta data
-              istemir, hesabi istenilen vaxt sistemdan cixara bilersiniz.
+            <h2 class="section-title" data-i18n="cta-h2">Sadəcə öyrənmə. Bacarıq qazan.</h2>
+            <p class="section-sub" data-i18n="cta-sub">
+              Bu gün başlayın — ilk mission 10 dəqiqədə bitir. Kart məlumatı
+              tələb etmir, hesabı istənilən vaxt silə bilərsiniz.
             </p>
             <div class="cta-row center">
-              <a class="btn btn-primary" href="http://self-study.xakker.org:8000/auth/register" target="_blank" rel="noreferrer">
-                Qeydiyyatdan kec
+              <a class="btn btn-primary" href="http://self-study.xakker.org:8000/auth/register" target="_blank" rel="noreferrer" data-i18n="cta-btn1">
+                Qeydiyyatdan keç
                 <span class="btn-arrow" aria-hidden="true">&rarr;</span>
               </a>
-              <a class="btn btn-ghost" href="#features">Platformu gor</a>
+              <a class="btn btn-ghost" href="#features" data-i18n="cta-btn2">Platformu gör</a>
             </div>
           </div>
         </div>
@@ -559,7 +557,7 @@ PORT     STATE SERVICE  VERSION
         <div class="footer-grid">
           <div class="footer-brand">
             <img src="/static/logo/xakkerLogoWhite2.png" alt="Xakker" />
-            <p>Azerbaycan ucun modern cyber security self-study ekosistemi.</p>
+            <p data-i18n="footer-tagline">Azərbaycan üçün müasir kibertəhlükəsizlik self-study ekosistemi.</p>
             <div class="footer-social">
               <a href="#" aria-label="Twitter">Tw</a>
               <a href="#" aria-label="LinkedIn">In</a>
@@ -567,41 +565,41 @@ PORT     STATE SERVICE  VERSION
             </div>
           </div>
           <div class="footer-col">
-            <h5>Platform</h5>
-            <a href="#features">Features</a>
-            <a href="#showcase">Product</a>
-            <a href="#process">Process</a>
+            <h5 data-i18n="footer-col1">Platforma</h5>
+            <a href="#features"  data-i18n="footer-features">Xüsusiyyətlər</a>
+            <a href="#showcase"  data-i18n="footer-product">Məhsul</a>
+            <a href="#process"   data-i18n="footer-process">Proses</a>
             <a href="http://self-study.xakker.org:8000" target="_blank" rel="noreferrer">Self-study</a>
           </div>
           <div class="footer-col">
-            <h5>Learn</h5>
-            <a href="#">Docs</a>
-            <a href="#">Resources</a>
-            <a href="#">Community</a>
-            <a href="#">Changelog</a>
+            <h5 data-i18n="footer-col2">Öyrən</h5>
+            <a href="#" data-i18n="footer-docs">Sənədlər</a>
+            <a href="#" data-i18n="footer-resources">Resurslar</a>
+            <a href="#" data-i18n="footer-community">İcma</a>
+            <a href="#" data-i18n="footer-changelog">Yeniliklər</a>
           </div>
           <div class="footer-col">
-            <h5>Company</h5>
-            <a href="#">About</a>
-            <a href="#">Careers</a>
-            <a href="#">Legal</a>
-            <a href="#">Contact</a>
+            <h5 data-i18n="footer-col3">Şirkət</h5>
+            <a href="#" data-i18n="footer-about">Haqqımızda</a>
+            <a href="#" data-i18n="footer-careers">Karyera</a>
+            <a href="#" data-i18n="footer-legal">Hüquqi</a>
+            <a href="#" data-i18n="footer-contact">Əlaqə</a>
           </div>
           <div class="footer-col newsletter">
-            <h5>Newsletter</h5>
-            <p>Monthly updates on new missions and tools.</p>
+            <h5 data-i18n="footer-newsletter-h">Xəbər bülleteni</h5>
+            <p data-i18n="footer-newsletter-p">Yeni missiyalar və alətlər haqqında aylıq yenilik.</p>
             <form class="newsletter-form" onsubmit="event.preventDefault()">
-              <input type="email" placeholder="you@email.com" aria-label="Email" />
-              <button type="submit" class="btn btn-primary btn-sm">Go</button>
+              <input type="email" placeholder="siz@email.com" aria-label="Email" />
+              <button type="submit" class="btn btn-primary btn-sm" data-i18n="footer-newsletter-btn">Get</button>
             </form>
           </div>
         </div>
         <div class="footer-bottom">
-          <p>&copy; 2025 Xakker Studios. All rights reserved.</p>
+          <p data-i18n="footer-copy">&copy; 2025 Xakker Studios. Bütün hüquqlar qorunur.</p>
           <div class="footer-legal">
-            <a href="#">Privacy</a>
-            <a href="#">Terms</a>
-            <a href="#">Cookies</a>
+            <a href="#" data-i18n="footer-privacy">Məxfilik</a>
+            <a href="#" data-i18n="footer-terms">Şərtlər</a>
+            <a href="#" data-i18n="footer-cookies">Cookies</a>
           </div>
         </div>
       </div>
