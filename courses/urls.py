@@ -12,6 +12,9 @@ from .views import (
     ExamListView,
     LearningPlanDetailView,
     LearningPlanListView,
+    LessonCompleteView,
+    LessonDetailView,
+    LessonQuestionSubmitView,
     QuestionDetailView,
     QuestionListView,
     QuestionSubmitAnswerView,
@@ -63,6 +66,15 @@ urlpatterns = [
 
     # Enrollment
     path("enroll/", EnrollmentCreateView.as_view(), name="course-enroll"),
+
+    # Course lessons
+    path("<slug:slug>/lessons/<int:lesson_id>/", LessonDetailView.as_view(), name="lesson-detail"),
+    path("<slug:slug>/lessons/<int:lesson_id>/complete/", LessonCompleteView.as_view(), name="lesson-complete"),
+    path(
+        "<slug:slug>/lessons/<int:lesson_id>/questions/<int:question_id>/submit/",
+        LessonQuestionSubmitView.as_view(),
+        name="lesson-question-submit",
+    ),
 
     # Course detail (keep last so "plans" etc. not shadowed)
     path("<slug:slug>/", CourseDetailView.as_view(), name="course-detail"),

@@ -49,6 +49,7 @@ class Course(models.Model):
     description = models.TextField()
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True)
     icon = models.CharField(max_length=8, blank=True, default="📘")
+    cover_color = models.CharField(max_length=16, blank=True, default="#ff5672")
     is_published = models.BooleanField(default=True)
 
     def __str__(self):
@@ -122,7 +123,8 @@ class Room(models.Model):
 class Lesson(models.Model):
     course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="lessons")
     title = models.CharField(max_length=200)
-    content = models.TextField()
+    content = models.TextField(blank=True, default="")
+    video_url = models.CharField(max_length=500, blank=True, default="", help_text="YouTube URL or direct video URL")
     order = models.PositiveIntegerField(default=1)
 
     class Meta:
@@ -130,6 +132,72 @@ class Lesson(models.Model):
 
     def __str__(self):
         return f"{self.course.title} - {self.title}"
+
+
+class LessonQuestion(models.Model):
+    lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE, related_name="lesson_questions")
+    text = models.TextField(help_text="Question text shown to the student")
+    explanation = models.TextField(blank=True, default="", help_text="Shown after answering")
+    at_seconds = models.IntegerField(
+        null=True, blank=True, default=None,
+        help_text="Video timestamp (seconds). Leave blank for inline questions.",
+    )
+    points = models.PositiveIntegerField(default=10)
+    order = models.PositiveIntegerField(default=1)
+
+    class Meta:
+        ordering = ["order", "id"]
+
+    def __str__(self):
+        return f"[Lesson {self.lesson_id}] Q{self.order}: {self.text[:60]}"
+
+
+class LessonQuestionChoice(models.Model):
+    question = models.ForeignKey(LessonQuestion, on_delete=models.CASCADE, related_name="choices")
+    text = models.CharField(max_length=400)
+    is_correct = models.BooleanField(default=False)
+    order = models.PositiveIntegerField(default=1)
+
+    class Meta:
+        ordering = ["order", "id"]
+
+    def __str__(self):
+        return f"{'✓' if self.is_correct else '○'} {self.text[:60]}"
+
+
+class LessonQuestionAttempt(models.Model):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="lesson_question_attempts"
+    )
+    question = models.ForeignKey(LessonQuestion, on_delete=models.CASCADE, related_name="attempts")
+    selected_choice = models.ForeignKey(
+        LessonQuestionChoice, on_delete=models.SET_NULL, null=True, blank=True, related_name="+"
+    )
+    is_correct = models.BooleanField(default=False)
+    points_awarded = models.PositiveIntegerField(default=0)
+    attempted_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ("user", "question")
+        ordering = ["-attempted_at"]
+
+    def __str__(self):
+        return f"{self.user.username} · LessonQ{self.question_id} · {'✓' if self.is_correct else '✗'}"
+
+
+class UserLessonProgress(models.Model):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="lesson_progress"
+    )
+    lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE, related_name="user_progress")
+    is_completed = models.BooleanField(default=False)
+    completed_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        unique_together = ("user", "lesson")
+
+    def __str__(self):
+        return f"{self.user.username} · {self.lesson.title} · {'✓' if self.is_completed else '…'}"
 
 
 class Task(models.Model):

@@ -49,4 +49,17 @@ export const endpoints = {
   exam: (slug) => api.get(`/courses/exams/${slug}/`),
   startExamAttempt: (slug) => api.post(`/courses/exams/${slug}/attempts/`),
   submitExam: (slug, payload) => api.post(`/courses/exams/${slug}/submit/`, payload),
+
+  // Profile extended endpoints
+  profileStats: () => api.get("/auth/profile/stats/"),
+  activityGraph: () => api.get("/auth/profile/activity-graph/"),
+  recentStudyActivity: (limit = 20) => api.get(`/auth/profile/recent-activity/?limit=${limit}`),
+
+  // Courses and lessons
+  courses: () => api.get("/courses/"),
+  courseDetail: (slug) => api.get(`/courses/${slug}/`),
+  lessonDetail: (courseSlug, lessonId) => api.get(`/courses/${courseSlug}/lessons/${lessonId}/`),
+  completeLesson: (courseSlug, lessonId) => api.post(`/courses/${courseSlug}/lessons/${lessonId}/complete/`),
+  submitLessonQuestion: (courseSlug, lessonId, questionId, payload) =>
+    api.post(`/courses/${courseSlug}/lessons/${lessonId}/questions/${questionId}/submit/`, payload),
 };

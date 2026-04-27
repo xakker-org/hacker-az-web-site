@@ -11,6 +11,8 @@ from rest_framework.views import APIView
 from accounts.models import Activity, UserProfile
 from accounts.serializers import ActivitySerializer, UserProfileSerializer
 
+from accounts.models import UserProfile
+
 from .models import (
     AttemptStatusChoices,
     Category,
@@ -20,6 +22,10 @@ from .models import (
     ExamAttempt,
     ExamAttemptAnswer,
     LearningPlan,
+    Lesson,
+    LessonQuestion,
+    LessonQuestionAttempt,
+    LessonQuestionChoice,
     Question,
     QuestionAttempt,
     QuestionTypeChoices,
@@ -27,6 +33,7 @@ from .models import (
     RoomTag,
     Task,
     TaskQuestion,
+    UserLessonProgress,
 )
 from .serializers import (
     CabinetSummarySerializer,
@@ -38,6 +45,9 @@ from .serializers import (
     ExamDetailSerializer,
     ExamListSerializer,
     LearningPlanSerializer,
+    LessonQuestionChoiceFullSerializer,
+    LessonQuestionSubmitSerializer,
+    LessonSerializer,
     RoomDetailSerializer,
     RoomListSerializer,
     RoomTagSerializer,
@@ -122,8 +132,20 @@ class QuestionDetailView(generics.RetrieveAPIView):
         if request.user.is_authenticated:
             attempts = QuestionAttempt.objects.filter(user=request.user, question=question).order_by("-attempted_at")
             data["attempts"] = QuestionAttemptSerializer(attempts, many=True).data
+            data["has_answered"] = attempts.exists()
+            if attempts.exists():
+                data["correct_choice_ids"] = list(
+                    question.choices.filter(is_correct=True).values_list("id", flat=True)
+                )
+                data["expected_answer"] = question.expected_answer or ""
+            else:
+                data["correct_choice_ids"] = []
+                data["expected_answer"] = ""
         else:
             data["attempts"] = []
+            data["has_answered"] = False
+            data["correct_choice_ids"] = []
+            data["expected_answer"] = ""
         return Response(data)
 
 
@@ -151,6 +173,7 @@ class QuestionSubmitAnswerView(APIView):
         )
 
         attempts = QuestionAttempt.objects.filter(user=request.user, question=question).order_by("-attempted_at")
+        correct_choice_ids = list(question.choices.filter(is_correct=True).values_list("id", flat=True))
         return Response(
             {
                 "question_id": question.id,
@@ -158,6 +181,9 @@ class QuestionSubmitAnswerView(APIView):
                 "points_awarded": result["points_awarded"],
                 "attempt_number": result["attempt_number"],
                 "explanation": result["explanation"],
+                "already_had_correct": result.get("already_had_correct", False),
+                "correct_choice_ids": correct_choice_ids,
+                "expected_answer": question.expected_answer or "",
                 "attempts": QuestionAttemptSerializer(attempts, many=True).data,
             },
             status=status.HTTP_200_OK,
@@ -495,6 +521,121 @@ class ExamAttemptSubmitView(generics.GenericAPIView):
 
         serializer = self.get_serializer(attempt)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+# ----- Lesson detail & lesson question submit -----
+
+class LessonDetailView(generics.RetrieveAPIView):
+    serializer_class = LessonSerializer
+
+    def get_queryset(self):
+        return Lesson.objects.select_related("course").prefetch_related(
+            "lesson_questions__choices"
+        )
+
+    def get_object(self):
+        return get_object_or_404(
+            self.get_queryset(),
+            id=self.kwargs["lesson_id"],
+            course__slug=self.kwargs["slug"],
+            course__is_published=True,
+        )
+
+    def retrieve(self, request, *args, **kwargs):
+        lesson = self.get_object()
+        data = self.get_serializer(lesson, context={"request": request}).data
+        return Response(data)
+
+
+class LessonQuestionSubmitView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, slug, lesson_id, question_id):
+        lesson = get_object_or_404(
+            Lesson, id=lesson_id, course__slug=slug, course__is_published=True
+        )
+        question = get_object_or_404(
+            LessonQuestion.objects.prefetch_related("choices"),
+            id=question_id,
+            lesson=lesson,
+        )
+
+        existing = LessonQuestionAttempt.objects.filter(
+            user=request.user, question=question
+        ).first()
+
+        correct_ids = list(question.choices.filter(is_correct=True).values_list("id", flat=True))
+
+        if existing:
+            return Response({
+                "already_answered": True,
+                "is_correct": existing.is_correct,
+                "points_awarded": existing.points_awarded,
+                "correct_choice_ids": correct_ids,
+                "explanation": question.explanation or "",
+                "selected_choice_id": existing.selected_choice_id,
+            }, status=status.HTTP_200_OK)
+
+        serializer = LessonQuestionSubmitSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        selected_choice_id = serializer.validated_data["selected_choice_id"]
+
+        choice = get_object_or_404(LessonQuestionChoice, id=selected_choice_id, question=question)
+        is_correct = choice.is_correct
+        points_awarded = question.points if is_correct else 0
+
+        LessonQuestionAttempt.objects.create(
+            user=request.user,
+            question=question,
+            selected_choice=choice,
+            is_correct=is_correct,
+            points_awarded=points_awarded,
+        )
+
+        if points_awarded > 0:
+            profile, _ = UserProfile.objects.get_or_create(user=request.user)
+            profile.xp = profile.xp + points_awarded
+            profile.recompute_rank()
+            profile.save()
+
+        # Auto-complete lesson when all questions have been attempted
+        total_qs = lesson.lesson_questions.count()
+        answered_qs = LessonQuestionAttempt.objects.filter(
+            user=request.user, question__lesson=lesson
+        ).count()
+        lesson_now_complete = total_qs > 0 and answered_qs >= total_qs
+        if lesson_now_complete:
+            UserLessonProgress.objects.update_or_create(
+                user=request.user,
+                lesson=lesson,
+                defaults={"is_completed": True, "completed_at": timezone.now()},
+            )
+
+        return Response({
+            "already_answered": False,
+            "is_correct": is_correct,
+            "points_awarded": points_awarded,
+            "correct_choice_ids": correct_ids,
+            "explanation": question.explanation or "",
+            "selected_choice_id": selected_choice_id,
+            "lesson_completed": lesson_now_complete,
+        }, status=status.HTTP_200_OK)
+
+
+class LessonCompleteView(APIView):
+    """Explicitly mark a lesson as complete (for lessons with no questions)."""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, slug, lesson_id):
+        lesson = get_object_or_404(
+            Lesson, id=lesson_id, course__slug=slug, course__is_published=True
+        )
+        progress, created = UserLessonProgress.objects.update_or_create(
+            user=request.user,
+            lesson=lesson,
+            defaults={"is_completed": True, "completed_at": timezone.now()},
+        )
+        return Response({"lesson_completed": True, "created": created}, status=status.HTTP_200_OK)
 
 
 class EnrollmentCreateView(generics.CreateAPIView):

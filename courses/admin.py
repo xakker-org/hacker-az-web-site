@@ -4,10 +4,15 @@ from django import forms
 from .models import (
     Category,
     Course,
+    Lesson,
+    LessonQuestion,
+    LessonQuestionChoice,
+    LessonQuestionAttempt,
     Question,
     QuestionTypeChoices,
     QuestionAttempt,
     QuestionChoice,
+    UserLessonProgress,
 )
 
 
@@ -18,12 +23,109 @@ class CategoryAdmin(admin.ModelAdmin):
     prepopulated_fields = {"slug": ("name",)}
 
 
+# ----- Lesson / Course admin -----
+
+class LessonQuestionChoiceInline(admin.TabularInline):
+    model = LessonQuestionChoice
+    extra = 4
+    fields = ("text", "is_correct", "order")
+
+
+class LessonQuestionInline(admin.StackedInline):
+    model = LessonQuestion
+    extra = 1
+    fields = ("text", "explanation", "at_seconds", "points", "order")
+    show_change_link = True
+
+
+@admin.register(LessonQuestion)
+class LessonQuestionAdmin(admin.ModelAdmin):
+    list_display = ("__str__", "lesson", "at_seconds", "points", "order")
+    list_filter = ("lesson__course",)
+    search_fields = ("text", "lesson__title", "lesson__course__title")
+    inlines = [LessonQuestionChoiceInline]
+    fieldsets = (
+        (None, {"fields": ("lesson", "text", "explanation", "points", "order")}),
+        ("Video timestamp", {
+            "fields": ("at_seconds",),
+            "description": "Leave blank for inline questions. Set seconds for video timeline questions (e.g. 120 = 2:00).",
+        }),
+    )
+
+
+class LessonInline(admin.StackedInline):
+    model = Lesson
+    extra = 1
+    fields = ("title", "video_url", "content", "order")
+    show_change_link = True
+
+
+@admin.register(Lesson)
+class LessonAdmin(admin.ModelAdmin):
+    list_display = ("title", "course", "order", "has_video", "question_count")
+    list_filter = ("course",)
+    search_fields = ("title", "course__title")
+    inlines = [LessonQuestionInline]
+    fieldsets = (
+        (None, {"fields": ("course", "title", "order")}),
+        ("Content", {"fields": ("content",)}),
+        ("Video", {
+            "fields": ("video_url",),
+            "description": "YouTube URL (https://youtu.be/...) or direct video file URL (.mp4).",
+        }),
+    )
+
+    @admin.display(boolean=True, description="Has video")
+    def has_video(self, obj):
+        return bool(obj.video_url)
+
+    @admin.display(description="Questions")
+    def question_count(self, obj):
+        return obj.lesson_questions.count()
+
+
 @admin.register(Course)
 class CourseAdmin(admin.ModelAdmin):
-    list_display = ("title", "slug", "category", "is_published")
+    list_display = ("title", "slug", "category", "is_published", "lesson_count")
     list_filter = ("is_published", "category")
     search_fields = ("title", "description")
     prepopulated_fields = {"slug": ("title",)}
+    inlines = [LessonInline]
+
+    @admin.display(description="Lessons")
+    def lesson_count(self, obj):
+        return obj.lessons.count()
+
+
+@admin.register(LessonQuestionAttempt)
+class LessonQuestionAttemptAdmin(admin.ModelAdmin):
+    list_display = ("user", "question", "is_correct", "points_awarded", "attempted_at")
+    list_filter = ("is_correct",)
+    search_fields = ("user__username",)
+    readonly_fields = ("user", "question", "selected_choice", "is_correct", "points_awarded", "attempted_at")
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+
+@admin.register(UserLessonProgress)
+class UserLessonProgressAdmin(admin.ModelAdmin):
+    list_display = ("user", "lesson", "is_completed", "completed_at")
+    list_filter = ("is_completed",)
+    search_fields = ("user__username", "lesson__title")
+    readonly_fields = ("user", "lesson", "is_completed", "completed_at")
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+
+# ----- Self-study Question admin -----
 
 class QuestionAdminForm(forms.ModelForm):
     option_a = forms.CharField(
@@ -136,7 +238,8 @@ class QuestionAdminForm(forms.ModelForm):
         return cleaned
 
     def save(self, commit=True):
-        question = super().save(commit=commit)
+        question = super().save(commit=False)
+        question.save()  # PK olmadan choices FK-sına əlçatmaq mümkün deyil
         self._sync_choices(question)
         return question
 

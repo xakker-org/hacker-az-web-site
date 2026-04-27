@@ -13,6 +13,9 @@ import ProfilePage from "./pages/ProfilePage";
 import ExamsPage from "./pages/ExamsPage";
 import SelfStudyPage from "./pages/SelfStudyPage";
 import QuestionDetailPage from "./pages/QuestionDetailPage";
+import CoursesPage from "./pages/CoursesPage";
+import CoursePage from "./pages/CoursePage";
+import LessonPage from "./pages/LessonPage";
 
 export default function App() {
   const location = useLocation();
@@ -47,7 +50,10 @@ export default function App() {
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="/self-study" element={<SelfStudyPage />} />
         <Route path="/self-study/question/:id" element={<QuestionDetailPage />} />
-        
+        <Route path="/courses" element={<CoursesPage />} />
+        <Route path="/courses/:slug" element={<CoursePage />} />
+        <Route path="/courses/:slug/lessons/:lessonId" element={<LessonPage />} />
+
         {/* Catch-all */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

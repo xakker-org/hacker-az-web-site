@@ -4,11 +4,12 @@ import { endpoints } from "../services/endpoints";
 import { clearTokens, getAccessToken } from "../utils/tokens";
 
 const NAV_PRIMARY = [
-  { to: "/dashboard", label: "Overview", icon: "◈" },
-  { to: "/self-study", label: "Self Study", icon: "◍" },
-  { to: "/rooms", label: "Rooms", icon: "▣" },
-  { to: "/plans", label: "Learning Paths", icon: "↗" },
-  { to: "/leaderboard", label: "Leaderboard", icon: "☱" },
+  { to: "/dashboard",  label: "Overview",       icon: "◈" },
+  { to: "/self-study", label: "Self Study",      icon: "◍" },
+  { to: "/courses",    label: "Kurslar",         icon: "📘" },
+  { to: "/rooms",      label: "Rooms",           icon: "▣" },
+  { to: "/plans",      label: "Learning Paths",  icon: "↗" },
+  { to: "/leaderboard",label: "Leaderboard",     icon: "☱" },
 ];
 
 const NAV_SECONDARY = [
@@ -64,10 +65,7 @@ export default function AppShell({ children, title, searchPlaceholder, onSearch,
             alt="Xakker"
             onError={() => setLogoSrc("/static/logo/logoXakker.png")}
           />
-          <div className="shell-brand-text">
-            <span className="shell-brand-name">Xakker</span>
-            <span className="shell-brand-sub">Self-Study</span>
-          </div>
+          
         </Link>
 
         <nav className="shell-nav">

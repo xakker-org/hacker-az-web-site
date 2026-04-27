@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import AppShell from "../components/AppShell";
 import { endpoints } from "../services/endpoints";
@@ -11,9 +11,51 @@ const typeLabel = {
 
 const OPTION_LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
+function ChoiceList({ choices, selectedId, correctIds, onSelect, locked }) {
+  return (
+    <div className="question-choices">
+      {choices.map((choice, index) => {
+        const letter = OPTION_LETTERS[index] || `${index + 1}`;
+        const isSelected = selectedId === choice.id;
+        const isCorrect = correctIds.includes(choice.id);
+
+        let cls = "q-choice";
+        if (locked) {
+          if (isCorrect) cls += " choice-correct";
+          else if (isSelected && !isCorrect) cls += " choice-wrong";
+          else cls += " choice-dimmed";
+        } else if (isSelected) {
+          cls += " selected";
+        }
+
+        return (
+          <label
+            key={choice.id}
+            className={cls}
+            style={locked ? { cursor: "default", pointerEvents: "none" } : undefined}
+          >
+            <input
+              type="radio"
+              name="selectedChoice"
+              checked={isSelected}
+              onChange={() => !locked && onSelect(choice.id)}
+              disabled={locked}
+            />
+            <span className="q-choice-letter">{letter}</span>
+            <span className="q-choice-text">{choice.text}</span>
+            {locked && isCorrect && <span className="q-choice-badge correct-badge">Düzgün</span>}
+            {locked && isSelected && !isCorrect && <span className="q-choice-badge wrong-badge">Seçdiniz</span>}
+          </label>
+        );
+      })}
+    </div>
+  );
+}
+
 export default function QuestionDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+
   const [question, setQuestion] = useState(null);
   const [attempts, setAttempts] = useState([]);
   const [answerText, setAnswerText] = useState("");
@@ -23,43 +65,61 @@ export default function QuestionDetailPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
-  const loadQuestion = () => {
+  // True when question is "locked" — user has answered (or just submitted)
+  const [locked, setLocked] = useState(false);
+  const [correctChoiceIds, setCorrectChoiceIds] = useState([]);
+  const [expectedAnswer, setExpectedAnswer] = useState("");
+
+  useEffect(() => {
     setLoading(true);
     setError("");
+    setResult(null);
+    setLocked(false);
+    setCorrectChoiceIds([]);
+    setExpectedAnswer("");
+    setSelectedChoiceId(null);
+    setAnswerText("");
+
     endpoints
       .questionDetail(id)
       .then(({ data }) => {
         setQuestion(data);
         setAttempts(data.attempts || []);
-        setSelectedChoiceId(null);
-        setAnswerText(data.question_type === "terminal" ? (data.starter_code || "") : "");
+        if (data.has_answered) {
+          setLocked(true);
+          setCorrectChoiceIds(data.correct_choice_ids || []);
+          setExpectedAnswer(data.expected_answer || "");
+          const first = (data.attempts || [])[0];
+          if (first) {
+            setSelectedChoiceId(
+              data.question_type === "closed"
+                ? parseInt((first.submitted_answer || "").split(",")[0]) || null
+                : null
+            );
+            if (data.question_type !== "closed") setAnswerText(first.submitted_answer || "");
+          }
+        } else {
+          setAnswerText(data.question_type === "terminal" ? (data.starter_code || "") : "");
+        }
       })
-      .catch(() => setError("Question details could not be loaded."))
+      .catch(() => setError("Sualı yükləmək mümkün olmadı."))
       .finally(() => setLoading(false));
-  };
-
-  useEffect(() => {
-    loadQuestion();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
-  const previousAttempts = useMemo(() => attempts.slice(1), [attempts]);
-
   const submitAnswer = async () => {
-    if (!question) return;
+    if (!question || locked) return;
 
     if (question.question_type === "closed" && !selectedChoiceId) {
-      setError("Bu sual ucun variant secmelisiniz.");
+      setError("Zəhmət olmasa bir variant seçin.");
       return;
     }
     if (question.question_type !== "closed" && !answerText.trim()) {
-      setError("Bu sual ucun yazili cavab daxil edin.");
+      setError("Zəhmət olmasa cavabınızı yazın.");
       return;
     }
 
     setSubmitting(true);
     setError("");
-    setResult(null);
 
     const payload =
       question.question_type === "closed"
@@ -70,12 +130,11 @@ export default function QuestionDetailPage() {
       const { data } = await endpoints.submitQuestionAnswer(id, payload);
       setResult(data);
       setAttempts(data.attempts || []);
-      if (data.is_correct) {
-        setAnswerText("");
-        setSelectedChoiceId(null);
-      }
-    } catch (requestError) {
-      const message = requestError?.response?.data?.detail || "Answer submit failed.";
+      setCorrectChoiceIds(data.correct_choice_ids || []);
+      setExpectedAnswer(data.expected_answer || "");
+      setLocked(true);
+    } catch (err) {
+      const message = err?.response?.data?.detail || "Cavab göndərilə bilmədi.";
       setError(message);
     } finally {
       setSubmitting(false);
@@ -83,104 +142,186 @@ export default function QuestionDetailPage() {
   };
 
   if (loading) {
-    return <AppShell title="Question"><div className="loading-block">Loading question...</div></AppShell>;
+    return (
+      <AppShell title="Sual">
+        <div className="loading-block">Sual yüklənir...</div>
+      </AppShell>
+    );
   }
 
   if (!question) {
-    return <AppShell title="Question"><div className="empty-state panel">Question not found.</div></AppShell>;
+    return (
+      <AppShell title="Sual">
+        <div className="empty-state panel">Sual tapılmadı.</div>
+      </AppShell>
+    );
   }
 
+  const previousAttempt = attempts[0] || null;
+  const levelClass = { beginner: "chip-mint", intermediate: "chip-amber", advanced: "chip-accent" }[question.level] || "chip";
+
   return (
-    <AppShell title="Question Detail">
+    <AppShell title="Sual">
       <section className="question-detail-layout">
         <main className="question-detail-main panel">
+          {/* Header */}
           <div className="question-head">
             <div>
-              <span className="chip chip-accent">{question.level}</span>
+              <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 8, flexWrap: "wrap" }}>
+                <span className={`chip ${levelClass}`}>{question.level}</span>
+                <span className="chip">{typeLabel[question.question_type] || question.question_type}</span>
+                <span className="chip chip-blue">{question.points} xal</span>
+                {locked && (
+                  <span className={`chip ${previousAttempt?.is_correct ? "chip-mint" : "chip-accent"}`}>
+                    {previousAttempt?.is_correct ? "Düzgün cavablandırıldı" : "Cavablandırıldı"}
+                  </span>
+                )}
+              </div>
               <h1>{question.title}</h1>
-              <p>{question.course?.title} • {typeLabel[question.question_type] || question.question_type} • {question.points} pts</p>
+              <p style={{ marginTop: 4, color: "var(--ink-3)" }}>{question.course?.title}</p>
             </div>
             <div className="question-head-actions">
-              <button type="button" className="btn btn-secondary btn-sm" onClick={() => navigate("/self-study")}>Back</button>
+              <button type="button" className="btn btn-secondary btn-sm" onClick={() => navigate("/self-study")}>
+                ← Geri
+              </button>
             </div>
           </div>
 
-          <div className="question-prompt panel">{question.prompt}</div>
+          {/* Prompt */}
+          <div className="question-prompt panel" style={{ marginBottom: 18, fontSize: 15, lineHeight: 1.7 }}>
+            {question.prompt}
+          </div>
 
-          {question.question_type === "closed" ? (
-            <div className="question-choices">
-              {(question.choices || []).map((choice, index) => {
-                const optionLabel = OPTION_LETTERS[index] || `${index + 1}`;
-                return (
-                <label key={choice.id} className={`q-choice ${selectedChoiceId === choice.id ? "selected" : ""}`}>
-                  <input
-                    type="radio"
-                    name="selectedChoice"
-                    checked={selectedChoiceId === choice.id}
-                    onChange={() => setSelectedChoiceId(choice.id)}
-                  />
-                  <span className="q-choice-letter" aria-hidden="true">{optionLabel}</span>
-                  <span className="q-choice-text">{choice.text}</span>
-                </label>
-                );
-              })}
+          {/* Already answered notice */}
+          {locked && !result && (
+            <div className="alert alert-info" style={{ marginBottom: 12 }}>
+              Bu sualı artıq cavablandırmısınız. Aşağıda öncəki cavabınızı, düzgün cavabı və izahı görə bilərsiniz.
             </div>
+          )}
+
+          {/* Answer area */}
+          {question.question_type === "closed" ? (
+            <ChoiceList
+              choices={question.choices || []}
+              selectedId={selectedChoiceId}
+              correctIds={locked ? correctChoiceIds : []}
+              onSelect={setSelectedChoiceId}
+              locked={locked}
+            />
           ) : (
             <div className="question-answer-area">
               <textarea
                 className="q-input"
-                rows={question.question_type === "terminal" ? "8" : "6"}
+                rows={question.question_type === "terminal" ? 8 : 5}
                 value={answerText}
-                onChange={(event) => setAnswerText(event.target.value)}
-                placeholder={question.question_type === "terminal" ? "Type command/code here..." : "Write your answer here..."}
+                onChange={(e) => !locked && setAnswerText(e.target.value)}
+                readOnly={locked}
+                placeholder={
+                  locked
+                    ? "(öncəki cavabınız)"
+                    : question.question_type === "terminal"
+                    ? "Əmri/kodu bura yazın..."
+                    : "Cavabınızı bura yazın..."
+                }
+                style={locked ? { opacity: 0.7, cursor: "default" } : undefined}
               />
+              {locked && expectedAnswer && (
+                <div className="correct-answer-box">
+                  <span className="correct-answer-label">Düzgün cavab:</span>
+                  <span className="correct-answer-text">{expectedAnswer}</span>
+                </div>
+              )}
             </div>
           )}
 
           {error && <div className="alert alert-error">{error}</div>}
 
-          <div className="question-actions">
-            <button type="button" className="btn btn-primary" onClick={submitAnswer} disabled={submitting}>
-              {submitting ? "Submitting..." : "Submit Answer"}
-            </button>
-            <Link to="/self-study" className="btn btn-secondary">Go to list</Link>
-          </div>
+          {/* Submit button — only if not locked */}
+          {!locked && (
+            <div className="question-actions">
+              <button
+                type="button"
+                className="btn btn-primary"
+                onClick={submitAnswer}
+                disabled={submitting}
+              >
+                {submitting ? "Göndərilir..." : "Cavabı göndər"}
+              </button>
+              <Link to="/self-study" className="btn btn-secondary">
+                Siyahıya qayıt
+              </Link>
+            </div>
+          )}
 
+          {/* Result panel shown immediately after submission */}
           {result && (
             <div className={`question-result panel ${result.is_correct ? "result-correct" : "result-wrong"}`}>
-              <h3>{result.is_correct ? "Correct! ✓" : "Incorrect ✗"}</h3>
-              <p>Attempt #{result.attempt_number} • Points earned: {result.points_awarded}</p>
-              {result.explanation && <p className="question-explanation">{result.explanation}</p>}
-              {previousAttempts.length > 0 && <p>This was not your first try. Previous attempts are shown on the right.</p>}
-              <div className="question-actions">
-                <button type="button" className="btn btn-secondary btn-sm" onClick={loadQuestion}>Try again</button>
+              <div className="result-header">
+                <span className={`result-icon ${result.is_correct ? "correct" : "wrong"}`}>
+                  {result.is_correct ? "✓" : "✗"}
+                </span>
+                <div>
+                  <h3>{result.is_correct ? "Düzgün cavab!" : "Yanlış cavab"}</h3>
+                  <p style={{ marginTop: 4 }}>
+                    {result.already_had_correct
+                      ? "Bu sualı daha öncə cavablandırmısınız — xal verilmir."
+                      : result.is_correct
+                      ? `+${result.points_awarded} xal qazandınız`
+                      : "Bu dəfə xal qazanılmadı."}
+                  </p>
+                </div>
               </div>
+              {result.explanation && (
+                <div className="question-explanation">{result.explanation}</div>
+              )}
+              {question.question_type !== "closed" && result.is_correct === false && expectedAnswer && (
+                <div className="correct-answer-box">
+                  <span className="correct-answer-label">Düzgün cavab:</span>
+                  <span className="correct-answer-text">{expectedAnswer}</span>
+                </div>
+              )}
+              <div className="question-actions" style={{ marginTop: 12 }}>
+                <Link to="/self-study" className="btn btn-primary">
+                  Digər suallar
+                </Link>
+              </div>
+            </div>
+          )}
+
+          {/* Explanation block if previously answered (no fresh result) */}
+          {locked && !result && question.explanation && (
+            <div className="panel" style={{ marginTop: 14, borderColor: "var(--line-3)" }}>
+              <h4 style={{ marginBottom: 8 }}>İzah</h4>
+              <p style={{ lineHeight: 1.7 }}>{question.explanation}</p>
             </div>
           )}
         </main>
 
+        {/* Sidebar — attempt history */}
         <aside className="question-detail-side panel">
           <div className="panel-title">
             <div>
-              <h2>Attempt history</h2>
-              <div className="panel-title-sub">This question only</div>
+              <h2>Cəhd tarixçəsi</h2>
+              <div className="panel-title-sub">Yalnız bu sual üçün</div>
             </div>
           </div>
 
           <div className="attempt-history-list">
             {attempts.length === 0 ? (
-              <div className="empty-state">No attempts yet.</div>
+              <div className="empty-state" style={{ padding: "24px 0" }}>Hələ cavab verilməyib.</div>
             ) : (
               attempts.map((attempt) => (
                 <div key={attempt.id} className="attempt-history-item">
                   <div className="attempt-history-head">
-                    <strong>Try #{attempt.attempt_number}</strong>
+                    <strong>Cəhd #{attempt.attempt_number}</strong>
                     <span className={attempt.is_correct ? "status-correct" : "status-wrong"}>
-                      {attempt.is_correct ? "correct" : "wrong"}
+                      {attempt.is_correct ? "✓ düzgün" : "✗ yanlış"}
                     </span>
                   </div>
-                  <div className="attempt-history-meta">+{attempt.points_awarded} pts</div>
-                  <div className="attempt-history-answer">{attempt.submitted_answer || "(empty answer)"}</div>
+                  <div className="attempt-history-meta">+{attempt.points_awarded} xal</div>
+                  <div className="attempt-history-answer">
+                    {attempt.submitted_answer || "(boş cavab)"}
+                  </div>
                 </div>
               ))
             )}

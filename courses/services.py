@@ -20,6 +20,38 @@ def _normalize_text(value):
     return (value or "").strip().casefold()
 
 
+def _get_or_create_profile(user):
+    profile, _ = UserProfile.objects.get_or_create(user=user)
+    return profile
+
+
+def _touch_streak(profile):
+    now = timezone.now()
+    if profile.last_activity:
+        delta = (now.date() - profile.last_activity.date()).days
+        if delta == 0:
+            return
+        if delta == 1:
+            profile.streak_days = profile.streak_days + 1
+        else:
+            profile.streak_days = 1
+    else:
+        profile.streak_days = 1
+    if profile.streak_days > profile.best_streak:
+        profile.best_streak = profile.streak_days
+    profile.last_activity = now
+
+
+def _award_xp_for_question(user, points):
+    if points <= 0:
+        return
+    profile = _get_or_create_profile(user)
+    profile.xp = profile.xp + points
+    _touch_streak(profile)
+    profile.recompute_rank()
+    profile.save()
+
+
 def validate_question_answer(*, question: Question, answer_text="", selected_choice_id=None, selected_choice_ids=None):
     selected_ids = []
     if selected_choice_id is not None:
@@ -56,8 +88,12 @@ def calculate_question_points(*, base_points, attempt_number, is_correct):
 
 @transaction.atomic
 def submit_question_answer(*, user, question: Question, answer_text="", selected_choice_id=None, selected_choice_ids=None, hint_used=False):
-    previous_attempts_count = QuestionAttempt.objects.filter(user=user, question=question).count()
-    attempt_number = previous_attempts_count + 1
+    previous_attempts = QuestionAttempt.objects.filter(user=user, question=question)
+    previous_count = previous_attempts.count()
+    attempt_number = previous_count + 1
+
+    # Backend guard: points only on the FIRST ever correct answer
+    has_previous_correct = previous_attempts.filter(is_correct=True).exists()
 
     is_correct, submitted_answer = validate_question_answer(
         question=question,
@@ -65,11 +101,12 @@ def submit_question_answer(*, user, question: Question, answer_text="", selected
         selected_choice_id=selected_choice_id,
         selected_choice_ids=selected_choice_ids,
     )
-    points_awarded = calculate_question_points(
-        base_points=question.points,
-        attempt_number=attempt_number,
-        is_correct=is_correct,
-    )
+
+    if is_correct and not has_previous_correct:
+        points_awarded = question.points
+        _award_xp_for_question(user, points_awarded)
+    else:
+        points_awarded = 0
 
     attempt = QuestionAttempt.objects.create(
         user=user,
@@ -87,6 +124,7 @@ def submit_question_answer(*, user, question: Question, answer_text="", selected
         "points_awarded": points_awarded,
         "attempt_number": attempt_number,
         "explanation": question.explanation or "",
+        "already_had_correct": has_previous_correct,
     }
 
 
@@ -107,28 +145,6 @@ def get_user_question_progress(user):
         "total_points_earned": total_points_earned,
         "accuracy_percent": accuracy_percent,
     }
-
-
-def _get_or_create_profile(user):
-    profile, _ = UserProfile.objects.get_or_create(user=user)
-    return profile
-
-
-def _touch_streak(profile):
-    now = timezone.now()
-    if profile.last_activity:
-        delta = (now.date() - profile.last_activity.date()).days
-        if delta == 0:
-            return
-        if delta == 1:
-            profile.streak_days = profile.streak_days + 1
-        else:
-            profile.streak_days = 1
-    else:
-        profile.streak_days = 1
-    if profile.streak_days > profile.best_streak:
-        profile.best_streak = profile.streak_days
-    profile.last_activity = now
 
 
 def evaluate_answer(question: TaskQuestion, submitted_text: str, selected_choice_id=None):

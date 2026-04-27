@@ -1,8 +1,15 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import AppShell from "../components/AppShell";
+import ContributionGraph from "../components/profile/ContributionGraph";
+import PerformanceSummary from "../components/profile/PerformanceSummary";
+import ProfileHeader from "../components/profile/ProfileHeader";
+import ProfileSidebar from "../components/profile/ProfileSidebar";
+import RecentActivity from "../components/profile/RecentActivity";
+import StatsCards from "../components/profile/StatsCards";
 import { endpoints } from "../services/endpoints";
+import "../styles/profile.css";
 
-const emptyProfile = {
+const EMPTY_PROFILE = {
   username: "",
   email: "",
   bio: "",
@@ -15,26 +22,70 @@ const emptyProfile = {
   rooms_completed: 0,
 };
 
+const EMPTY_STATS = {
+  total_questions_solved: 0,
+  total_attempts: 0,
+  correct_answers: 0,
+  wrong_answers: 0,
+  accuracy_rate: 0,
+  total_points_earned: 0,
+  leaderboard_rank: 0,
+  active_days: 0,
+  best_day_points: 0,
+  best_day_date: null,
+};
+
 export default function ProfilePage() {
-  const [profile, setProfile] = useState(emptyProfile);
-  const [studyStats, setStudyStats] = useState({
-    total_questions: 0,
-    answered_questions: 0,
-    correct_answers: 0,
-    total_attempts: 0,
-    total_points_earned: 0,
-    accuracy_percent: 0,
-  });
+  const [profile, setProfile] = useState(EMPTY_PROFILE);
+  const [stats, setStats] = useState(EMPTY_STATS);
+  const [graphDays, setGraphDays] = useState([]);
+  const [recentActivity, setRecentActivity] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  const [editOpen, setEditOpen] = useState(false);
+  const [draft, setDraft] = useState({ bio: "", country: "", avatar_hue: 0 });
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
 
+  const loadProfileData = async () => {
+    setLoading(true);
+    setError("");
+
+    try {
+      const [profileRes, statsRes, graphRes, recentRes] = await Promise.all([
+        endpoints.myProfile(),
+        endpoints.profileStats(),
+        endpoints.activityGraph(),
+        endpoints.recentStudyActivity(20),
+      ]);
+
+      const profileData = profileRes?.data || EMPTY_PROFILE;
+      const statsData = statsRes?.data || EMPTY_STATS;
+
+      setProfile({ ...EMPTY_PROFILE, ...profileData, ...statsData });
+      setStats({ ...EMPTY_STATS, ...statsData });
+      setGraphDays(Array.isArray(graphRes?.data?.days) ? graphRes.data.days : []);
+      setRecentActivity(Array.isArray(recentRes?.data) ? recentRes.data : []);
+
+      setDraft({
+        bio: profileData.bio || "",
+        country: profileData.country || "",
+        avatar_hue: Number(profileData.avatar_hue) || 0,
+      });
+    } catch (loadError) {
+      setError(loadError?.response?.data?.detail || "Failed to load profile data.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    endpoints.myProfile().then(({ data }) => setProfile((current) => ({ ...current, ...data })));
-    endpoints.questionProgress().then(({ data }) => setStudyStats((current) => ({ ...current, ...data })));
+    loadProfileData();
   }, []);
 
-  const updateField = (field) => (event) => {
-    setProfile((current) => ({ ...current, [field]: event.target.value }));
+  const updateDraft = (field) => (event) => {
+    setDraft((current) => ({ ...current, [field]: event.target.value }));
   };
 
   const saveProfile = async (event) => {
@@ -43,72 +94,118 @@ export default function ProfilePage() {
     setMessage("");
     try {
       const { data } = await endpoints.updateProfile({
-        bio: profile.bio,
-        country: profile.country,
-        avatar_hue: Number(profile.avatar_hue) || 0,
+        bio: draft.bio,
+        country: draft.country,
+        avatar_hue: Number(draft.avatar_hue) || 0,
       });
       setProfile((current) => ({ ...current, ...data }));
-      setMessage("Profile saved.");
+      setMessage("Profile updated successfully.");
+      setEditOpen(false);
     } finally {
       setSaving(false);
     }
   };
 
+  const hasAnyActivity = useMemo(
+    () => graphDays.some((day) => Number(day.questions_solved) > 0 || Number(day.points_earned) > 0),
+    [graphDays],
+  );
+
   return (
     <AppShell title="Profile">
-      <div className="profile-hero">
-        <div className="profile-avatar">{profile.username?.[0]?.toUpperCase() || "H"}</div>
-        <div className="profile-meta">
-          <h1>{profile.username}</h1>
-          <p>{profile.email}</p>
-          <div className="profile-meta-row">
-            <span className="chip chip-accent">{profile.rank}</span>
-            <span className="chip">{profile.xp} XP</span>
-            <span className="chip">{profile.streak_days} day streak</span>
+      <div className="profile-page">
+        {loading && (
+          <div className="profile-loading">
+            <div className="profile-spinner" aria-hidden="true" />
+            <div>Loading profile analytics...</div>
           </div>
-        </div>
-        <div className="profile-side">
-          <span className="chip chip-blue">{profile.tasks_completed} tasks</span>
-          <span className="chip chip-mint">{profile.rooms_completed} rooms</span>
-        </div>
-      </div>
+        )}
 
-      <div className="profile-stats">
-        <div className="panel"><div className="dash-stat-value">{profile.xp}</div><div className="dash-stat-label">XP</div></div>
-        <div className="panel"><div className="dash-stat-value">{profile.streak_days}</div><div className="dash-stat-label">Streak</div></div>
-        <div className="panel"><div className="dash-stat-value">{profile.tasks_completed}</div><div className="dash-stat-label">Tasks</div></div>
-        <div className="panel"><div className="dash-stat-value">{profile.rooms_completed}</div><div className="dash-stat-label">Rooms</div></div>
-      </div>
-
-      <div className="panel">
-        <div className="page-head" style={{ marginBottom: 16 }}>
-          <div>
-            <h2>Self-Study Statistics</h2>
-            <p>Question attempts and accuracy summary from self-study progress API.</p>
+        {!loading && error && (
+          <div className="profile-error" role="alert">
+            {error}
+            <button type="button" className="profile-edit-btn" style={{ marginTop: 12 }} onClick={loadProfileData}>
+              Retry
+            </button>
           </div>
-        </div>
-        <div className="profile-stats">
-          <div className="panel"><div className="dash-stat-value">{studyStats.total_questions}</div><div className="dash-stat-label">Questions</div></div>
-          <div className="panel"><div className="dash-stat-value">{studyStats.answered_questions}</div><div className="dash-stat-label">Answered</div></div>
-          <div className="panel"><div className="dash-stat-value">{studyStats.total_attempts}</div><div className="dash-stat-label">Attempts</div></div>
-          <div className="panel"><div className="dash-stat-value">{studyStats.accuracy_percent}%</div><div className="dash-stat-label">Accuracy</div></div>
-        </div>
-      </div>
+        )}
 
-      <div className="panel">
-        <div className="page-head" style={{ marginBottom: 16 }}>
-          <div>
-            <h2>Edit profile</h2>
-            <p>Frontend yalnız backend-də artıq hazır olan profile sahələrini yeniləyir.</p>
+        {!loading && !error && (
+          <div className="profile-layout">
+            <ProfileSidebar profile={profile} stats={stats} onEdit={() => setEditOpen(true)} />
+
+            <div className="profile-main">
+              <ProfileHeader profile={profile} stats={stats} />
+
+              {message && <div className="profile-alert-success">{message}</div>}
+
+              <StatsCards stats={stats} />
+
+              {hasAnyActivity ? <ContributionGraph days={graphDays} /> : <div className="profile-empty">No activity yet. Solve a question to start building your graph.</div>}
+
+              <div className="profile-two-col">
+                <RecentActivity activities={recentActivity} />
+                <PerformanceSummary stats={stats} days={graphDays} activities={recentActivity} />
+              </div>
+            </div>
           </div>
-        </div>
-        {message && <div className="alert alert-success">{message}</div>}
-        <form onSubmit={saveProfile} className="rooms-filters" style={{ gridTemplateColumns: "1fr 1fr 1fr" }}>
-          <textarea className="filter-input" rows="4" value={profile.bio} onChange={updateField("bio")} placeholder="Bio" />
-          <input className="filter-input" value={profile.country} onChange={updateField("country")} placeholder="Country" />
-          <input className="filter-input" type="number" min="0" max="360" value={profile.avatar_hue} onChange={updateField("avatar_hue")} placeholder="Avatar hue" />
-          <button type="submit" className="btn btn-primary btn-sm" disabled={saving}>Save profile</button>
-        </form>
+        )}
+
+        {editOpen && (
+          <div className="profile-modal-overlay" role="dialog" aria-modal="true" aria-label="Edit profile">
+            <form className="profile-modal" onSubmit={saveProfile}>
+              <h2 className="profile-modal-title">Edit Profile</h2>
+
+              <label className="profile-modal-field">
+                <span className="profile-modal-label">Bio</span>
+                <textarea
+                  className="profile-modal-textarea"
+                  value={draft.bio}
+                  onChange={updateDraft("bio")}
+                  placeholder="Tell about your learning focus"
+                />
+              </label>
+
+              <label className="profile-modal-field">
+                <span className="profile-modal-label">Country</span>
+                <input
+                  className="profile-modal-input"
+                  value={draft.country}
+                  onChange={updateDraft("country")}
+                  placeholder="Country"
+                />
+              </label>
+
+              <label className="profile-modal-field">
+                <span className="profile-modal-label">Avatar Hue</span>
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <input
+                    className="profile-modal-input"
+                    type="number"
+                    min="0"
+                    max="360"
+                    value={draft.avatar_hue}
+                    onChange={updateDraft("avatar_hue")}
+                  />
+                  <span
+                    className="hue-preview"
+                    style={{ background: `hsl(${Number(draft.avatar_hue) || 0} 75% 56%)` }}
+                    aria-hidden="true"
+                  />
+                </div>
+              </label>
+
+              <div className="profile-modal-actions">
+                <button type="button" className="profile-modal-cancel" onClick={() => setEditOpen(false)}>
+                  Cancel
+                </button>
+                <button type="submit" className="profile-modal-save" disabled={saving}>
+                  {saving ? "Saving..." : "Save"}
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
       </div>
     </AppShell>
   );

@@ -11,6 +11,9 @@ from .models import (
     LearningPlan,
     LearningPlanCourse,
     Lesson,
+    LessonQuestion,
+    LessonQuestionAttempt,
+    LessonQuestionChoice,
     Question,
     QuestionAttempt,
     QuestionChoice,
@@ -19,6 +22,7 @@ from .models import (
     Task,
     TaskQuestion,
     TaskQuestionChoice,
+    UserLessonProgress,
     UserQuestionAttempt,
     UserTaskProgress,
 )
@@ -40,10 +44,62 @@ class RoomTagSerializer(serializers.ModelSerializer):
 
 # ----- Courses / plans / lessons -----
 
+class LessonQuestionChoicePublicSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = LessonQuestionChoice
+        fields = ["id", "text", "order"]
+
+
+class LessonQuestionChoiceFullSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = LessonQuestionChoice
+        fields = ["id", "text", "order", "is_correct"]
+
+
+class LessonQuestionSerializer(serializers.ModelSerializer):
+    choices = LessonQuestionChoicePublicSerializer(many=True, read_only=True)
+    user_attempt = serializers.SerializerMethodField()
+
+    class Meta:
+        model = LessonQuestion
+        fields = ["id", "text", "explanation", "at_seconds", "points", "order", "choices", "user_attempt"]
+
+    def get_user_attempt(self, obj):
+        request = self.context.get("request")
+        if not request or not request.user.is_authenticated:
+            return None
+        attempt = LessonQuestionAttempt.objects.filter(user=request.user, question=obj).first()
+        if not attempt:
+            return None
+        correct_ids = list(obj.choices.filter(is_correct=True).values_list("id", flat=True))
+        return {
+            "selected_choice_id": attempt.selected_choice_id,
+            "is_correct": attempt.is_correct,
+            "points_awarded": attempt.points_awarded,
+            "attempted_at": attempt.attempted_at,
+            "correct_choice_ids": correct_ids,
+        }
+
+
 class LessonSerializer(serializers.ModelSerializer):
+    lesson_questions = serializers.SerializerMethodField()
+    user_completed = serializers.SerializerMethodField()
+
     class Meta:
         model = Lesson
-        fields = ["id", "title", "content", "order"]
+        fields = ["id", "title", "content", "video_url", "order", "lesson_questions", "user_completed"]
+
+    def get_lesson_questions(self, obj):
+        qs = obj.lesson_questions.prefetch_related("choices").order_by("order", "id")
+        return LessonQuestionSerializer(qs, many=True, context=self.context).data
+
+    def get_user_completed(self, obj):
+        request = self.context.get("request")
+        if not request or not request.user.is_authenticated:
+            return False
+        return UserLessonProgress.objects.filter(
+            user=request.user, lesson=obj, is_completed=True
+        ).exists()
 
 
 class CourseSummarySerializer(serializers.ModelSerializer):
@@ -51,7 +107,7 @@ class CourseSummarySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Course
-        fields = ["id", "title", "slug", "description", "category", "icon"]
+        fields = ["id", "title", "slug", "description", "category", "icon", "cover_color"]
 
 
 class LearningPlanCourseSerializer(serializers.ModelSerializer):
@@ -410,6 +466,10 @@ class QuestionAnswerSubmitSerializer(serializers.Serializer):
         return attrs
 
 
+class LessonQuestionSubmitSerializer(serializers.Serializer):
+    selected_choice_id = serializers.IntegerField()
+
+
 class ExamQuestionSerializer(serializers.ModelSerializer):
     question = QuestionSerializer(read_only=True)
 
@@ -523,22 +583,59 @@ class CabinetSummarySerializer(serializers.Serializer):
 class CourseListSerializer(serializers.ModelSerializer):
     category = serializers.StringRelatedField()
     room_count = serializers.IntegerField(source="rooms.count", read_only=True)
+    lesson_count = serializers.IntegerField(source="lessons.count", read_only=True)
 
     class Meta:
         model = Course
-        fields = ["id", "title", "slug", "description", "category", "icon", "room_count"]
+        fields = ["id", "title", "slug", "description", "category", "icon", "cover_color", "room_count", "lesson_count"]
+
+
+class LessonSummarySerializer(serializers.ModelSerializer):
+    has_video = serializers.SerializerMethodField()
+    has_text = serializers.SerializerMethodField()
+    question_count = serializers.SerializerMethodField()
+    user_completed = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Lesson
+        fields = ["id", "title", "order", "has_video", "has_text", "question_count", "user_completed"]
+
+    def get_has_video(self, obj):
+        return bool(obj.video_url)
+
+    def get_has_text(self, obj):
+        return bool(obj.content)
+
+    def get_question_count(self, obj):
+        return obj.lesson_questions.count()
+
+    def get_user_completed(self, obj):
+        request = self.context.get("request")
+        if not request or not request.user.is_authenticated:
+            return False
+        return UserLessonProgress.objects.filter(
+            user=request.user, lesson=obj, is_completed=True
+        ).exists()
 
 
 class CourseDetailSerializer(serializers.ModelSerializer):
-    lessons = LessonSerializer(many=True, read_only=True)
+    lessons = serializers.SerializerMethodField()
     category = serializers.StringRelatedField()
     exams = ExamListSerializer(many=True, read_only=True)
     learning_plans = LearningPlanSerializer(many=True, read_only=True)
     rooms = serializers.SerializerMethodField()
+    lesson_count = serializers.IntegerField(source="lessons.count", read_only=True)
 
     class Meta:
         model = Course
-        fields = ["id", "title", "slug", "description", "category", "icon", "lessons", "exams", "learning_plans", "rooms"]
+        fields = [
+            "id", "title", "slug", "description", "category", "icon", "cover_color",
+            "lessons", "lesson_count", "exams", "learning_plans", "rooms",
+        ]
+
+    def get_lessons(self, obj):
+        qs = obj.lessons.prefetch_related("lesson_questions").order_by("order")
+        return LessonSummarySerializer(qs, many=True, context=self.context).data
 
     def get_rooms(self, obj):
         rooms = obj.rooms.filter(is_published=True).prefetch_related("tags").order_by("order", "id")
