@@ -1,4 +1,5 @@
-from datetime import timedelta
+from calendar import monthrange
+from datetime import date, timedelta
 
 from django.contrib.auth.models import User
 from django.db.models import Count, Q, Sum
@@ -196,14 +197,45 @@ class ProfileDetailStatsView(APIView):
 
 
 class ActivityGraphView(APIView):
-    """Returns daily activity counts for the last 365 days (contribution graph)."""
+    """Returns daily activity counts for a rolling 365-day window."""
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
         from courses.models import LessonQuestionAttempt, QuestionAttempt, UserQuestionAttempt
 
         user = request.user
-        end_date = timezone.now().date()
+        selected_year = request.query_params.get("year")
+
+        # Fetch all user attempts (no date filter yet)
+        all_attempts_qa = QuestionAttempt.objects.filter(user=user).values_list("attempted_at__date", flat=True)
+        all_attempts_lqa = LessonQuestionAttempt.objects.filter(user=user).values_list("attempted_at__date", flat=True)
+        all_attempts_uqa = UserQuestionAttempt.objects.filter(user=user).values_list("attempted_at__date", flat=True)
+
+        # Combine all dates to find which years have activity
+        all_dates = list(all_attempts_qa) + list(all_attempts_lqa) + list(all_attempts_uqa)
+        years_with_activity = sorted(set(d.year for d in all_dates if d))
+
+        # If no activity, return empty response
+        if not years_with_activity:
+            return Response({"days": [], "years": [], "selected_year": selected_year or None})
+
+        # Use selected year or current year, fallback to most recent year with activity
+        if selected_year:
+            try:
+                year = int(selected_year)
+                if year not in years_with_activity:
+                    year = years_with_activity[-1]
+            except (ValueError, TypeError):
+                year = years_with_activity[-1]
+        else:
+            year = years_with_activity[-1]
+
+        # GitHub-like behavior: last 365 days ending on the same month/day within selected year.
+        # This avoids showing "future" months for the current year.
+        today = timezone.now().date()
+        target_month = today.month
+        target_day = min(today.day, monthrange(year, target_month)[1])
+        end_date = date(year, target_month, target_day)
         start_date = end_date - timedelta(days=364)
 
         merged = {}
@@ -218,7 +250,7 @@ class ActivityGraphView(APIView):
                 merged[d]["points_earned"] += entry.get(points_field) or 0
 
         qa_data = (
-            QuestionAttempt.objects.filter(user=user, attempted_at__date__gte=start_date)
+            QuestionAttempt.objects.filter(user=user, attempted_at__date__gte=start_date, attempted_at__date__lte=end_date)
             .annotate(day=TruncDate("attempted_at"))
             .values("day")
             .annotate(q=Count("id"), c=Count("id", filter=Q(is_correct=True)), p=Sum("points_awarded"))
@@ -226,7 +258,7 @@ class ActivityGraphView(APIView):
         add_entries(qa_data, "p")
 
         lqa_data = (
-            LessonQuestionAttempt.objects.filter(user=user, attempted_at__date__gte=start_date)
+            LessonQuestionAttempt.objects.filter(user=user, attempted_at__date__gte=start_date, attempted_at__date__lte=end_date)
             .annotate(day=TruncDate("attempted_at"))
             .values("day")
             .annotate(q=Count("id"), c=Count("id", filter=Q(is_correct=True)), p=Sum("points_awarded"))
@@ -234,7 +266,7 @@ class ActivityGraphView(APIView):
         add_entries(lqa_data, "p")
 
         uqa_data = (
-            UserQuestionAttempt.objects.filter(user=user, attempted_at__date__gte=start_date)
+            UserQuestionAttempt.objects.filter(user=user, attempted_at__date__gte=start_date, attempted_at__date__lte=end_date)
             .annotate(day=TruncDate("attempted_at"))
             .values("day")
             .annotate(q=Count("id"), c=Count("id", filter=Q(is_correct=True)), p=Sum("awarded_points"))
@@ -248,7 +280,13 @@ class ActivityGraphView(APIView):
             days.append(merged.get(d) or {"date": d, "questions_solved": 0, "correct_answers": 0, "points_earned": 0})
             current += timedelta(days=1)
 
-        return Response({"days": days, "start_date": str(start_date), "end_date": str(end_date)})
+        return Response({
+            "days": days,
+            "years": years_with_activity,
+            "selected_year": year,
+            "start_date": str(start_date),
+            "end_date": str(end_date)
+        })
 
 
 class RecentStudyActivityView(APIView):

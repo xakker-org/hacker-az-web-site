@@ -1,17 +1,103 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import AppShell from "../components/AppShell";
 import { endpoints } from "../services/endpoints";
-
-const typeLabel = {
-  closed: "Multiple choice",
-  open: "Open text",
-  terminal: "Terminal/code",
-};
+import { getStoredStudyLanguage, pickByLanguage, setStoredStudyLanguage } from "../utils/selfStudyI18n";
 
 const OPTION_LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
-function ChoiceList({ choices, selectedId, correctIds, onSelect, locked }) {
+const TEXT = {
+  az: {
+    pageTitle: "Sərbəst Tədris • Sual",
+    typeClosed: "Çoxseçimli",
+    typeOpen: "Açıq cavab",
+    typeTerminal: "Terminal / Kod",
+    levelBeginner: "Başlanğıc",
+    levelIntermediate: "Orta",
+    levelAdvanced: "İrəliləmiş",
+    correct: "Düzgün",
+    yourChoice: "Seçiminiz",
+    loadError: "Sualı yükləmək mümkün olmadı.",
+    chooseOption: "Zəhmət olmasa bir variant seçin.",
+    writeAnswer: "Zəhmət olmasa cavabınızı yazın.",
+    submitError: "Cavab göndərilə bilmədi.",
+    loading: "Sual yüklənir...",
+    notFound: "Sual tapılmadı.",
+    points: "xal",
+    answeredCorrectly: "Düzgün cavablandırıldı",
+    answered: "Cavablandırıldı",
+    back: "← Geri qayıt",
+    alreadyAnswered: "Bu sualı artıq cavablandırmısınız. Aşağıda öncəki cavabınızı, düzgün cavabı və izahı görə bilərsiniz.",
+    previousAnswer: "(öncəki cavabınız)",
+    terminalPlaceholder: "Əmri/kodu bura yazın...",
+    answerPlaceholder: "Cavabınızı bura yazın...",
+    correctAnswer: "Düzgün cavab:",
+    submitSending: "Göndərilir...",
+    submit: "Cavabı göndər",
+    backToList: "Siyahıya qayıt",
+    resultCorrect: "Düzgün cavab!",
+    resultWrong: "Yanlış cavab",
+    noExtraPoints: "Bu sualı daha əvvəl düzgün cavablandırmısınız, əlavə xal verilmir.",
+    pointsAwarded: "xal qazandınız",
+    noPoints: "Bu dəfə xal qazanılmadı.",
+    otherQuestions: "Digər suallar",
+    explanation: "İzah",
+    attemptHistory: "Cəhd tarixçəsi",
+    attemptHistorySub: "Yalnız bu sual üzrə",
+    noAttempts: "Hələ cavab verilməyib.",
+    attempt: "Cəhd",
+    correctShort: "düzgün",
+    wrongShort: "yanlış",
+    emptyAnswer: "(boş cavab)",
+    languageLabel: "Dil",
+  },
+  en: {
+    pageTitle: "Self Study • Question",
+    typeClosed: "Multiple Choice",
+    typeOpen: "Open Answer",
+    typeTerminal: "Terminal / Code",
+    levelBeginner: "Beginner",
+    levelIntermediate: "Intermediate",
+    levelAdvanced: "Advanced",
+    correct: "Correct",
+    yourChoice: "Your choice",
+    loadError: "Could not load the question.",
+    chooseOption: "Please select one option.",
+    writeAnswer: "Please enter your answer.",
+    submitError: "Failed to submit answer.",
+    loading: "Loading question...",
+    notFound: "Question not found.",
+    points: "pts",
+    answeredCorrectly: "Answered correctly",
+    answered: "Answered",
+    back: "← Back",
+    alreadyAnswered: "You have already answered this question. You can review your previous answer, the correct answer, and explanation below.",
+    previousAnswer: "(your previous answer)",
+    terminalPlaceholder: "Write your command/code here...",
+    answerPlaceholder: "Write your answer here...",
+    correctAnswer: "Correct answer:",
+    submitSending: "Submitting...",
+    submit: "Submit answer",
+    backToList: "Back to list",
+    resultCorrect: "Correct answer!",
+    resultWrong: "Wrong answer",
+    noExtraPoints: "You already answered this question correctly before, so no extra points are awarded.",
+    pointsAwarded: "points earned",
+    noPoints: "No points were earned this time.",
+    otherQuestions: "More questions",
+    explanation: "Explanation",
+    attemptHistory: "Attempt history",
+    attemptHistorySub: "For this question only",
+    noAttempts: "No answers submitted yet.",
+    attempt: "Attempt",
+    correctShort: "correct",
+    wrongShort: "wrong",
+    emptyAnswer: "(empty answer)",
+    languageLabel: "Language",
+  },
+};
+
+function ChoiceList({ choices, selectedId, correctIds, onSelect, locked, t }) {
   return (
     <div className="question-choices">
       {choices.map((choice, index) => {
@@ -43,8 +129,8 @@ function ChoiceList({ choices, selectedId, correctIds, onSelect, locked }) {
             />
             <span className="q-choice-letter">{letter}</span>
             <span className="q-choice-text">{choice.text}</span>
-            {locked && isCorrect && <span className="q-choice-badge correct-badge">Düzgün</span>}
-            {locked && isSelected && !isCorrect && <span className="q-choice-badge wrong-badge">Seçdiniz</span>}
+            {locked && isCorrect && <span className="q-choice-badge correct-badge">{t.correct}</span>}
+            {locked && isSelected && !isCorrect && <span className="q-choice-badge wrong-badge">{t.yourChoice}</span>}
           </label>
         );
       })}
@@ -56,6 +142,27 @@ export default function QuestionDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
 
+  const [lang, setLang] = useState(getStoredStudyLanguage);
+  const t = pickByLanguage(TEXT, lang);
+
+  const typeLabel = useMemo(
+    () => ({
+      closed: t.typeClosed,
+      open: t.typeOpen,
+      terminal: t.typeTerminal,
+    }),
+    [t.typeClosed, t.typeOpen, t.typeTerminal],
+  );
+
+  const levelLabel = useMemo(
+    () => ({
+      beginner: t.levelBeginner,
+      intermediate: t.levelIntermediate,
+      advanced: t.levelAdvanced,
+    }),
+    [t.levelBeginner, t.levelIntermediate, t.levelAdvanced],
+  );
+
   const [question, setQuestion] = useState(null);
   const [attempts, setAttempts] = useState([]);
   const [answerText, setAnswerText] = useState("");
@@ -65,10 +172,13 @@ export default function QuestionDetailPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
-  // True when question is "locked" — user has answered (or just submitted)
   const [locked, setLocked] = useState(false);
   const [correctChoiceIds, setCorrectChoiceIds] = useState([]);
   const [expectedAnswer, setExpectedAnswer] = useState("");
+
+  useEffect(() => {
+    setStoredStudyLanguage(lang);
+  }, [lang]);
 
   useEffect(() => {
     setLoading(true);
@@ -93,28 +203,28 @@ export default function QuestionDetailPage() {
           if (first) {
             setSelectedChoiceId(
               data.question_type === "closed"
-                ? parseInt((first.submitted_answer || "").split(",")[0]) || null
-                : null
+                ? parseInt((first.submitted_answer || "").split(",")[0], 10) || null
+                : null,
             );
             if (data.question_type !== "closed") setAnswerText(first.submitted_answer || "");
           }
         } else {
-          setAnswerText(data.question_type === "terminal" ? (data.starter_code || "") : "");
+          setAnswerText(data.question_type === "terminal" ? data.starter_code || "" : "");
         }
       })
-      .catch(() => setError("Sualı yükləmək mümkün olmadı."))
+      .catch(() => setError(t.loadError))
       .finally(() => setLoading(false));
-  }, [id]);
+  }, [id, t.loadError]);
 
   const submitAnswer = async () => {
     if (!question || locked) return;
 
     if (question.question_type === "closed" && !selectedChoiceId) {
-      setError("Zəhmət olmasa bir variant seçin.");
+      setError(t.chooseOption);
       return;
     }
     if (question.question_type !== "closed" && !answerText.trim()) {
-      setError("Zəhmət olmasa cavabınızı yazın.");
+      setError(t.writeAnswer);
       return;
     }
 
@@ -134,46 +244,68 @@ export default function QuestionDetailPage() {
       setExpectedAnswer(data.expected_answer || "");
       setLocked(true);
     } catch (err) {
-      const message = err?.response?.data?.detail || "Cavab göndərilə bilmədi.";
+      const message = err?.response?.data?.detail || t.submitError;
       setError(message);
     } finally {
       setSubmitting(false);
     }
   };
 
+  const extraTopbar = (
+    <div className="lang-switch" role="group" aria-label={t.languageLabel}>
+      <button
+        type="button"
+        className={`lang-switch-btn ${lang === "az" ? "active" : ""}`}
+        onClick={() => setLang("az")}
+      >
+        AZ
+      </button>
+      <button
+        type="button"
+        className={`lang-switch-btn ${lang === "en" ? "active" : ""}`}
+        onClick={() => setLang("en")}
+      >
+        EN
+      </button>
+    </div>
+  );
+
   if (loading) {
     return (
-      <AppShell title="Sual">
-        <div className="loading-block">Sual yüklənir...</div>
+      <AppShell title={t.pageTitle} extraTopbar={extraTopbar}>
+        <div className="loading-block">{t.loading}</div>
       </AppShell>
     );
   }
 
   if (!question) {
     return (
-      <AppShell title="Sual">
-        <div className="empty-state panel">Sual tapılmadı.</div>
+      <AppShell title={t.pageTitle} extraTopbar={extraTopbar}>
+        <div className="empty-state panel">{t.notFound}</div>
       </AppShell>
     );
   }
 
   const previousAttempt = attempts[0] || null;
-  const levelClass = { beginner: "chip-mint", intermediate: "chip-amber", advanced: "chip-accent" }[question.level] || "chip";
+  const levelClass = {
+    beginner: "chip-mint",
+    intermediate: "chip-amber",
+    advanced: "chip-accent",
+  }[question.level] || "chip";
 
   return (
-    <AppShell title="Sual">
+    <AppShell title={t.pageTitle} extraTopbar={extraTopbar}>
       <section className="question-detail-layout">
         <main className="question-detail-main panel">
-          {/* Header */}
           <div className="question-head">
             <div>
               <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 8, flexWrap: "wrap" }}>
-                <span className={`chip ${levelClass}`}>{question.level}</span>
+                <span className={`chip ${levelClass}`}>{levelLabel[question.level] || question.level}</span>
                 <span className="chip">{typeLabel[question.question_type] || question.question_type}</span>
-                <span className="chip chip-blue">{question.points} xal</span>
+                <span className="chip chip-blue">{question.points} {t.points}</span>
                 {locked && (
                   <span className={`chip ${previousAttempt?.is_correct ? "chip-mint" : "chip-accent"}`}>
-                    {previousAttempt?.is_correct ? "Düzgün cavablandırıldı" : "Cavablandırıldı"}
+                    {previousAttempt?.is_correct ? t.answeredCorrectly : t.answered}
                   </span>
                 )}
               </div>
@@ -182,24 +314,21 @@ export default function QuestionDetailPage() {
             </div>
             <div className="question-head-actions">
               <button type="button" className="btn btn-secondary btn-sm" onClick={() => navigate("/self-study")}>
-                ← Geri
+                {t.back}
               </button>
             </div>
           </div>
 
-          {/* Prompt */}
           <div className="question-prompt panel" style={{ marginBottom: 18, fontSize: 15, lineHeight: 1.7 }}>
             {question.prompt}
           </div>
 
-          {/* Already answered notice */}
           {locked && !result && (
             <div className="alert alert-info" style={{ marginBottom: 12 }}>
-              Bu sualı artıq cavablandırmısınız. Aşağıda öncəki cavabınızı, düzgün cavabı və izahı görə bilərsiniz.
+              {t.alreadyAnswered}
             </div>
           )}
 
-          {/* Answer area */}
           {question.question_type === "closed" ? (
             <ChoiceList
               choices={question.choices || []}
@@ -207,6 +336,7 @@ export default function QuestionDetailPage() {
               correctIds={locked ? correctChoiceIds : []}
               onSelect={setSelectedChoiceId}
               locked={locked}
+              t={t}
             />
           ) : (
             <div className="question-answer-area">
@@ -218,16 +348,16 @@ export default function QuestionDetailPage() {
                 readOnly={locked}
                 placeholder={
                   locked
-                    ? "(öncəki cavabınız)"
+                    ? t.previousAnswer
                     : question.question_type === "terminal"
-                    ? "Əmri/kodu bura yazın..."
-                    : "Cavabınızı bura yazın..."
+                    ? t.terminalPlaceholder
+                    : t.answerPlaceholder
                 }
                 style={locked ? { opacity: 0.7, cursor: "default" } : undefined}
               />
               {locked && expectedAnswer && (
                 <div className="correct-answer-box">
-                  <span className="correct-answer-label">Düzgün cavab:</span>
+                  <span className="correct-answer-label">{t.correctAnswer}</span>
                   <span className="correct-answer-text">{expectedAnswer}</span>
                 </div>
               )}
@@ -236,7 +366,6 @@ export default function QuestionDetailPage() {
 
           {error && <div className="alert alert-error">{error}</div>}
 
-          {/* Submit button — only if not locked */}
           {!locked && (
             <div className="question-actions">
               <button
@@ -245,15 +374,14 @@ export default function QuestionDetailPage() {
                 onClick={submitAnswer}
                 disabled={submitting}
               >
-                {submitting ? "Göndərilir..." : "Cavabı göndər"}
+                {submitting ? t.submitSending : t.submit}
               </button>
               <Link to="/self-study" className="btn btn-secondary">
-                Siyahıya qayıt
+                {t.backToList}
               </Link>
             </div>
           )}
 
-          {/* Result panel shown immediately after submission */}
           {result && (
             <div className={`question-result panel ${result.is_correct ? "result-correct" : "result-wrong"}`}>
               <div className="result-header">
@@ -261,66 +389,62 @@ export default function QuestionDetailPage() {
                   {result.is_correct ? "✓" : "✗"}
                 </span>
                 <div>
-                  <h3>{result.is_correct ? "Düzgün cavab!" : "Yanlış cavab"}</h3>
+                  <h3>{result.is_correct ? t.resultCorrect : t.resultWrong}</h3>
                   <p style={{ marginTop: 4 }}>
                     {result.already_had_correct
-                      ? "Bu sualı daha öncə cavablandırmısınız — xal verilmir."
+                      ? t.noExtraPoints
                       : result.is_correct
-                      ? `+${result.points_awarded} xal qazandınız`
-                      : "Bu dəfə xal qazanılmadı."}
+                      ? `+${result.points_awarded} ${t.pointsAwarded}`
+                      : t.noPoints}
                   </p>
                 </div>
               </div>
-              {result.explanation && (
-                <div className="question-explanation">{result.explanation}</div>
-              )}
+              {result.explanation && <div className="question-explanation">{result.explanation}</div>}
               {question.question_type !== "closed" && result.is_correct === false && expectedAnswer && (
                 <div className="correct-answer-box">
-                  <span className="correct-answer-label">Düzgün cavab:</span>
+                  <span className="correct-answer-label">{t.correctAnswer}</span>
                   <span className="correct-answer-text">{expectedAnswer}</span>
                 </div>
               )}
               <div className="question-actions" style={{ marginTop: 12 }}>
                 <Link to="/self-study" className="btn btn-primary">
-                  Digər suallar
+                  {t.otherQuestions}
                 </Link>
               </div>
             </div>
           )}
 
-          {/* Explanation block if previously answered (no fresh result) */}
           {locked && !result && question.explanation && (
             <div className="panel" style={{ marginTop: 14, borderColor: "var(--line-3)" }}>
-              <h4 style={{ marginBottom: 8 }}>İzah</h4>
+              <h4 style={{ marginBottom: 8 }}>{t.explanation}</h4>
               <p style={{ lineHeight: 1.7 }}>{question.explanation}</p>
             </div>
           )}
         </main>
 
-        {/* Sidebar — attempt history */}
         <aside className="question-detail-side panel">
           <div className="panel-title">
             <div>
-              <h2>Cəhd tarixçəsi</h2>
-              <div className="panel-title-sub">Yalnız bu sual üçün</div>
+              <h2>{t.attemptHistory}</h2>
+              <div className="panel-title-sub">{t.attemptHistorySub}</div>
             </div>
           </div>
 
           <div className="attempt-history-list">
             {attempts.length === 0 ? (
-              <div className="empty-state" style={{ padding: "24px 0" }}>Hələ cavab verilməyib.</div>
+              <div className="empty-state" style={{ padding: "24px 0" }}>{t.noAttempts}</div>
             ) : (
               attempts.map((attempt) => (
                 <div key={attempt.id} className="attempt-history-item">
                   <div className="attempt-history-head">
-                    <strong>Cəhd #{attempt.attempt_number}</strong>
+                    <strong>{t.attempt} #{attempt.attempt_number}</strong>
                     <span className={attempt.is_correct ? "status-correct" : "status-wrong"}>
-                      {attempt.is_correct ? "✓ düzgün" : "✗ yanlış"}
+                      {attempt.is_correct ? `✓ ${t.correctShort}` : `✗ ${t.wrongShort}`}
                     </span>
                   </div>
-                  <div className="attempt-history-meta">+{attempt.points_awarded} xal</div>
+                  <div className="attempt-history-meta">+{attempt.points_awarded} {t.points}</div>
                   <div className="attempt-history-answer">
-                    {attempt.submitted_answer || "(boş cavab)"}
+                    {attempt.submitted_answer || t.emptyAnswer}
                   </div>
                 </div>
               ))

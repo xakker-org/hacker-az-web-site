@@ -2,25 +2,134 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import AppShell from "../components/AppShell";
 import { endpoints } from "../services/endpoints";
+import { getStoredStudyLanguage, pickByLanguage, setStoredStudyLanguage } from "../utils/selfStudyI18n";
 
 const PAGE_SIZE = 12;
 
-const levelMeta = {
-  beginner:     { cls: "level-beginner",     label: "Başlanğıc" },
-  intermediate: { cls: "level-intermediate", label: "Orta" },
-  advanced:     { cls: "level-advanced",     label: "İrəliləmiş" },
-};
-
 const typeIcon = { closed: "◉", open: "✎", terminal: "⌨" };
-const typeLabel = { closed: "Çoxseçimli", open: "Açıq", terminal: "Terminal" };
 
-const statusMeta = {
-  correct: { cls: "status-correct", icon: "✓", label: "Düzgün" },
-  wrong:   { cls: "status-wrong",   icon: "✗", label: "Yanlış" },
-  pending: { cls: "status-pending", icon: "○", label: "Cavabsız" },
+const TEXT = {
+  az: {
+    pageTitle: "Sərbəst Tədris",
+    searchPlaceholder: "Sual, kurs və ya mövzu axtar...",
+    questionsAvailable: "sual mövcuddur",
+    filtersTitle: "Filtrləmə",
+    filtersSub: "Səviyyə, kurs və sual növünə görə",
+    level: "Səviyyə",
+    allLevels: "Bütün səviyyələr",
+    beginner: "Başlanğıc",
+    intermediate: "Orta",
+    advanced: "İrəliləmiş",
+    questionType: "Sual növü",
+    allTypes: "Bütün növlər",
+    typeClosed: "Çoxseçimli",
+    typeOpen: "Açıq cavab",
+    typeTerminal: "Terminal / Kod",
+    course: "Kurs",
+    allCourses: "Bütün kurslar",
+    status: "Status",
+    all: "Hamısı",
+    statusCorrect: "Düzgün",
+    statusWrong: "Yanlış",
+    statusPending: "Cavabsız",
+    progressTitle: "İrəliləyişim",
+    progressCorrect: "Düzgün",
+    answered: "Cavablandırılan",
+    accuracy: "Dəqiqlik",
+    earnedPoints: "Qazanılan xallar",
+    totalAttempts: "Ümumi cəhdlər",
+    heroTitle: "Sərbəst Tədris Mərkəzi",
+    heroSub: "Uyğun sualı seçin, cavablayın və nəticənizi real vaxtda izləyin.",
+    heroMetricsAria: "Əsas göstəricilər",
+    totalQuestions: "Cəmi sual",
+    correctAnswers: "Düzgün cavab",
+    loadError: "Suallar yüklənə bilmədi.",
+    loading: "Suallar yüklənir...",
+    emptyTitle: "Sual tapılmadı",
+    emptySub: "Filtrləri dəyişdirərək yenidən cəhd edin.",
+    points: "xal",
+    attempts: "cəhd",
+    prev: "← Əvvəlki",
+    next: "Növbəti →",
+    languageLabel: "Dil",
+  },
+  en: {
+    pageTitle: "Self Study",
+    searchPlaceholder: "Search by question, course, or topic...",
+    questionsAvailable: "questions available",
+    filtersTitle: "Filters",
+    filtersSub: "By level, course, and question type",
+    level: "Level",
+    allLevels: "All levels",
+    beginner: "Beginner",
+    intermediate: "Intermediate",
+    advanced: "Advanced",
+    questionType: "Question type",
+    allTypes: "All types",
+    typeClosed: "Multiple Choice",
+    typeOpen: "Open Answer",
+    typeTerminal: "Terminal / Code",
+    course: "Course",
+    allCourses: "All courses",
+    status: "Status",
+    all: "All",
+    statusCorrect: "Correct",
+    statusWrong: "Wrong",
+    statusPending: "Unanswered",
+    progressTitle: "My Progress",
+    progressCorrect: "Correct",
+    answered: "Answered",
+    accuracy: "Accuracy",
+    earnedPoints: "Points earned",
+    totalAttempts: "Total attempts",
+    heroTitle: "Self Study Center",
+    heroSub: "Pick a question, answer it, and track your progress in real time.",
+    heroMetricsAria: "Key metrics",
+    totalQuestions: "Total questions",
+    correctAnswers: "Correct answers",
+    loadError: "Failed to load questions.",
+    loading: "Loading questions...",
+    emptyTitle: "No questions found",
+    emptySub: "Try changing the filters and search again.",
+    points: "pts",
+    attempts: "attempts",
+    prev: "← Previous",
+    next: "Next →",
+    languageLabel: "Language",
+  },
 };
 
 export default function SelfStudyPage() {
+  const [lang, setLang] = useState(getStoredStudyLanguage);
+  const t = pickByLanguage(TEXT, lang);
+
+  const levelMeta = useMemo(
+    () => ({
+      beginner: { cls: "level-beginner", label: t.beginner },
+      intermediate: { cls: "level-intermediate", label: t.intermediate },
+      advanced: { cls: "level-advanced", label: t.advanced },
+    }),
+    [t.beginner, t.intermediate, t.advanced],
+  );
+
+  const typeLabel = useMemo(
+    () => ({
+      closed: t.typeClosed,
+      open: t.typeOpen,
+      terminal: t.typeTerminal,
+    }),
+    [t.typeClosed, t.typeOpen, t.typeTerminal],
+  );
+
+  const statusMeta = useMemo(
+    () => ({
+      correct: { cls: "status-correct", icon: "✓", label: t.statusCorrect },
+      wrong: { cls: "status-wrong", icon: "✗", label: t.statusWrong },
+      pending: { cls: "status-pending", icon: "○", label: t.statusPending },
+    }),
+    [t.statusCorrect, t.statusWrong, t.statusPending],
+  );
+
   const [questions, setQuestions] = useState([]);
   const [progress, setProgress] = useState({
     total_questions: 0,
@@ -41,6 +150,10 @@ export default function SelfStudyPage() {
   const [page, setPage] = useState(1);
 
   useEffect(() => {
+    setStoredStudyLanguage(lang);
+  }, [lang]);
+
+  useEffect(() => {
     let mounted = true;
     setLoading(true);
     Promise.all([
@@ -54,15 +167,19 @@ export default function SelfStudyPage() {
       })
       .catch(() => {
         if (!mounted) return;
-        setError("Suallar yüklənə bilmədi.");
+        setError(t.loadError);
       })
       .finally(() => {
         if (mounted) setLoading(false);
       });
-    return () => { mounted = false; };
-  }, [search, level, questionType, course]);
+    return () => {
+      mounted = false;
+    };
+  }, [search, level, questionType, course, t.loadError]);
 
-  useEffect(() => { setPage(1); }, [search, level, questionType, course, statusFilter]);
+  useEffect(() => {
+    setPage(1);
+  }, [search, level, questionType, course, statusFilter]);
 
   const courseOptions = useMemo(() => {
     const map = new Map();
@@ -87,49 +204,66 @@ export default function SelfStudyPage() {
 
   return (
     <AppShell
-      title="Self Study"
-      searchPlaceholder="Sual axtar..."
+      title={t.pageTitle}
+      searchPlaceholder={t.searchPlaceholder}
       onSearch={setSearch}
-      extraTopbar={
-        <span className="topbar-chip">
-          <strong>{questions.length}</strong> sual
-        </span>
-      }
+      extraTopbar={(
+        <>
+          <div className="lang-switch" role="group" aria-label={t.languageLabel}>
+            <button
+              type="button"
+              className={`lang-switch-btn ${lang === "az" ? "active" : ""}`}
+              onClick={() => setLang("az")}
+            >
+              AZ
+            </button>
+            <button
+              type="button"
+              className={`lang-switch-btn ${lang === "en" ? "active" : ""}`}
+              onClick={() => setLang("en")}
+            >
+              EN
+            </button>
+          </div>
+          <span className="topbar-chip">
+            <strong>{questions.length}</strong> {t.questionsAvailable}
+          </span>
+        </>
+      )}
     >
       <section className="study-layout">
-        {/* ---- Sidebar ---- */}
         <aside className="study-sidebar panel">
           <div className="panel-title">
             <div>
-              <h2>Filtrlər</h2>
-              <div className="panel-title-sub">Səviyyə, kurs, tip</div>
+              <h2>{t.filtersTitle}</h2>
+              <div className="panel-title-sub">{t.filtersSub}</div>
             </div>
           </div>
 
           <div className="study-filter-group">
-            <label>Səviyyə</label>
+            <label>{t.level}</label>
             <select className="filter-select" value={level} onChange={(e) => setLevel(e.target.value)}>
-              <option value="">Bütün səviyyələr</option>
-              <option value="beginner">Başlanğıc</option>
-              <option value="intermediate">Orta</option>
-              <option value="advanced">İrəliləmiş</option>
+              <option value="">{t.allLevels}</option>
+              <option value="beginner">{t.beginner}</option>
+              <option value="intermediate">{t.intermediate}</option>
+              <option value="advanced">{t.advanced}</option>
             </select>
           </div>
 
           <div className="study-filter-group">
-            <label>Sual tipi</label>
+            <label>{t.questionType}</label>
             <select className="filter-select" value={questionType} onChange={(e) => setQuestionType(e.target.value)}>
-              <option value="">Bütün tiplər</option>
-              <option value="closed">Çoxseçimli</option>
-              <option value="open">Açıq mətn</option>
-              <option value="terminal">Terminal/kod</option>
+              <option value="">{t.allTypes}</option>
+              <option value="closed">{t.typeClosed}</option>
+              <option value="open">{t.typeOpen}</option>
+              <option value="terminal">{t.typeTerminal}</option>
             </select>
           </div>
 
           <div className="study-filter-group">
-            <label>Kurs</label>
+            <label>{t.course}</label>
             <select className="filter-select" value={course} onChange={(e) => setCourse(e.target.value)}>
-              <option value="">Bütün kurslar</option>
+              <option value="">{t.allCourses}</option>
               {courseOptions.map((c) => (
                 <option key={c.id} value={c.id}>{c.title}</option>
               ))}
@@ -137,7 +271,7 @@ export default function SelfStudyPage() {
           </div>
 
           <div className="study-filter-group">
-            <label>Status</label>
+            <label>{t.status}</label>
             <div className="status-filter-btns">
               {["", "pending", "wrong", "correct"].map((s) => (
                 <button
@@ -146,19 +280,18 @@ export default function SelfStudyPage() {
                   className={`status-filter-btn ${statusFilter === s ? "active" : ""}`}
                   onClick={() => setStatusFilter(s)}
                 >
-                  {s === "" ? "Hamısı" : statusMeta[s]?.label}
+                  {s === "" ? t.all : statusMeta[s]?.label}
                 </button>
               ))}
             </div>
           </div>
 
-          {/* Progress block */}
           <div className="study-progress panel" style={{ marginTop: 8 }}>
-            <h3 style={{ marginBottom: 14 }}>Proqresim</h3>
+            <h3 style={{ marginBottom: 14 }}>{t.progressTitle}</h3>
 
             <div className="progress" style={{ marginBottom: 14 }}>
               <div className="progress-meta">
-                <span>Düzgün</span>
+                <span>{t.progressCorrect}</span>
                 <span>{progress.correct_answers}/{progress.total_questions}</span>
               </div>
               <div className="progress-track">
@@ -167,36 +300,56 @@ export default function SelfStudyPage() {
             </div>
 
             <div className="study-progress-row">
-              <span>Cavablandırılan</span>
+              <span>{t.answered}</span>
               <strong>{progress.answered_questions || 0}</strong>
             </div>
             <div className="study-progress-row">
-              <span>Düzgünlük</span>
+              <span>{t.accuracy}</span>
               <strong>{progress.accuracy_percent || 0}%</strong>
             </div>
             <div className="study-progress-row">
-              <span>Qazanılan xallar</span>
+              <span>{t.earnedPoints}</span>
               <strong style={{ color: "var(--accent-2)" }}>{progress.total_points_earned || 0}</strong>
             </div>
             <div className="study-progress-row">
-              <span>Ümumi cəhdlər</span>
+              <span>{t.totalAttempts}</span>
               <strong>{progress.total_attempts || 0}</strong>
             </div>
           </div>
         </aside>
 
-        {/* ---- Main grid ---- */}
         <main className="study-main">
+          <section className="study-hero panel">
+            <div>
+              <h1>{t.heroTitle}</h1>
+              <p>{t.heroSub}</p>
+            </div>
+            <div className="study-hero-metrics" aria-label={t.heroMetricsAria}>
+              <div className="study-hero-metric">
+                <span>{t.totalQuestions}</span>
+                <strong>{progress.total_questions || 0}</strong>
+              </div>
+              <div className="study-hero-metric">
+                <span>{t.correctAnswers}</span>
+                <strong>{progress.correct_answers || 0}</strong>
+              </div>
+              <div className="study-hero-metric">
+                <span>{t.accuracy}</span>
+                <strong>{progress.accuracy_percent || 0}%</strong>
+              </div>
+            </div>
+          </section>
+
           {error && <div className="alert alert-error">{error}</div>}
 
           {loading ? (
-            <div className="loading-block">Suallar yüklənir...</div>
+            <div className="loading-block">{t.loading}</div>
           ) : (
             <>
               {filtered.length === 0 && !loading && (
                 <div className="empty-state panel">
-                  <h3>Sual tapılmadı</h3>
-                  <p>Filtrləri dəyişdirərək yenidən cəhd edin.</p>
+                  <h3>{t.emptyTitle}</h3>
+                  <p>{t.emptySub}</p>
                 </div>
               )}
 
@@ -216,10 +369,10 @@ export default function SelfStudyPage() {
                       <p className="study-course">{item.course?.title}</p>
                       <div className="study-card-meta">
                         <span>{typeIcon[item.question_type]} {typeLabel[item.question_type] || item.question_type}</span>
-                        <span className="study-card-pts">{item.points} xal</span>
+                        <span className="study-card-pts">{item.points} {t.points}</span>
                       </div>
                       {item.attempt_count > 0 && (
-                        <div className="study-card-footer">{item.attempt_count} cəhd</div>
+                        <div className="study-card-footer">{item.attempt_count} {t.attempts}</div>
                       )}
                     </Link>
                   );
@@ -234,7 +387,7 @@ export default function SelfStudyPage() {
                     onClick={() => setPage((p) => Math.max(1, p - 1))}
                     disabled={safePage <= 1}
                   >
-                    ← Əvvəlki
+                    {t.prev}
                   </button>
                   <span className="pagination-info">
                     {safePage} / {totalPages}
@@ -245,7 +398,7 @@ export default function SelfStudyPage() {
                     onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                     disabled={safePage >= totalPages}
                   >
-                    Növbəti →
+                    {t.next}
                   </button>
                 </div>
               )}

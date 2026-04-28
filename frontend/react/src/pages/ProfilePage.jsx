@@ -39,6 +39,8 @@ export default function ProfilePage() {
   const [profile, setProfile] = useState(EMPTY_PROFILE);
   const [stats, setStats] = useState(EMPTY_STATS);
   const [graphDays, setGraphDays] = useState([]);
+  const [graphYears, setGraphYears] = useState([]);
+  const [selectedYear, setSelectedYear] = useState(null);
   const [recentActivity, setRecentActivity] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -48,7 +50,7 @@ export default function ProfilePage() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
 
-  const loadProfileData = async () => {
+  const loadProfileData = async (year = null) => {
     setLoading(true);
     setError("");
 
@@ -56,16 +58,19 @@ export default function ProfilePage() {
       const [profileRes, statsRes, graphRes, recentRes] = await Promise.all([
         endpoints.myProfile(),
         endpoints.profileStats(),
-        endpoints.activityGraph(),
+        year ? endpoints.activityGraph(year) : endpoints.activityGraph(),
         endpoints.recentStudyActivity(20),
       ]);
 
       const profileData = profileRes?.data || EMPTY_PROFILE;
       const statsData = statsRes?.data || EMPTY_STATS;
+      const graphData = graphRes?.data || {};
 
       setProfile({ ...EMPTY_PROFILE, ...profileData, ...statsData });
       setStats({ ...EMPTY_STATS, ...statsData });
-      setGraphDays(Array.isArray(graphRes?.data?.days) ? graphRes.data.days : []);
+      setGraphDays(Array.isArray(graphData.days) ? graphData.days : []);
+      setGraphYears(Array.isArray(graphData.years) ? graphData.years : []);
+      setSelectedYear(graphData.selected_year || null);
       setRecentActivity(Array.isArray(recentRes?.data) ? recentRes.data : []);
 
       setDraft({
@@ -141,7 +146,7 @@ export default function ProfilePage() {
 
               <StatsCards stats={stats} />
 
-              {hasAnyActivity ? <ContributionGraph days={graphDays} /> : <div className="profile-empty">No activity yet. Solve a question to start building your graph.</div>}
+              {hasAnyActivity ? <ContributionGraph days={graphDays} years={graphYears} selectedYear={selectedYear} onYearChange={loadProfileData} /> : <div className="profile-empty">No activity yet. Solve a question to start building your graph.</div>}
 
               <div className="profile-two-col">
                 <RecentActivity activities={recentActivity} />

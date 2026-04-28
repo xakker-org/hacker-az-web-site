@@ -52,7 +52,7 @@ export const endpoints = {
 
   // Profile extended endpoints
   profileStats: () => api.get("/auth/profile/stats/"),
-  activityGraph: () => api.get("/auth/profile/activity-graph/"),
+  activityGraph: (year = null) => api.get(`/auth/profile/activity-graph/${year ? `?year=${year}` : ""}`),
   recentStudyActivity: (limit = 20) => api.get(`/auth/profile/recent-activity/?limit=${limit}`),
 
   // Courses and lessons

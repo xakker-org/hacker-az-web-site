@@ -343,7 +343,7 @@
 
 .profile-panel-header {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   margin-bottom: 18px;
 }
@@ -361,7 +361,82 @@
   margin-top: 3px;
 }
 
-/* ---- Contribution Graph ---- */
+/* ---- Contribution Graph (GitHub style) ---- */
+.contrib-graph-container {
+  margin-top: 10px;
+  overflow-x: auto;
+}
+
+.contrib-graph-wrapper-github {
+  display: flex;
+  gap: 8px;
+  min-width: max-content;
+}
+
+.contrib-day-labels {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 34px;
+}
+
+.contrib-label-spacer {
+  height: 16px;
+  flex-shrink: 0;
+}
+
+.contrib-day-label {
+  height: 10px;
+  text-align: right;
+  font-size: 12px;
+  color: var(--ink-4);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.contrib-graph-main {
+  display: flex;
+  flex-direction: column;
+}
+
+.contrib-month-header {
+  display: block;
+  margin-bottom: 8px;
+  min-width: max-content;
+}
+
+.contrib-month-labels {
+  display: flex;
+  gap: 2px;
+  min-width: max-content;
+}
+
+.contrib-month-label {
+  font-size: 12px;
+  color: var(--ink-4);
+  width: 10px;
+  text-align: left;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.contrib-month-label.active {
+  color: var(--ink-2);
+}
+
+.contrib-grid-github {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.contrib-row {
+  display: flex;
+  gap: 2px;
+}
+
 .contrib-graph-wrapper {
   overflow-x: auto;
   overflow-y: visible;
@@ -387,22 +462,16 @@
   min-width: max-content;
 }
 
-.contrib-month-label {
-  font-size: 10px;
-  color: var(--ink-4);
-  width: 14px;
-  text-align: left;
-  flex-shrink: 0;
-}
-
 .contrib-cell {
-  width: 12px;
-  height: 12px;
+  width: 10px;
+  height: 10px;
   border-radius: 2px;
   cursor: pointer;
   position: relative;
   transition: transform 0.1s;
   flex-shrink: 0;
+  border: none;
+  padding: 0;
 }
 
 .contrib-cell:hover {
@@ -421,7 +490,7 @@
   display: flex;
   align-items: center;
   gap: 4px;
-  margin-top: 10px;
+  margin-top: 12px;
   justify-content: flex-end;
 }
 
@@ -431,9 +500,80 @@
 }
 
 .contrib-legend-box {
-  width: 11px;
-  height: 11px;
+  width: 10px;
+  height: 10px;
   border-radius: 2px;
+}
+
+/* ---- Header right / years rail ---- */
+.contrib-header-right {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.contrib-settings {
+  color: var(--ink-3);
+  font-size: 13px;
+  white-space: nowrap;
+  margin-top: 8px;
+}
+
+.contrib-settings-caret {
+  font-size: 10px;
+  color: var(--ink-4);
+  margin-left: 4px;
+}
+
+.contrib-year-rail {
+  display: flex;
+  flex-direction: column;
+  min-width: 118px;
+  gap: 6px;
+}
+
+.contrib-year-rail-item {
+  display: block;
+  width: 100%;
+  padding: 8px 14px;
+  text-align: left;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  color: var(--ink-2);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.contrib-year-rail-item:hover {
+  background: rgba(91, 139, 255, 0.12);
+  color: var(--ink-0);
+}
+
+.contrib-year-rail-item.active {
+  background: #2f81f7;
+  border-color: #2f81f7;
+  color: #ffffff;
+}
+
+@media (max-width: 900px) {
+  .profile-panel-header {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .contrib-header-right {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .contrib-year-rail {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
 }
 
 /* ---- Tooltip ---- */
