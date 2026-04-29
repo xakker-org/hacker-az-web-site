@@ -12,12 +12,17 @@ def get_list_env(name, default):
     value = config(name, default=default)
     return [item.strip() for item in value.split(",") if item.strip()]
 
-ALLOWED_HOSTS = [
-    *get_list_env(
-        "ALLOWED_HOSTS",
-        "127.0.0.1,localhost,localhost.xakker.org,xakker.org,www.xakker.org,self-study.xakker.org",
-    ),
-]
+ALLOWED_HOSTS = list(
+    dict.fromkeys(
+        [
+            *get_list_env(
+                "ALLOWED_HOSTS",
+                "127.0.0.1,localhost,localhost.xakker.org,xakker.org,www.xakker.org,self-study.xakker.org",
+            ),
+            ".ngrok-free.dev",
+        ]
+    )
+)
 
 INSTALLED_APPS = [
     "django_hosts",

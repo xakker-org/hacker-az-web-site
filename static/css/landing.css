@@ -1940,6 +1940,13 @@ h5 {
     );
   }
 
+  .hero-az-bg img {
+    width: 720px;
+    max-width: none;
+    margin-left: 50%;
+    transform: translateX(-50%);
+  }
+
   .hero-inner {
     padding-left: 0;
     padding-right: 0;

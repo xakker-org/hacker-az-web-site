@@ -158,7 +158,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  animation: slideInLeft 0.8s ease 0.2s both reverse;
+  animation: slideInRight 0.9s ease 0.15s both;
 }
 
 .logo-showcase {
@@ -284,9 +284,34 @@
   animation: mapPulse 6s ease-in-out infinite;
 }
 
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
 @keyframes mapPulse {
-  0%, 100% { opacity: 0.48; filter: drop-shadow(0 0 36px rgba(0, 194, 255, 0.6)) drop-shadow(0 0 80px rgba(159, 232, 255, 0.3)) brightness(1.5) saturate(0.25); }
-  50%       { opacity: 0.60; filter: drop-shadow(0 0 52px rgba(0, 194, 255, 0.8)) drop-shadow(0 0 110px rgba(159, 232, 255, 0.45)) brightness(1.7) saturate(0.3); }
+  0%, 100% {
+    opacity: var(--map-opacity-low, 0.48);
+    filter:
+      drop-shadow(0 0 36px rgba(0, 194, 255, 0.60))
+      drop-shadow(0 0 80px rgba(159, 232, 255, 0.30))
+      brightness(1.5)
+      saturate(0.25);
+  }
+  50% {
+    opacity: var(--map-opacity-high, 0.62);
+    filter:
+      drop-shadow(0 0 54px rgba(0, 194, 255, 0.85))
+      drop-shadow(0 0 115px rgba(159, 232, 255, 0.50))
+      brightness(1.75)
+      saturate(0.32);
+  }
 }
 
 .hero-glow {
@@ -869,12 +894,41 @@
   }
 
   .hero-visual {
+    min-height: 300px;
+    width: 100%;
+  }
+
+  .az-map-wrap {
     min-height: 280px;
+    padding: var(--space-md) 0;
   }
 
   .az-map-img {
-    max-width: 320px;
-    opacity: 0.25;
+    max-width: min(100%, 420px);
+    width: 90%;
+    opacity: 0.55;
+  }
+
+  .floating-card {
+    padding: 10px 13px;
+    border-radius: 14px;
+    white-space: nowrap;
+  }
+
+  .floating-card strong {
+    font-size: 12px;
+  }
+
+  .floating-card-top {
+    top: 10px;
+    right: 4px;
+    left: auto;
+  }
+
+  .floating-card-bottom {
+    bottom: 10px;
+    left: 4px;
+    right: auto;
   }
 
   .comparison-grid {
@@ -911,13 +965,50 @@
   .btn-lg {
     width: 100%;
   }
+}
+
+@media (max-width: 480px) {
+  .hero-visual {
+    min-height: 240px;
+  }
+
+  .az-map-wrap {
+    min-height: 220px;
+    padding: var(--space-sm) 0;
+  }
+
+  .az-map-img {
+    width: 95%;
+    max-width: 100%;
+    opacity: 0.52;
+  }
+
+  .floating-card {
+    padding: 7px 10px;
+    border-radius: 11px;
+  }
+
+  .floating-card-label {
+    font-size: 9px;
+    letter-spacing: 0.09em;
+  }
+
+  .floating-card strong {
+    font-size: 11px;
+  }
 
   .floating-card-top {
-    right: 0;
+    top: 6px;
+    right: 2px;
   }
 
   .floating-card-bottom {
-    left: 0;
     bottom: 6px;
+    left: 2px;
+  }
+
+  .az-map-glow {
+    inset: -8%;
+    filter: blur(24px);
   }
 }

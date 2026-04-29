@@ -35,7 +35,7 @@ cd /home/maharrammasimov/hacker-az-web-site
 ```
 
 Then access:
-- **Landing Page**: http://xakker.org:8000
+- **Landing Page**: http://xakker.org:8000 or http://localhost:8000
 - **Platform Page**: http://self-study.xakker.org:8000
 
 ### Option 2: Using Docker Compose
@@ -52,7 +52,8 @@ This will start:
 
 - `xakker.org` → Landing Page (django-hosts routes to `config.urls_landing`)
 - `self-study.xakker.org` → Platform Dashboard (django-hosts routes to `config.urls_platform`)
-- `localhost`, `127.0.0.1` → Platform Dashboard (default fallback)
+- `localhost`, `127.0.0.1` → Landing Page
+- `*.ngrok-free.dev` → Landing Page
 
 ## Architecture
 

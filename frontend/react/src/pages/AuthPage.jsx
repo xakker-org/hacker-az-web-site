@@ -31,76 +31,52 @@ export default function AuthPage() {
 
   useEffect(() => {
     const normalized = normalizeMode(mode);
-    if (normalized !== activeTab) {
-      setActiveTab(normalized);
-    }
+    if (normalized !== activeTab) setActiveTab(normalized);
   }, [mode, activeTab]);
 
-  const handleLogoError = () => {
-    setLogoSrc("/static/logo/logoXakker.png");
-  };
+  const handleLogoError = () => setLogoSrc("/static/logo/logoXakker.png");
 
   const switchMode = (nextMode) => {
     const normalized = normalizeMode(nextMode);
     setActiveTab(normalized);
     setError("");
     setSuccess("");
-    setForm((prev) => ({
-      ...prev,
-      password: "",
-      confirmPassword: "",
-    }));
+    setForm((prev) => ({ ...prev, password: "", confirmPassword: "" }));
     navigate(`/auth/${normalized}`, { replace: true });
   };
 
   const getRequestErrorMessage = (requestError, fallback) => {
     const payload = requestError?.response?.data;
-    if (!payload) {
-      return fallback;
-    }
-
-    if (typeof payload === "string") {
-      return payload;
-    }
-
-    if (payload.detail) {
-      return payload.detail;
-    }
-
-    if (Array.isArray(payload.non_field_errors) && payload.non_field_errors[0]) {
+    if (!payload) return fallback;
+    if (typeof payload === "string") return payload;
+    if (payload.detail) return payload.detail;
+    if (Array.isArray(payload.non_field_errors) && payload.non_field_errors[0])
       return payload.non_field_errors[0];
-    }
-
-    const firstFieldError = Object.values(payload).find((value) => Array.isArray(value) && value[0]);
-    if (firstFieldError) {
-      return firstFieldError[0];
-    }
-
+    const firstFieldError = Object.values(payload).find(
+      (v) => Array.isArray(v) && v[0]
+    );
+    if (firstFieldError) return firstFieldError[0];
     return fallback;
   };
 
   const title = useMemo(
-    () => (isLogin ? "Welcome Back, Hacker" : "Start Your Security Journey"),
+    () => (isLogin ? "Welcome Back, Hacker" : "Start Your Journey"),
     [isLogin]
   );
 
   const subtitle = useMemo(
     () =>
       isLogin
-        ? "Log in to your Xakker account to continue training"
-        : "Join elite cybersecurity professionals learning on Xakker",
+        ? "Sign in to continue your cybersecurity training"
+        : "Join elite professionals training on Xakker",
     [isLogin]
   );
 
-  const onChange = (event) => {
-    setForm((prev) => ({
-      ...prev,
-      [event.target.name]: event.target.value,
-    }));
-  };
+  const onChange = (e) =>
+    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
 
-  const onSubmit = async (event) => {
-    event.preventDefault();
+  const onSubmit = async (e) => {
+    e.preventDefault();
     setLoading(true);
     setError("");
     setSuccess("");
@@ -112,7 +88,7 @@ export default function AuthPage() {
           password: form.password,
         });
         setTokens(data.access, data.refresh);
-        setSuccess("Login successful! Redirecting to dashboard...");
+        setSuccess("Login successful! Redirecting...");
         setTimeout(() => navigate("/dashboard"), 1000);
       } else {
         if (form.password !== form.confirmPassword) {
@@ -120,20 +96,17 @@ export default function AuthPage() {
           setLoading(false);
           return;
         }
-
         await api.post("/auth/register/", {
           username: form.username,
           email: form.email,
           password: form.password,
         });
-
         const { data } = await api.post("/auth/login/", {
           username: form.username,
           password: form.password,
         });
         setTokens(data.access, data.refresh);
-
-        setSuccess("Account created! Redirecting to dashboard...");
+        setSuccess("Account created! Redirecting...");
         setTimeout(() => navigate("/dashboard"), 900);
       }
     } catch (requestError) {
@@ -152,86 +125,101 @@ export default function AuthPage() {
 
   return (
     <div className="auth-page">
-      {/* Animated background */}
-      <div className="auth-background">
-        <div className="glow glow-1"></div>
-        <div className="glow glow-2"></div>
-        <div className="glow glow-3"></div>
+      {/* Background */}
+      <div className="auth-bg">
+        <div className="auth-glow auth-glow-1" />
+        <div className="auth-glow auth-glow-2" />
+        <div className="auth-glow auth-glow-3" />
       </div>
 
       <div className="auth-container">
-        {/* Left Side - Brand Story */}
+        {/* ── LEFT PANEL ─────────────────────── */}
         <div className="auth-left">
-          <div className="auth-left-content">
-            <div className="auth-logo">
-              <img
-                src={logoSrc}
-                alt="Xakker logo"
-                className="auth-logo-image"
-                onError={handleLogoError}
-              />
+          <div className="auth-logo-block">
+            <img
+              src={logoSrc}
+              alt="Xakker"
+              className="auth-logo-img"
+              onError={handleLogoError}
+            />
+          </div>
+
+          {/* Radar visual */}
+          <div className="auth-radar">
+            <div className="radar-circle">
+              <div className="radar-ring radar-ring-1" />
+              <div className="radar-ring radar-ring-2" />
+              <div className="radar-sweep" />
+              <div className="radar-dot dot-1" />
+              <div className="radar-dot dot-2" />
+              <div className="radar-dot dot-3" />
+              <div className="radar-dot dot-4" />
+              <div className="radar-center" />
             </div>
+            <p className="radar-label">// threat monitoring active</p>
+          </div>
 
-            <h1>Xakker Self-Study</h1>
-            <p className="auth-subtitle">Train like a hacker. Learn like a pro.</p>
-
-            <div className="auth-features">
-              <div className="feature">
-                <div className="feature-icon">✓</div>
-                <div>
-                  <h4>Real-World Labs</h4>
-                  <p>Hands-on cyber security training in isolated environments</p>
-                </div>
-              </div>
-              <div className="feature">
-                <div className="feature-icon">✓</div>
-                <div>
-                  <h4>Expert Guidance</h4>
-                  <p>Learn from industry professionals and security experts</p>
-                </div>
-              </div>
-              <div className="feature">
-                <div className="feature-icon">✓</div>
-                <div>
-                  <h4>Certifications</h4>
-                  <p>Earn recognized credentials in cybersecurity</p>
-                </div>
-              </div>
-              <div className="feature">
-                <div className="feature-icon">✓</div>
-                <div>
-                  <h4>Career Growth</h4>
-                  <p>Build elite skills for high-paying security roles</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="auth-stats">
-              <div className="stat">
-                <div className="stat-number">10,000+</div>
-                <div className="stat-label">Students</div>
-              </div>
-              <div className="stat">
-                <div className="stat-number">250+</div>
-                <div className="stat-label">Labs</div>
-              </div>
-              <div className="stat">
-                <div className="stat-number">95%</div>
-                <div className="stat-label">Satisfaction</div>
-              </div>
-            </div>
-
-            <p className="auth-security">
-              🔒 Secure account • Industry-grade encryption • Your data is protected
+          <div className="auth-copy">
+            <h2>Train like a hacker.</h2>
+            <p>
+              Elite cybersecurity training for the next generation of security
+              professionals. Hands-on labs, real-world scenarios.
             </p>
+          </div>
+
+          <ul className="auth-feat-list">
+            <li>
+              <span className="feat-num">01</span>
+              <div>
+                <strong>Real-World Labs</strong>
+                <p>Isolated environments with actual threat scenarios</p>
+              </div>
+            </li>
+            <li>
+              <span className="feat-num">02</span>
+              <div>
+                <strong>Expert Guidance</strong>
+                <p>Industry professionals as your mentors</p>
+              </div>
+            </li>
+            <li>
+              <span className="feat-num">03</span>
+              <div>
+                <strong>Certifications</strong>
+                <p>Industry-recognized cybersecurity credentials</p>
+              </div>
+            </li>
+          </ul>
+
+          <div className="auth-stats-row">
+            <div className="auth-stat">
+              <span>10K+</span>
+              <label>Students</label>
+            </div>
+            <div className="auth-stat">
+              <span>250+</span>
+              <label>Labs</label>
+            </div>
+            <div className="auth-stat">
+              <span>95%</span>
+              <label>Rating</label>
+            </div>
           </div>
         </div>
 
-        {/* Right Side - Auth Form */}
+        {/* ── RIGHT PANEL ────────────────────── */}
         <div className="auth-right">
           <div className="auth-card">
+            {/* Terminal bar */}
+            <div className="auth-terminal-bar">
+              <span className="t-dot t-red" />
+              <span className="t-dot t-yellow" />
+              <span className="t-dot t-green" />
+              <span className="t-title">xakker_auth.exe</span>
+            </div>
+
             {/* Tabs */}
-            <div className="auth-tabs">
+            <div className={`auth-tabs auth-tabs-${activeTab}`}>
               <button
                 className={`tab ${activeTab === "login" ? "active" : ""}`}
                 type="button"
@@ -246,54 +234,59 @@ export default function AuthPage() {
               >
                 Register
               </button>
+              <div className="tab-slider" />
             </div>
 
             {/* Form */}
             <form onSubmit={onSubmit} className="auth-form">
-              <h2>{title}</h2>
-              <p className="form-subtitle">{subtitle}</p>
+              <div className="form-header">
+                <h2>{title}</h2>
+                <p className="form-subtitle">{subtitle}</p>
+              </div>
 
               {/* Username */}
-              <div className="form-group">
-                <label htmlFor="username">Username</label>
+              <div className="field-wrap">
+                <span className="field-icon">$_</span>
                 <input
                   id="username"
                   type="text"
                   name="username"
                   value={form.username}
                   onChange={onChange}
-                  placeholder="your_username"
+                  placeholder="username"
+                  autoComplete="username"
                   required
                 />
               </div>
 
-              {/* Email (Register Only) */}
+              {/* Email — register only */}
               {!isLogin && (
-                <div className="form-group">
-                  <label htmlFor="email">Email Address</label>
+                <div className="field-wrap">
+                  <span className="field-icon">@</span>
                   <input
                     id="email"
                     type="email"
                     name="email"
                     value={form.email}
                     onChange={onChange}
-                    placeholder="your@email.com"
+                    placeholder="email@example.com"
+                    autoComplete="email"
                     required
                   />
                 </div>
               )}
 
-              {/* Role Selection (Register Only) */}
+              {/* Account type — register only */}
               {!isLogin && (
-                <div className="form-group">
-                  <label>Account type</label>
+                <div className="field-wrap field-disabled">
+                  <span className="field-icon">#</span>
                   <input value="Client account" disabled readOnly />
                 </div>
               )}
 
               {/* Password */}
-              <div className="form-group">
-                <label htmlFor="password">Password</label>
+              <div className="field-wrap">
+                <span className="field-icon">••</span>
                 <input
                   id="password"
                   type="password"
@@ -301,81 +294,89 @@ export default function AuthPage() {
                   value={form.password}
                   onChange={onChange}
                   placeholder="••••••••"
+                  autoComplete={isLogin ? "current-password" : "new-password"}
                   minLength={8}
                   required
                 />
               </div>
 
-              {/* Confirm Password (Register Only) */}
+              {/* Confirm password — register only */}
               {!isLogin && (
-                <div className="form-group">
-                  <label htmlFor="confirmPassword">Confirm Password</label>
+                <div className="field-wrap">
+                  <span className="field-icon">••</span>
                   <input
                     id="confirmPassword"
                     type="password"
                     name="confirmPassword"
                     value={form.confirmPassword}
                     onChange={onChange}
-                    placeholder="••••••••"
+                    placeholder="confirm password"
+                    autoComplete="new-password"
                     minLength={8}
                     required
                   />
                 </div>
               )}
 
-              {/* Forgot Password Link (Login Only) */}
               {isLogin && (
-                <div className="forgot-password">
-                  <span>Account recovery is handled by support for now.</span>
+                <div className="forgot-hint">
+                  Account recovery handled via support.
                 </div>
               )}
 
-              {/* Error Message */}
-              {error && <div className="error-message">{error}</div>}
+              {error && (
+                <div className="auth-message auth-error" role="alert">
+                  <span className="msg-icon">✕</span> {error}
+                </div>
+              )}
+              {success && (
+                <div className="auth-message auth-success" role="status">
+                  <span className="msg-icon">✓</span> {success}
+                </div>
+              )}
 
-              {/* Success Message */}
-              {success && <div className="success-message">{success}</div>}
-
-              {/* Submit Button */}
               <button
                 type="submit"
-                className="btn btn-primary btn-lg btn-block"
+                className={`auth-submit-btn${loading ? " is-loading" : ""}`}
                 disabled={loading}
               >
-                {loading
-                  ? "Processing..."
-                  : isLogin
-                    ? "Sign In"
-                    : "Create Account"}
+                {loading ? (
+                  <>
+                    <span className="submit-spinner" />
+                    <span>Processing...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>{isLogin ? "Sign In" : "Create Account"}</span>
+                    <span className="submit-arrow">→</span>
+                  </>
+                )}
               </button>
 
-              {/* Terms & Conditions (Register Only) */}
               {!isLogin && (
                 <p className="terms-text">
-                  By creating an account, you confirm the profile will be used only for self-study access,
-                  progress tracking, and exam workflows.
+                  By registering you confirm this account will be used only for
+                  self-study, progress tracking, and exam workflows.
                 </p>
               )}
 
-              {/* Switch Auth Mode */}
               <p className="auth-switch">
-                {isLogin ? "Don't have an account? " : "Already registered? "}
+                {isLogin ? "No account? " : "Already registered? "}
                 <button
                   type="button"
                   className="switch-btn"
                   onClick={() => switchMode(isLogin ? "register" : "login")}
                 >
-                  {isLogin ? "Register now" : "Sign in"}
+                  {isLogin ? "Join now" : "Sign in"}
                 </button>
               </p>
             </form>
           </div>
 
-          {/* Trust Indicators */}
-          <div className="trust-indicators">
-            <span>🔒 Secure and encrypted</span>
-            <span>✓ Industry-standard security</span>
-            <span>⚡ Instant access to labs</span>
+          <div className="auth-trust-row">
+            <span>🔒 Encrypted</span>
+            <span>⚡ Instant access</span>
+            <span>✓ ISO-grade security</span>
           </div>
         </div>
       </div>
