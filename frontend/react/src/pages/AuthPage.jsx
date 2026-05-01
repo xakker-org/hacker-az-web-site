@@ -21,6 +21,8 @@ export default function AuthPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   const isLogin = activeTab === "login";
 
@@ -159,50 +161,25 @@ export default function AuthPage() {
             <p className="radar-label">// threat monitoring active</p>
           </div>
 
-          <div className="auth-copy">
-            <h2>Train like a hacker.</h2>
-            <p>
-              Elite cybersecurity training for the next generation of security
-              professionals. Hands-on labs, real-world scenarios.
-            </p>
-          </div>
-
-          <ul className="auth-feat-list">
-            <li>
-              <span className="feat-num">01</span>
-              <div>
-                <strong>Real-World Labs</strong>
-                <p>Isolated environments with actual threat scenarios</p>
-              </div>
-            </li>
-            <li>
-              <span className="feat-num">02</span>
-              <div>
-                <strong>Expert Guidance</strong>
-                <p>Industry professionals as your mentors</p>
-              </div>
-            </li>
-            <li>
-              <span className="feat-num">03</span>
-              <div>
-                <strong>Certifications</strong>
-                <p>Industry-recognized cybersecurity credentials</p>
-              </div>
-            </li>
-          </ul>
-
-          <div className="auth-stats-row">
-            <div className="auth-stat">
-              <span>10K+</span>
-              <label>Students</label>
+          <div className="auth-terminal-lines">
+            <div className="auth-terminal-line">
+              <span className="atl-prompt">$</span>
+              <span className="atl-text">connecting to xakker.org...</span>
+              <span className="atl-ok">OK</span>
             </div>
-            <div className="auth-stat">
-              <span>250+</span>
-              <label>Labs</label>
+            <div className="auth-terminal-line">
+              <span className="atl-prompt">$</span>
+              <span className="atl-text">loading secure session...</span>
+              <span className="atl-ok">OK</span>
             </div>
-            <div className="auth-stat">
-              <span>95%</span>
-              <label>Rating</label>
+            <div className="auth-terminal-line">
+              <span className="atl-prompt">$</span>
+              <span className="atl-text">encryption: AES-256</span>
+              <span className="atl-ok">READY</span>
+            </div>
+            <div className="auth-terminal-line atl-blink">
+              <span className="atl-prompt">$</span>
+              <span className="atl-text">awaiting credentials_</span>
             </div>
           </div>
         </div>
@@ -253,10 +230,11 @@ export default function AuthPage() {
                   name="username"
                   value={form.username}
                   onChange={onChange}
-                  placeholder="username"
+                  placeholder=" "
                   autoComplete="username"
                   required
                 />
+                <label htmlFor="username" className="field-label">Username</label>
               </div>
 
               {/* Email — register only */}
@@ -269,18 +247,11 @@ export default function AuthPage() {
                     name="email"
                     value={form.email}
                     onChange={onChange}
-                    placeholder="email@example.com"
+                    placeholder=" "
                     autoComplete="email"
                     required
                   />
-                </div>
-              )}
-
-              {/* Account type — register only */}
-              {!isLogin && (
-                <div className="field-wrap field-disabled">
-                  <span className="field-icon">#</span>
-                  <input value="Client account" disabled readOnly />
+                  <label htmlFor="email" className="field-label">Email</label>
                 </div>
               )}
 
@@ -289,15 +260,36 @@ export default function AuthPage() {
                 <span className="field-icon">••</span>
                 <input
                   id="password"
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   name="password"
                   value={form.password}
                   onChange={onChange}
-                  placeholder="••••••••"
+                  placeholder=" "
                   autoComplete={isLogin ? "current-password" : "new-password"}
                   minLength={8}
                   required
                 />
+                <label htmlFor="password" className="field-label">Password</label>
+                <button
+                  type="button"
+                  className="eye-btn"
+                  onClick={() => setShowPassword((v) => !v)}
+                  tabIndex={-1}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? (
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94"/>
+                      <path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"/>
+                      <line x1="1" y1="1" x2="23" y2="23"/>
+                    </svg>
+                  ) : (
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                      <circle cx="12" cy="12" r="3"/>
+                    </svg>
+                  )}
+                </button>
               </div>
 
               {/* Confirm password — register only */}
@@ -306,15 +298,36 @@ export default function AuthPage() {
                   <span className="field-icon">••</span>
                   <input
                     id="confirmPassword"
-                    type="password"
+                    type={showConfirm ? "text" : "password"}
                     name="confirmPassword"
                     value={form.confirmPassword}
                     onChange={onChange}
-                    placeholder="confirm password"
+                    placeholder=" "
                     autoComplete="new-password"
                     minLength={8}
                     required
                   />
+                  <label htmlFor="confirmPassword" className="field-label">Confirm Password</label>
+                  <button
+                    type="button"
+                    className="eye-btn"
+                    onClick={() => setShowConfirm((v) => !v)}
+                    tabIndex={-1}
+                    aria-label={showConfirm ? "Hide password" : "Show password"}
+                  >
+                    {showConfirm ? (
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94"/>
+                        <path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"/>
+                        <line x1="1" y1="1" x2="23" y2="23"/>
+                      </svg>
+                    ) : (
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                        <circle cx="12" cy="12" r="3"/>
+                      </svg>
+                    )}
+                  </button>
                 </div>
               )}
 

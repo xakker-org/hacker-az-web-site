@@ -13,7 +13,15 @@
   overflow: hidden;
   padding: var(--space-xl) var(--space-lg);
   background:
-    linear-gradient(135deg, #04070c 0%, #07101a 55%, #0b1622 100%);
+    linear-gradient(
+      125deg,
+      #020610 0%,
+      #050e1f 25%,
+      #0c1528 42%,
+      #160a14 58%,
+      #180510 75%,
+      #0d0208 100%
+    );
 }
 
 /* dot-grid overlay */
@@ -21,7 +29,7 @@
   content: "";
   position: fixed;
   inset: 0;
-  background-image: radial-gradient(rgba(142, 216, 232, 0.055) 1px, transparent 1px);
+  background-image: radial-gradient(rgba(142, 216, 232, 0.04) 1px, transparent 1px);
   background-size: 30px 30px;
   pointer-events: none;
   z-index: 0;
@@ -44,27 +52,27 @@
 .auth-glow-1 {
   top: -8%;
   left: -10%;
-  width: 500px;
-  height: 500px;
-  background: radial-gradient(circle, rgba(142, 216, 232, 0.11), transparent 70%);
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, rgba(53, 130, 200, 0.14), transparent 70%);
   animation: float 28s ease-in-out infinite;
 }
 
 .auth-glow-2 {
   bottom: -10%;
   right: -8%;
-  width: 440px;
-  height: 440px;
-  background: radial-gradient(circle, rgba(53, 103, 168, 0.14), transparent 70%);
+  width: 520px;
+  height: 520px;
+  background: radial-gradient(circle, rgba(180, 30, 55, 0.14), transparent 70%);
   animation: float-reverse 33s ease-in-out infinite;
 }
 
 .auth-glow-3 {
   top: 45%;
   left: 42%;
-  width: 320px;
-  height: 320px;
-  background: radial-gradient(circle, rgba(191, 238, 246, 0.06), transparent 70%);
+  width: 380px;
+  height: 380px;
+  background: radial-gradient(circle, rgba(120, 20, 50, 0.07), transparent 70%);
   animation: float 22s ease-in-out 4s infinite;
   transform: translate(-50%, -50%);
 }
@@ -102,6 +110,7 @@
 .auth-left {
   display: flex;
   flex-direction: column;
+  justify-content: center;
   gap: var(--space-2xl);
   padding: 44px 38px;
   background: linear-gradient(160deg, rgba(7, 13, 24, 0.99), rgba(4, 8, 16, 0.97));
@@ -306,92 +315,53 @@
   color: rgba(142, 216, 232, 0.45);
 }
 
-/* ── Copy ───────────────────────────────── */
-.auth-copy h2 {
-  font-size: clamp(20px, 2vw, 28px);
-  color: var(--text-primary);
-  margin-bottom: 10px;
-  line-height: 1.25;
-}
-
-.auth-copy p {
-  font-size: 13px;
-  color: var(--text-secondary);
-  line-height: 1.75;
-}
-
-/* ── Feature list ───────────────────────── */
-.auth-feat-list {
-  list-style: none;
+/* ── Terminal lines ─────────────────────── */
+.auth-terminal-lines {
   display: flex;
   flex-direction: column;
-  gap: var(--space-lg);
+  gap: 10px;
+  padding: 18px 20px;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(142, 216, 232, 0.1);
+  border-radius: 12px;
+  font-family: var(--font-mono);
 }
 
-.auth-feat-list li {
+.auth-terminal-line {
   display: flex;
-  gap: 14px;
-  align-items: flex-start;
-}
-
-.feat-num {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  color: rgba(142, 216, 232, 0.65);
-  background: rgba(142, 216, 232, 0.07);
-  border: 1px solid rgba(142, 216, 232, 0.14);
-  border-radius: 5px;
-  padding: 3px 7px;
-  flex-shrink: 0;
-  margin-top: 2px;
-  letter-spacing: 0.05em;
-}
-
-.auth-feat-list strong {
-  display: block;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text-primary);
-  margin-bottom: 3px;
-}
-
-.auth-feat-list p {
+  align-items: center;
+  gap: 10px;
   font-size: 12px;
-  color: var(--text-tertiary);
-  margin: 0;
-  line-height: 1.5;
 }
 
-/* ── Stats row ──────────────────────────── */
-.auth-stats-row {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: var(--space-md);
-  padding: var(--space-lg);
-  background: rgba(142, 216, 232, 0.04);
-  border: 1px solid rgba(142, 216, 232, 0.09);
-  border-radius: 13px;
-}
-
-.auth-stat {
-  text-align: center;
-}
-
-.auth-stat span {
-  display: block;
-  font-family: var(--font-mono);
-  font-size: 19px;
+.atl-prompt {
+  color: rgba(142, 216, 232, 0.5);
   font-weight: 700;
-  color: var(--blue-light);
-  margin-bottom: 4px;
+  flex-shrink: 0;
 }
 
-.auth-stat label {
-  display: block;
+.atl-text {
+  color: var(--text-secondary);
+  flex: 1;
+  letter-spacing: 0.01em;
+}
+
+.atl-ok {
   font-size: 10px;
-  color: var(--text-tertiary);
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
+  font-weight: 700;
+  color: #27c93f;
+  letter-spacing: 0.08em;
+  flex-shrink: 0;
+}
+
+.atl-blink .atl-text {
+  color: rgba(142, 216, 232, 0.65);
+  animation: cursorBlink 1.1s step-end infinite;
+}
+
+@keyframes cursorBlink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
 }
 
 /* ══════════════════════════════════════════
@@ -554,7 +524,7 @@
 
 .field-wrap input {
   width: 100%;
-  padding: 13px 14px 13px 48px;
+  padding: 18px 14px 10px 48px;
   background: rgba(4, 9, 18, 0.75);
   border: 1.5px solid rgba(142, 216, 232, 0.1);
   border-radius: 10px;
@@ -568,8 +538,7 @@
 }
 
 .field-wrap input::placeholder {
-  color: var(--text-tertiary);
-  font-size: 13px;
+  color: transparent;
 }
 
 .field-wrap input:focus {
@@ -590,6 +559,73 @@
 .field-wrap input:disabled {
   opacity: 0.45;
   cursor: not-allowed;
+}
+
+/* ── Floating Label ─────────────────────── */
+.field-label {
+  position: absolute;
+  left: 48px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 13px;
+  color: rgba(142, 216, 232, 0.38);
+  pointer-events: none;
+  transition:
+    top 0.22s cubic-bezier(0.4, 0, 0.2, 1),
+    font-size 0.22s cubic-bezier(0.4, 0, 0.2, 1),
+    color 0.22s ease,
+    left 0.22s ease,
+    padding 0.22s ease,
+    background 0.22s ease;
+  line-height: 1;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.field-wrap input:focus ~ .field-label,
+.field-wrap input:not(:placeholder-shown) ~ .field-label {
+  top: 0;
+  left: 44px;
+  font-size: 10px;
+  font-weight: 600;
+  color: rgba(142, 216, 232, 0.85);
+  background: rgba(5, 10, 20, 0.97);
+  padding: 1px 7px;
+  border-radius: 4px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+/* ── Eye toggle button ──────────────────── */
+.eye-btn {
+  position: absolute;
+  right: 13px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  color: rgba(142, 216, 232, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 5px;
+  transition: color 0.2s ease;
+  z-index: 2;
+}
+
+.eye-btn:hover {
+  color: rgba(142, 216, 232, 0.85);
+}
+
+.eye-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+.field-wrap input:has(~ .eye-btn) {
+  padding-right: 42px;
 }
 
 /* ── Forgot hint ────────────────────────── */
