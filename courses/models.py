@@ -415,3 +415,209 @@ class ExamAttemptAnswer(models.Model):
 
     def __str__(self):
         return f"{self.attempt.id} - {self.question.title}"
+
+
+# ═══════════════════════════════════════════════════════════════
+#  MISSION / PASS SYSTEM
+# ═══════════════════════════════════════════════════════════════
+
+class MissionDifficultyChoices(models.TextChoices):
+    EASY = "easy", "Easy"
+    MEDIUM = "medium", "Medium"
+    HARD = "hard", "Hard"
+    EXPERT = "expert", "Expert"
+
+
+class Mission(models.Model):
+    title = models.CharField(max_length=200)
+    slug = models.SlugField(unique=True)
+    description = models.TextField()
+    short_description = models.CharField(max_length=300, blank=True)
+    difficulty = models.CharField(
+        max_length=20,
+        choices=MissionDifficultyChoices.choices,
+        default=MissionDifficultyChoices.MEDIUM,
+    )
+    cover_color = models.CharField(max_length=16, blank=True, default="#4d9fff")
+    icon = models.CharField(max_length=8, blank=True, default="🎯")
+    estimated_hours = models.PositiveSmallIntegerField(default=1)
+    xp_reward = models.PositiveIntegerField(default=100)
+    order = models.PositiveSmallIntegerField(default=0)
+    is_published = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["order", "created_at"]
+
+    def __str__(self):
+        return self.title
+
+    @property
+    def pass_count(self):
+        return self.passes.filter(is_published=True).count()
+
+    @property
+    def has_exam(self):
+        return hasattr(self, "mission_exam") and self.mission_exam.is_published
+
+
+class MissionPass(models.Model):
+    mission = models.ForeignKey(Mission, on_delete=models.CASCADE, related_name="passes")
+    title = models.CharField(max_length=200)
+    content = models.TextField(
+        help_text="HTML content for this pass. Supports standard HTML tags."
+    )
+    order = models.PositiveSmallIntegerField(default=0)
+    estimated_minutes = models.PositiveSmallIntegerField(default=10)
+    is_published = models.BooleanField(default=True)
+
+    class Meta:
+        ordering = ["order"]
+        unique_together = [["mission", "order"]]
+        verbose_name = "Mission Pass"
+        verbose_name_plural = "Mission Passes"
+
+    def __str__(self):
+        return f"{self.mission.title} — Pass {self.order}: {self.title}"
+
+
+class MissionExam(models.Model):
+    mission = models.OneToOneField(
+        Mission, on_delete=models.CASCADE, related_name="mission_exam"
+    )
+    title = models.CharField(max_length=200)
+    description = models.TextField(blank=True)
+    passing_score = models.PositiveSmallIntegerField(
+        default=70, help_text="Minimum percentage (0-100) required to pass"
+    )
+    time_limit_minutes = models.PositiveSmallIntegerField(
+        default=0, help_text="Time limit in minutes. Set 0 for no limit."
+    )
+    max_attempts = models.PositiveSmallIntegerField(
+        default=3, help_text="Maximum allowed attempts. Set 0 for unlimited."
+    )
+    xp_reward = models.PositiveIntegerField(default=50)
+    is_published = models.BooleanField(default=True)
+
+    class Meta:
+        verbose_name = "Mission Exam"
+
+    def __str__(self):
+        return f"Final Exam: {self.mission.title}"
+
+
+class MissionExamQuestion(models.Model):
+    exam = models.ForeignKey(MissionExam, on_delete=models.CASCADE, related_name="questions")
+    question_text = models.TextField()
+    order = models.PositiveSmallIntegerField(default=0)
+    is_multiple = models.BooleanField(
+        default=False, help_text="Allow multiple correct answers to be selected"
+    )
+    explanation = models.TextField(
+        blank=True, help_text="Shown after the exam to explain the correct answer"
+    )
+
+    class Meta:
+        ordering = ["order"]
+        verbose_name = "Exam Question"
+
+    def __str__(self):
+        return f"Q{self.order}: {self.question_text[:80]}"
+
+
+class MissionExamChoice(models.Model):
+    question = models.ForeignKey(
+        MissionExamQuestion, on_delete=models.CASCADE, related_name="choices"
+    )
+    choice_text = models.CharField(max_length=500)
+    is_correct = models.BooleanField(default=False)
+    order = models.PositiveSmallIntegerField(default=0)
+
+    class Meta:
+        ordering = ["order"]
+        verbose_name = "Exam Choice"
+
+    def __str__(self):
+        mark = "✓" if self.is_correct else "✗"
+        return f"{mark} {self.choice_text[:60]}"
+
+
+class MissionProgress(models.Model):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="mission_progress",
+    )
+    mission = models.ForeignKey(
+        Mission, on_delete=models.CASCADE, related_name="user_progress"
+    )
+    started_at = models.DateTimeField(auto_now_add=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+    is_completed = models.BooleanField(default=False)
+    exam_passed = models.BooleanField(default=False)
+
+    class Meta:
+        unique_together = [["user", "mission"]]
+        verbose_name = "Mission Progress"
+        verbose_name_plural = "Mission Progress"
+
+    def __str__(self):
+        status = "completed" if self.is_completed else "in progress"
+        return f"{self.user.username} — {self.mission.title} ({status})"
+
+
+class MissionPassCompletion(models.Model):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="pass_completions",
+    )
+    mission_pass = models.ForeignKey(
+        MissionPass, on_delete=models.CASCADE, related_name="completions"
+    )
+    completed_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = [["user", "mission_pass"]]
+        verbose_name = "Pass Completion"
+
+    def __str__(self):
+        return f"{self.user.username} — {self.mission_pass}"
+
+
+class MissionExamAttempt(models.Model):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="mission_exam_attempts",
+    )
+    exam = models.ForeignKey(MissionExam, on_delete=models.CASCADE, related_name="attempts")
+    attempt_number = models.PositiveSmallIntegerField(default=1)
+    started_at = models.DateTimeField(auto_now_add=True)
+    submitted_at = models.DateTimeField(null=True, blank=True)
+    score = models.FloatField(null=True, blank=True)
+    passed = models.BooleanField(default=False)
+
+    class Meta:
+        unique_together = [["user", "exam", "attempt_number"]]
+        ordering = ["-started_at"]
+        verbose_name = "Exam Attempt"
+
+    def __str__(self):
+        return f"{self.user.username} — {self.exam} — Attempt #{self.attempt_number}"
+
+
+class MissionExamAnswer(models.Model):
+    attempt = models.ForeignKey(
+        MissionExamAttempt, on_delete=models.CASCADE, related_name="answers"
+    )
+    question = models.ForeignKey(MissionExamQuestion, on_delete=models.CASCADE)
+    selected_choices = models.ManyToManyField(MissionExamChoice, blank=True)
+
+    class Meta:
+        unique_together = [["attempt", "question"]]
+        verbose_name = "Exam Answer"
+
+    def __str__(self):
+        return f"Answer to {self.question} in {self.attempt}"

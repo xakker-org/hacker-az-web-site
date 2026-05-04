@@ -14,6 +14,15 @@ from .models import (
     LessonQuestion,
     LessonQuestionAttempt,
     LessonQuestionChoice,
+    Mission,
+    MissionExam,
+    MissionExamAnswer,
+    MissionExamAttempt,
+    MissionExamChoice,
+    MissionExamQuestion,
+    MissionPass,
+    MissionPassCompletion,
+    MissionProgress,
     Question,
     QuestionAttempt,
     QuestionChoice,
@@ -647,3 +656,176 @@ class EnrollmentSerializer(serializers.ModelSerializer):
         model = Enrollment
         fields = ["id", "user", "course", "created_at"]
         read_only_fields = ["user", "created_at"]
+
+
+# ═══════════════════════════════════════════════════════════════
+#  MISSION SERIALIZERS
+# ═══════════════════════════════════════════════════════════════
+
+class MissionExamChoiceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MissionExamChoice
+        fields = ["id", "choice_text", "order"]
+
+
+class MissionExamChoiceFullSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MissionExamChoice
+        fields = ["id", "choice_text", "is_correct", "order"]
+
+
+class MissionExamQuestionSerializer(serializers.ModelSerializer):
+    choices = MissionExamChoiceSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = MissionExamQuestion
+        fields = ["id", "question_text", "order", "is_multiple", "choices"]
+
+
+class MissionExamSerializer(serializers.ModelSerializer):
+    questions = MissionExamQuestionSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = MissionExam
+        fields = [
+            "id", "title", "description", "passing_score",
+            "time_limit_minutes", "max_attempts", "xp_reward", "questions",
+        ]
+
+
+class MissionExamSummarySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MissionExam
+        fields = ["id", "title", "passing_score", "time_limit_minutes", "max_attempts", "xp_reward"]
+
+
+class MissionPassListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MissionPass
+        fields = ["id", "title", "order", "estimated_minutes"]
+
+
+class MissionPassDetailSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MissionPass
+        fields = ["id", "title", "content", "order", "estimated_minutes"]
+
+
+class MissionListSerializer(serializers.ModelSerializer):
+    pass_count = serializers.SerializerMethodField()
+    has_exam = serializers.SerializerMethodField()
+    user_progress = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Mission
+        fields = [
+            "id", "title", "slug", "description", "short_description",
+            "difficulty", "cover_color", "icon", "estimated_hours",
+            "xp_reward", "order", "pass_count", "has_exam", "user_progress",
+        ]
+
+    def get_pass_count(self, obj):
+        return obj.passes.filter(is_published=True).count()
+
+    def get_has_exam(self, obj):
+        return hasattr(obj, "mission_exam") and obj.mission_exam.is_published
+
+    def get_user_progress(self, obj):
+        request = self.context.get("request")
+        if not request or not request.user.is_authenticated:
+            return None
+        try:
+            prog = obj.user_progress.get(user=request.user)
+        except MissionProgress.DoesNotExist:
+            return None
+        passes = obj.passes.filter(is_published=True)
+        completed = MissionPassCompletion.objects.filter(
+            user=request.user, mission_pass__in=passes
+        ).count()
+        return {
+            "is_started": True,
+            "is_completed": prog.is_completed,
+            "exam_passed": prog.exam_passed,
+            "completed_passes": completed,
+            "total_passes": passes.count(),
+        }
+
+
+class MissionDetailSerializer(serializers.ModelSerializer):
+    passes = serializers.SerializerMethodField()
+    exam = serializers.SerializerMethodField()
+    user_progress = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Mission
+        fields = [
+            "id", "title", "slug", "description", "short_description",
+            "difficulty", "cover_color", "icon", "estimated_hours",
+            "xp_reward", "order", "passes", "exam", "user_progress",
+        ]
+
+    def get_passes(self, obj):
+        qs = obj.passes.filter(is_published=True).order_by("order")
+        return MissionPassListSerializer(qs, many=True).data
+
+    def get_exam(self, obj):
+        if not (hasattr(obj, "mission_exam") and obj.mission_exam.is_published):
+            return None
+        return MissionExamSummarySerializer(obj.mission_exam).data
+
+    def get_user_progress(self, obj):
+        request = self.context.get("request")
+        if not request or not request.user.is_authenticated:
+            return None
+        try:
+            prog = obj.user_progress.get(user=request.user)
+        except MissionProgress.DoesNotExist:
+            return None
+        passes = obj.passes.filter(is_published=True)
+        completed_ids = list(
+            MissionPassCompletion.objects.filter(
+                user=request.user, mission_pass__in=passes
+            ).values_list("mission_pass_id", flat=True)
+        )
+        return {
+            "is_started": True,
+            "is_completed": prog.is_completed,
+            "exam_passed": prog.exam_passed,
+            "completed_pass_ids": completed_ids,
+            "total_passes": passes.count(),
+        }
+
+
+class MissionExamSubmitSerializer(serializers.Serializer):
+    answers = serializers.ListField(
+        child=serializers.DictField(),
+        help_text='[{"question_id": 1, "choice_ids": [3, 4]}, ...]',
+    )
+
+
+class MissionExamAttemptResultSerializer(serializers.ModelSerializer):
+    answers_detail = serializers.SerializerMethodField()
+
+    class Meta:
+        model = MissionExamAttempt
+        fields = [
+            "id", "attempt_number", "started_at", "submitted_at",
+            "score", "passed", "answers_detail",
+        ]
+
+    def get_answers_detail(self, obj):
+        result = []
+        for ans in obj.answers.prefetch_related("selected_choices", "question__choices"):
+            q = ans.question
+            selected_ids = set(ans.selected_choices.values_list("id", flat=True))
+            correct_ids = set(q.choices.filter(is_correct=True).values_list("id", flat=True))
+            result.append({
+                "question_id": q.id,
+                "question_text": q.question_text,
+                "explanation": q.explanation,
+                "selected_choice_ids": list(selected_ids),
+                "correct_choice_ids": list(correct_ids),
+                "is_correct": selected_ids == correct_ids,
+                "choices": MissionExamChoiceFullSerializer(q.choices.all(), many=True).data,
+            })
+        return result

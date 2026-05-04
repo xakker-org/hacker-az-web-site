@@ -3,6 +3,10 @@ import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import AuthPage from "./pages/AuthPage";
 import DashboardPage from "./pages/DashboardPage";
 import ExamAttemptPage from "./pages/ExamAttemptPage";
+import MissionDetailPage from "./pages/MissionDetailPage";
+import MissionExamPage from "./pages/MissionExamPage";
+import MissionsPage from "./pages/MissionsPage";
+import PassContentPage from "./pages/PassContentPage";
 import RoomsPage from "./pages/RoomsPage";
 import RoomDetailPage from "./pages/RoomDetailPage";
 import PlansPage from "./pages/PlansPage";
@@ -31,27 +35,39 @@ export default function App() {
       <Routes>
         {/* Root redirect */}
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
-        
-        {/* Auth Pages */}
+
+        {/* Auth */}
         <Route path="/auth" element={<Navigate to="/auth/login" replace />} />
         <Route path="/auth/:mode" element={<AuthPage />} />
-        
+
         {/* Dashboard */}
         <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/dashboard/exams/:slug" element={<ExamAttemptPage />} />
         <Route path="/exams/:slug" element={<ExamAttemptPage />} />
         <Route path="/exams" element={<ExamsPage />} />
+
+        {/* ── Missions ── */}
+        <Route path="/missions" element={<MissionsPage />} />
+        <Route path="/missions/:slug" element={<MissionDetailPage />} />
+        <Route path="/missions/:slug/passes/:passId" element={<PassContentPage />} />
+        <Route path="/missions/:slug/exam" element={<MissionExamPage />} />
+
+        {/* Rooms / Plans / Courses */}
         <Route path="/rooms" element={<RoomsPage />} />
         <Route path="/rooms/:slug" element={<RoomDetailPage />} />
         <Route path="/plans" element={<PlansPage />} />
-        <Route path="/leaderboard" element={<LeaderboardPage />} />
-        <Route path="/badges" element={<BadgesPage />} />
-        <Route path="/profile" element={<ProfilePage />} />
-        <Route path="/self-study" element={<SelfStudyPage />} />
-        <Route path="/self-study/question/:id" element={<QuestionDetailPage />} />
         <Route path="/courses" element={<CoursesPage />} />
         <Route path="/courses/:slug" element={<CoursePage />} />
         <Route path="/courses/:slug/lessons/:lessonId" element={<LessonPage />} />
+
+        {/* Community */}
+        <Route path="/leaderboard" element={<LeaderboardPage />} />
+        <Route path="/badges" element={<BadgesPage />} />
+        <Route path="/profile" element={<ProfilePage />} />
+
+        {/* Labs */}
+        <Route path="/self-study" element={<SelfStudyPage />} />
+        <Route path="/self-study/question/:id" element={<QuestionDetailPage />} />
 
         {/* Catch-all */}
         <Route path="*" element={<Navigate to="/dashboard" replace />} />

@@ -5,22 +5,23 @@ import { clearTokens, getAccessToken } from "../utils/tokens";
 
 const NAV = [
   {
-    label: "Platforma",
+    label: "Platform",
     items: [
-      { to: "/dashboard",   label: "Ana Səhifə",   icon: "⌂" },
-      { to: "/rooms",       label: "Missions",     icon: "⚡", badge: "Yeni" },
-      { to: "/self-study",  label: "Labs",         icon: "🧪" },
-      { to: "/plans",       label: "Öyrənmə Yolu", icon: "🗺" },
-      { to: "/courses",     label: "Kurslar",      icon: "📚" },
-      { to: "/exams",       label: "İmtahanlar",   icon: "📝" },
+      { to: "/dashboard",   label: "Dashboard",    icon: "⌂" },
+      { to: "/missions",    label: "Missions",     icon: "🎯", badge: "New" },
+      { to: "/rooms",       label: "Labs",         icon: "⚡" },
+      { to: "/self-study",  label: "Self-Study",   icon: "🧪" },
+      { to: "/plans",       label: "Learning Path", icon: "🗺" },
+      { to: "/courses",     label: "Courses",      icon: "📚" },
+      { to: "/exams",       label: "Exams",        icon: "📝" },
     ],
   },
   {
-    label: "Sosial",
+    label: "Community",
     items: [
-      { to: "/leaderboard", label: "Liderlik",     icon: "🏆" },
-      { to: "/badges",      label: "Nişanlar",     icon: "🎖" },
-      { to: "/profile",     label: "Profilim",     icon: "👤" },
+      { to: "/leaderboard", label: "Leaderboard",  icon: "🏆" },
+      { to: "/badges",      label: "Badges",       icon: "🎖" },
+      { to: "/profile",     label: "Profile",      icon: "👤" },
     ],
   },
 ];

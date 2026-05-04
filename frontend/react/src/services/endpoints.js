@@ -62,4 +62,16 @@ export const endpoints = {
   completeLesson: (courseSlug, lessonId) => api.post(`/courses/${courseSlug}/lessons/${lessonId}/complete/`),
   submitLessonQuestion: (courseSlug, lessonId, questionId, payload) =>
     api.post(`/courses/${courseSlug}/lessons/${lessonId}/questions/${questionId}/submit/`, payload),
+
+  // ── Missions ──────────────────────────────────────────────
+  missions: () => api.get("/courses/missions/"),
+  missionDetail: (slug) => api.get(`/courses/missions/${slug}/`),
+  missionStart: (slug) => api.post(`/courses/missions/${slug}/start/`),
+  missionPassDetail: (slug, passId) => api.get(`/courses/missions/${slug}/passes/${passId}/`),
+  missionPassComplete: (slug, passId) => api.post(`/courses/missions/${slug}/passes/${passId}/complete/`),
+  missionExamDetail: (slug) => api.get(`/courses/missions/${slug}/exam/`),
+  missionExamStart: (slug) => api.post(`/courses/missions/${slug}/exam/start/`),
+  missionExamSubmit: (slug, attemptId, payload) =>
+    api.post(`/courses/missions/${slug}/exam/${attemptId}/submit/`, payload),
+  myMissionProgress: () => api.get("/courses/missions/my-progress/"),
 };

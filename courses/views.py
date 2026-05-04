@@ -26,6 +26,13 @@ from .models import (
     LessonQuestion,
     LessonQuestionAttempt,
     LessonQuestionChoice,
+    Mission,
+    MissionExam,
+    MissionExamAnswer,
+    MissionExamAttempt,
+    MissionPass,
+    MissionPassCompletion,
+    MissionProgress,
     Question,
     QuestionAttempt,
     QuestionTypeChoices,
@@ -48,6 +55,12 @@ from .serializers import (
     LessonQuestionChoiceFullSerializer,
     LessonQuestionSubmitSerializer,
     LessonSerializer,
+    MissionDetailSerializer,
+    MissionExamAttemptResultSerializer,
+    MissionExamSerializer,
+    MissionExamSubmitSerializer,
+    MissionListSerializer,
+    MissionPassDetailSerializer,
     RoomDetailSerializer,
     RoomListSerializer,
     RoomTagSerializer,
@@ -692,3 +705,319 @@ class RoomEnrollView(APIView):
             "course": room.course.slug,
             "created": created,
         }, status=status.HTTP_200_OK)
+
+
+# ═══════════════════════════════════════════════════════════════
+#  MISSION VIEWS
+# ═══════════════════════════════════════════════════════════════
+
+class MissionListView(generics.ListAPIView):
+    """List all published missions with user progress."""
+    serializer_class = MissionListSerializer
+
+    def get_queryset(self):
+        return (
+            Mission.objects.filter(is_published=True)
+            .prefetch_related("passes", "mission_exam")
+            .order_by("order", "id")
+        )
+
+    def get_serializer_context(self):
+        ctx = super().get_serializer_context()
+        ctx["request"] = self.request
+        return ctx
+
+
+class MissionDetailView(generics.RetrieveAPIView):
+    """Mission detail with ordered passes and exam summary."""
+    serializer_class = MissionDetailSerializer
+    lookup_field = "slug"
+
+    def get_queryset(self):
+        return Mission.objects.filter(is_published=True).prefetch_related(
+            "passes", "mission_exam"
+        )
+
+    def get_serializer_context(self):
+        ctx = super().get_serializer_context()
+        ctx["request"] = self.request
+        return ctx
+
+
+class MissionStartView(APIView):
+    """Create or return a MissionProgress record (start the mission)."""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, slug):
+        mission = get_object_or_404(Mission, slug=slug, is_published=True)
+        progress, created = MissionProgress.objects.get_or_create(
+            user=request.user, mission=mission
+        )
+        return Response(
+            {"started": True, "created": created, "mission_slug": slug},
+            status=status.HTTP_201_CREATED if created else status.HTTP_200_OK,
+        )
+
+
+class MissionPassDetailView(generics.RetrieveAPIView):
+    """Return a single Pass's full content."""
+    serializer_class = MissionPassDetailSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_object(self):
+        mission = get_object_or_404(Mission, slug=self.kwargs["slug"], is_published=True)
+        return get_object_or_404(
+            MissionPass,
+            id=self.kwargs["pass_id"],
+            mission=mission,
+            is_published=True,
+        )
+
+    def retrieve(self, request, *args, **kwargs):
+        pass_obj = self.get_object()
+        data = self.get_serializer(pass_obj).data
+        # Attach completion state
+        data["is_completed"] = MissionPassCompletion.objects.filter(
+            user=request.user, mission_pass=pass_obj
+        ).exists()
+        return Response(data)
+
+
+class MissionPassCompleteView(APIView):
+    """Mark a Pass as completed for the current user."""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, slug, pass_id):
+        mission = get_object_or_404(Mission, slug=slug, is_published=True)
+        pass_obj = get_object_or_404(
+            MissionPass, id=pass_id, mission=mission, is_published=True
+        )
+
+        # Ensure mission progress exists
+        MissionProgress.objects.get_or_create(user=request.user, mission=mission)
+
+        completion, created = MissionPassCompletion.objects.get_or_create(
+            user=request.user, mission_pass=pass_obj
+        )
+
+        # Check if all passes are now complete (for missions without exam)
+        all_passes = mission.passes.filter(is_published=True)
+        completed_count = MissionPassCompletion.objects.filter(
+            user=request.user, mission_pass__in=all_passes
+        ).count()
+        all_done = completed_count >= all_passes.count()
+
+        # If no exam, mark mission complete
+        if all_done and not (hasattr(mission, "mission_exam") and mission.mission_exam.is_published):
+            MissionProgress.objects.filter(user=request.user, mission=mission).update(
+                is_completed=True, completed_at=timezone.now()
+            )
+
+        return Response(
+            {
+                "pass_completed": True,
+                "created": created,
+                "completed_passes": completed_count,
+                "total_passes": all_passes.count(),
+                "all_passes_done": all_done,
+            },
+            status=status.HTTP_200_OK,
+        )
+
+
+class MissionExamDetailView(generics.RetrieveAPIView):
+    """Return the exam with questions (choices without is_correct)."""
+    serializer_class = MissionExamSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_object(self):
+        mission = get_object_or_404(Mission, slug=self.kwargs["slug"], is_published=True)
+        return get_object_or_404(MissionExam, mission=mission, is_published=True)
+
+    def retrieve(self, request, *args, **kwargs):
+        exam = self.get_object()
+        mission = exam.mission
+
+        # Verify all passes are completed before showing exam questions
+        all_passes = mission.passes.filter(is_published=True)
+        completed_count = MissionPassCompletion.objects.filter(
+            user=request.user, mission_pass__in=all_passes
+        ).count()
+        passes_done = completed_count >= all_passes.count() or all_passes.count() == 0
+
+        data = self.get_serializer(exam).data
+        data["passes_completed"] = passes_done
+
+        # Attach attempt history
+        attempts = MissionExamAttempt.objects.filter(
+            user=request.user, exam=exam
+        ).order_by("-started_at")
+        data["attempts_used"] = attempts.count()
+        data["best_score"] = attempts.order_by("-score").values_list("score", flat=True).first()
+        data["can_attempt"] = (
+            passes_done
+            and (exam.max_attempts == 0 or attempts.count() < exam.max_attempts)
+        )
+
+        # If questions should be hidden until passes are done
+        if not passes_done:
+            data["questions"] = []
+
+        return Response(data)
+
+
+class MissionExamStartView(APIView):
+    """Create a new exam attempt."""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, slug):
+        mission = get_object_or_404(Mission, slug=slug, is_published=True)
+        exam = get_object_or_404(MissionExam, mission=mission, is_published=True)
+
+        # Guard: all passes must be complete
+        all_passes = mission.passes.filter(is_published=True)
+        completed_count = MissionPassCompletion.objects.filter(
+            user=request.user, mission_pass__in=all_passes
+        ).count()
+        if completed_count < all_passes.count():
+            return Response(
+                {"detail": "Complete all passes before taking the exam."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Guard: max attempts
+        existing = MissionExamAttempt.objects.filter(user=request.user, exam=exam)
+        if exam.max_attempts > 0 and existing.count() >= exam.max_attempts:
+            return Response(
+                {"detail": "Maximum attempts reached."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        attempt_number = existing.count() + 1
+        attempt = MissionExamAttempt.objects.create(
+            user=request.user, exam=exam, attempt_number=attempt_number
+        )
+        return Response(
+            {"attempt_id": attempt.id, "attempt_number": attempt_number},
+            status=status.HTTP_201_CREATED,
+        )
+
+
+class MissionExamSubmitView(APIView):
+    """Submit exam answers, grade, and update mission progress."""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, slug, attempt_id):
+        mission = get_object_or_404(Mission, slug=slug, is_published=True)
+        exam = get_object_or_404(MissionExam, mission=mission, is_published=True)
+        attempt = get_object_or_404(
+            MissionExamAttempt,
+            id=attempt_id,
+            user=request.user,
+            exam=exam,
+            submitted_at__isnull=True,
+        )
+
+        serializer = MissionExamSubmitSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        answers_data = serializer.validated_data["answers"]
+
+        questions = exam.questions.prefetch_related("choices").all()
+        question_map = {q.id: q for q in questions}
+        answers_by_question = {
+            int(a["question_id"]): a.get("choice_ids", [])
+            for a in answers_data
+            if "question_id" in a
+        }
+
+        with transaction.atomic():
+            correct_count = 0
+            total_count = questions.count()
+
+            for q in questions:
+                selected_ids = answers_by_question.get(q.id, [])
+                correct_ids = set(q.choices.filter(is_correct=True).values_list("id", flat=True))
+                selected_set = set(selected_ids)
+
+                ans_obj, _ = MissionExamAnswer.objects.get_or_create(
+                    attempt=attempt, question=q
+                )
+                ans_obj.selected_choices.set(
+                    q.choices.filter(id__in=selected_ids)
+                )
+
+                if selected_set == correct_ids:
+                    correct_count += 1
+
+            score = (correct_count / total_count * 100) if total_count else 0
+            passed = score >= exam.passing_score
+
+            attempt.score = round(score, 2)
+            attempt.passed = passed
+            attempt.submitted_at = timezone.now()
+            attempt.save(update_fields=["score", "passed", "submitted_at"])
+
+            # Update mission progress
+            progress, _ = MissionProgress.objects.get_or_create(
+                user=request.user, mission=mission
+            )
+            if passed and not progress.exam_passed:
+                progress.exam_passed = True
+                progress.is_completed = True
+                progress.completed_at = timezone.now()
+                progress.save(update_fields=["exam_passed", "is_completed", "completed_at"])
+
+                # Award XP
+                profile, _ = UserProfile.objects.get_or_create(user=request.user)
+                xp_gain = exam.xp_reward + mission.xp_reward
+                profile.xp += xp_gain
+                profile.recompute_rank()
+                profile.save(update_fields=["xp", "rank"])
+
+                Activity.objects.create(
+                    user=request.user,
+                    kind=Activity.Kind.EXAM_SUBMIT,
+                    title=f"Completed mission: {mission.title}",
+                    detail=f"Score {score:.1f}% — +{xp_gain} XP",
+                    target_slug=mission.slug,
+                )
+
+        result_serializer = MissionExamAttemptResultSerializer(attempt)
+        return Response(
+            {
+                **result_serializer.data,
+                "mission_completed": passed,
+            },
+            status=status.HTTP_200_OK,
+        )
+
+
+class MyMissionProgressView(generics.ListAPIView):
+    """List the current user's mission progress records."""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def list(self, request, *args, **kwargs):
+        missions = Mission.objects.filter(is_published=True).order_by("order", "id")
+        result = []
+        for m in missions:
+            try:
+                prog = MissionProgress.objects.get(user=request.user, mission=m)
+            except MissionProgress.DoesNotExist:
+                prog = None
+
+            all_passes = m.passes.filter(is_published=True)
+            completed_count = MissionPassCompletion.objects.filter(
+                user=request.user, mission_pass__in=all_passes
+            ).count()
+
+            result.append({
+                "mission_id": m.id,
+                "mission_slug": m.slug,
+                "mission_title": m.title,
+                "is_started": prog is not None,
+                "is_completed": prog.is_completed if prog else False,
+                "exam_passed": prog.exam_passed if prog else False,
+                "completed_passes": completed_count,
+                "total_passes": all_passes.count(),
+            })
+        return Response(result)

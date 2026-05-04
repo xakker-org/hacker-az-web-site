@@ -14,6 +14,15 @@ from .models import (
     LessonQuestion,
     LessonQuestionAttempt,
     LessonQuestionChoice,
+    Mission,
+    MissionExam,
+    MissionExamAnswer,
+    MissionExamAttempt,
+    MissionExamChoice,
+    MissionExamQuestion,
+    MissionPass,
+    MissionPassCompletion,
+    MissionProgress,
     Question,
     QuestionAttempt,
     QuestionChoice,
@@ -457,3 +466,160 @@ class EnrollmentAdmin(admin.ModelAdmin):
     search_fields = ("user__username", "course__title")
     readonly_fields = ("created_at",)
     date_hierarchy = "created_at"
+
+
+# ═══════════════════════════════════════════════════════════════
+#  MISSION / PASS ADMIN
+# ═══════════════════════════════════════════════════════════════
+
+class MissionPassInline(admin.StackedInline):
+    model  = MissionPass
+    extra  = 1
+    fields = ("title", "content", "order", "estimated_minutes", "is_published")
+    show_change_link = True
+    ordering = ("order",)
+
+
+@admin.register(MissionPass)
+class MissionPassAdmin(admin.ModelAdmin):
+    list_display  = ("__str__", "mission", "order", "estimated_minutes", "is_published")
+    list_filter   = ("is_published", "mission")
+    search_fields = ("title", "mission__title")
+    list_editable = ("order", "is_published")
+    fieldsets = (
+        (None, {"fields": ("mission", "title", "order", "estimated_minutes", "is_published")}),
+        ("Content (HTML)", {
+            "fields": ("content",),
+            "description": "Supports standard HTML. Use &lt;h2&gt;, &lt;p&gt;, &lt;ul&gt;, &lt;pre&gt;, &lt;code&gt; etc.",
+        }),
+    )
+
+
+@admin.register(Mission)
+class MissionAdmin(admin.ModelAdmin):
+    list_display  = (
+        "title", "slug", "difficulty", "is_published",
+        "pass_count_display", "has_exam_display", "xp_reward", "order",
+    )
+    list_filter   = ("difficulty", "is_published")
+    search_fields = ("title", "description")
+    prepopulated_fields = {"slug": ("title",)}
+    list_editable = ("is_published", "order")
+    inlines       = [MissionPassInline]
+    fieldsets = (
+        ("Core", {
+            "fields": ("title", "slug", "description", "short_description"),
+        }),
+        ("Appearance", {
+            "fields": ("icon", "cover_color", "difficulty"),
+        }),
+        ("Settings", {
+            "fields": ("estimated_hours", "xp_reward", "order", "is_published"),
+        }),
+    )
+
+    @admin.display(description="Passes")
+    def pass_count_display(self, obj):
+        return obj.passes.filter(is_published=True).count()
+
+    @admin.display(boolean=True, description="Has Exam?")
+    def has_exam_display(self, obj):
+        return hasattr(obj, "mission_exam") and obj.mission_exam.is_published
+
+
+# ─── Mission Exam ─────────────────────────────────────────────────────────────
+
+class MissionExamChoiceInline(admin.TabularInline):
+    model  = MissionExamChoice
+    extra  = 4
+    fields = ("choice_text", "is_correct", "order")
+
+
+class MissionExamQuestionInline(admin.StackedInline):
+    model  = MissionExamQuestion
+    extra  = 1
+    fields = ("question_text", "order", "is_multiple", "explanation")
+    show_change_link = True
+    ordering = ("order",)
+
+
+@admin.register(MissionExamQuestion)
+class MissionExamQuestionAdmin(admin.ModelAdmin):
+    list_display  = ("__str__", "exam", "order", "is_multiple")
+    list_filter   = ("exam__mission",)
+    search_fields = ("question_text", "exam__title")
+    inlines       = [MissionExamChoiceInline]
+    fieldsets = (
+        (None, {"fields": ("exam", "question_text", "order", "is_multiple")}),
+        ("Explanation (shown after exam)", {"fields": ("explanation",)}),
+    )
+
+
+@admin.register(MissionExam)
+class MissionExamAdmin(admin.ModelAdmin):
+    list_display  = (
+        "title", "mission", "passing_score", "time_limit_minutes",
+        "max_attempts", "xp_reward", "is_published", "question_count",
+    )
+    list_filter   = ("is_published",)
+    search_fields = ("title", "mission__title")
+    list_editable = ("is_published",)
+    inlines       = [MissionExamQuestionInline]
+    fieldsets = (
+        ("Core", {"fields": ("mission", "title", "description")}),
+        ("Rules", {
+            "fields": ("passing_score", "time_limit_minutes", "max_attempts", "xp_reward", "is_published"),
+            "description": "passing_score is a percentage (0-100). Set time_limit_minutes=0 for no limit. Set max_attempts=0 for unlimited.",
+        }),
+    )
+
+    @admin.display(description="Questions")
+    def question_count(self, obj):
+        return obj.questions.count()
+
+
+# ─── Mission Progress (read-only) ─────────────────────────────────────────────
+
+@admin.register(MissionProgress)
+class MissionProgressAdmin(admin.ModelAdmin):
+    list_display    = ("user", "mission", "is_completed", "exam_passed", "started_at", "completed_at")
+    list_filter     = ("is_completed", "exam_passed", "mission")
+    search_fields   = ("user__username", "mission__title")
+    readonly_fields = ("user", "mission", "is_completed", "exam_passed", "started_at", "completed_at")
+    date_hierarchy  = "started_at"
+
+    def has_add_permission(self, request): return False
+    def has_change_permission(self, request, obj=None): return False
+
+
+@admin.register(MissionPassCompletion)
+class MissionPassCompletionAdmin(admin.ModelAdmin):
+    list_display    = ("user", "mission_pass", "completed_at")
+    list_filter     = ("mission_pass__mission",)
+    search_fields   = ("user__username", "mission_pass__title")
+    readonly_fields = ("user", "mission_pass", "completed_at")
+
+    def has_add_permission(self, request): return False
+    def has_change_permission(self, request, obj=None): return False
+
+
+@admin.register(MissionExamAttempt)
+class MissionExamAttemptAdmin(admin.ModelAdmin):
+    list_display    = ("user", "exam", "attempt_number", "score", "passed", "started_at", "submitted_at")
+    list_filter     = ("passed", "exam__mission")
+    search_fields   = ("user__username", "exam__title")
+    readonly_fields = ("user", "exam", "attempt_number", "score", "passed", "started_at", "submitted_at")
+    date_hierarchy  = "started_at"
+
+    def has_add_permission(self, request): return False
+    def has_change_permission(self, request, obj=None): return False
+
+
+@admin.register(MissionExamAnswer)
+class MissionExamAnswerAdmin(admin.ModelAdmin):
+    list_display    = ("attempt", "question")
+    search_fields   = ("attempt__user__username",)
+    readonly_fields = ("attempt", "question", "selected_choices")
+
+    def has_add_permission(self, request): return False
+    def has_change_permission(self, request, obj=None): return False

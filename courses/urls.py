@@ -15,6 +15,15 @@ from .views import (
     LessonCompleteView,
     LessonDetailView,
     LessonQuestionSubmitView,
+    MissionDetailView,
+    MissionExamDetailView,
+    MissionExamStartView,
+    MissionExamSubmitView,
+    MissionListView,
+    MissionPassCompleteView,
+    MissionPassDetailView,
+    MissionStartView,
+    MyMissionProgressView,
     QuestionDetailView,
     QuestionListView,
     QuestionSubmitAnswerView,
@@ -75,6 +84,17 @@ urlpatterns = [
         LessonQuestionSubmitView.as_view(),
         name="lesson-question-submit",
     ),
+
+    # ── Missions ──────────────────────────────────────────────
+    path("missions/", MissionListView.as_view(), name="mission-list"),
+    path("missions/my-progress/", MyMissionProgressView.as_view(), name="mission-my-progress"),
+    path("missions/<slug:slug>/", MissionDetailView.as_view(), name="mission-detail"),
+    path("missions/<slug:slug>/start/", MissionStartView.as_view(), name="mission-start"),
+    path("missions/<slug:slug>/passes/<int:pass_id>/", MissionPassDetailView.as_view(), name="mission-pass-detail"),
+    path("missions/<slug:slug>/passes/<int:pass_id>/complete/", MissionPassCompleteView.as_view(), name="mission-pass-complete"),
+    path("missions/<slug:slug>/exam/", MissionExamDetailView.as_view(), name="mission-exam-detail"),
+    path("missions/<slug:slug>/exam/start/", MissionExamStartView.as_view(), name="mission-exam-start"),
+    path("missions/<slug:slug>/exam/<int:attempt_id>/submit/", MissionExamSubmitView.as_view(), name="mission-exam-submit"),
 
     # Course detail (keep last so "plans" etc. not shadowed)
     path("<slug:slug>/", CourseDetailView.as_view(), name="course-detail"),

@@ -96,8 +96,9 @@ export default function DashboardPage() {
             Hər gün öyrən, irəliləyişini izlə. Cybersecurity dünyasında öz yerini al.
           </p>
           <div className="dash-ctas">
-            <Link to="/rooms"      className="xk-btn xk-btn-primary">⚡ Missions</Link>
-            <Link to="/self-study" className="xk-btn xk-btn-secondary">🧪 Labs</Link>
+            <Link to="/missions" className="xk-btn xk-btn-primary">🎯 Missions</Link>
+            <Link to="/rooms" className="xk-btn xk-btn-secondary">⚡ Rooms</Link>
+            <Link to="/self-study" className="xk-btn xk-btn-ghost">🧪 Labs</Link>
             <Link to="/plans"      className="xk-btn xk-btn-ghost">🗺 Planlar</Link>
           </div>
         </div>
@@ -148,7 +149,7 @@ export default function DashboardPage() {
           <div className="xk-section-head">
             <div>
               <h2>⚡ Öyrənməyə davam et</h2>
-              <div className="xk-section-sub">Aktiv missionlar — hər hansını davam etdir</div>
+              <div className="xk-section-sub">Aktiv rooms — hər hansını davam etdir</div>
             </div>
             <Link to="/rooms" className="xk-btn xk-btn-secondary xk-btn-sm">Hamısına bax →</Link>
           </div>
@@ -214,7 +215,7 @@ export default function DashboardPage() {
             )) : (
               <div className="xk-empty" style={{ padding: "32px 20px" }}>
                 <div className="xk-empty-ico">◍</div>
-                <p>Hələ heç bir fəaliyyət yoxdur. Missions-dan başla!</p>
+                <p>Hələ heç bir fəaliyyət yoxdur. Rooms-dan başla!</p>
               </div>
             )}
           </div>
