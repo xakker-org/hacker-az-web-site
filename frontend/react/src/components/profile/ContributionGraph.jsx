@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const DAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -119,6 +120,16 @@ export default function ContributionGraph({ days, years = [], selectedYear, onYe
     [years],
   );
 
+  const showTooltip = (event, day) => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    setTooltip({
+      x: centerX,
+      y: Math.max(rect.top - 8, 12),
+      day,
+    });
+  };
+
   if (!days?.length) {
     return <div className="profile-empty">No activity yet. Start solving to fill your graph.</div>;
   }
@@ -190,14 +201,7 @@ export default function ContributionGraph({ days, years = [], selectedYear, onYe
                         type="button"
                         className="contrib-cell"
                         data-level={level}
-                        onMouseEnter={(event) => {
-                          const rect = event.currentTarget.getBoundingClientRect();
-                          setTooltip({
-                            x: rect.left + rect.width / 2,
-                            y: rect.top,
-                            day,
-                          });
-                        }}
+                        onMouseEnter={(event) => showTooltip(event, day)}
                         onMouseLeave={() => setTooltip(null)}
                         aria-label={`${formatDate(day.date)}: ${day.questions_solved} solved, ${day.points_earned} points`}
                       />
@@ -218,13 +222,21 @@ export default function ContributionGraph({ days, years = [], selectedYear, onYe
         <span className="contrib-legend-label">More</span>
       </div>
 
-      {tooltip && (
-        <div className="contrib-tooltip" style={{ left: tooltip.x, top: tooltip.y }}>
+      {tooltip && createPortal(
+        <div
+          className="contrib-tooltip"
+          style={{
+            left: tooltip.x,
+            top: tooltip.y,
+            transform: "translate(-50%, -100%)",
+          }}
+        >
           <div className="contrib-tooltip-date">{formatDate(tooltip.day.date)}</div>
           <div className="contrib-tooltip-row"><span>Solved</span><strong>{tooltip.day.questions_solved}</strong></div>
           <div className="contrib-tooltip-row"><span>Points</span><strong>{tooltip.day.points_earned}</strong></div>
           <div className="contrib-tooltip-row"><span>Correct</span><strong>{tooltip.day.correct_answers}</strong></div>
-        </div>
+        </div>,
+        document.body
       )}
     </section>
   );

@@ -11,20 +11,30 @@ export default function ProfileHeader({ profile, stats }) {
 
   return (
     <section className="profile-panel profile-header-panel">
-      <div className="profile-header-top">
-        <div>
-          <h1 className="profile-header-name">{displayName}</h1>
-          <p className="profile-header-username">{username}</p>
-          <p className="profile-header-bio">{profile?.bio || "No bio added yet."}</p>
-        </div>
-        <div className="profile-header-badges">
-          <span className="profile-rank-badge">{profile?.rank || "Recruit"}</span>
-          <span className="profile-header-pill">#{stats?.leaderboard_rank || "-"} Leaderboard</span>
+      <div className="profile-header-banner">
+        <div className="profile-header-banner-orb profile-header-banner-orb-a" aria-hidden="true" />
+        <div className="profile-header-banner-orb profile-header-banner-orb-b" aria-hidden="true" />
+        <div className="profile-header-top">
+          <div>
+            <div className="profile-header-kicker">Profile overview</div>
+            <h1 className="profile-header-name">{displayName}</h1>
+            <p className="profile-header-username">{username}</p>
+            <p className="profile-header-bio">{profile?.bio || "No bio added yet. Add a short intro and make the profile feel alive."}</p>
+          </div>
+
+          <div className="profile-header-badges">
+            <span className="profile-rank-badge">{profile?.rank || "Recruit"}</span>
+            <span className="profile-header-pill">#{stats?.leaderboard_rank || "-"} Leaderboard</span>
+            {profile?.country && <span className="profile-header-pill">{profile.country}</span>}
+          </div>
         </div>
       </div>
-      <div className="profile-header-meta-row">
+
+      <div className="profile-header-meta-grid">
         <span className="profile-header-meta-item">{formatJoinDate(profile?.date_joined)}</span>
         <span className="profile-header-meta-item">{profile?.email || "No email"}</span>
+        <span className="profile-header-meta-item">{profile?.tasks_completed || 0} tasks completed</span>
+        <span className="profile-header-meta-item">{profile?.rooms_completed || 0} rooms completed</span>
       </div>
     </section>
   );

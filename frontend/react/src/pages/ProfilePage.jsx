@@ -146,7 +146,11 @@ export default function ProfilePage() {
 
               <StatsCards stats={stats} />
 
-              {hasAnyActivity ? <ContributionGraph days={graphDays} years={graphYears} selectedYear={selectedYear} onYearChange={loadProfileData} /> : <div className="profile-empty">No activity yet. Solve a question to start building your graph.</div>}
+              {hasAnyActivity ? (
+                <ContributionGraph days={graphDays} years={graphYears} selectedYear={selectedYear} onYearChange={loadProfileData} />
+              ) : (
+                <div className="profile-empty">No activity yet. Solve a question to start building your graph.</div>
+              )}
 
               <div className="profile-two-col">
                 <RecentActivity activities={recentActivity} />
@@ -159,7 +163,18 @@ export default function ProfilePage() {
         {editOpen && (
           <div className="profile-modal-overlay" role="dialog" aria-modal="true" aria-label="Edit profile">
             <form className="profile-modal" onSubmit={saveProfile}>
-              <h2 className="profile-modal-title">Edit Profile</h2>
+              <div className="profile-modal-hero">
+                <div
+                  className="profile-modal-avatar"
+                  style={{ background: `linear-gradient(135deg, hsl(${Number(draft.avatar_hue) || 0} 75% 56%), hsl(${(Number(draft.avatar_hue) + 60) % 360} 82% 62%))` }}
+                >
+                  {(profile?.username || "H").slice(0, 1).toUpperCase()}
+                </div>
+                <div>
+                  <h2 className="profile-modal-title">Edit Profile</h2>
+                  <p className="profile-modal-subtitle">Tune your bio, location, and avatar tone.</p>
+                </div>
+              </div>
 
               <label className="profile-modal-field">
                 <span className="profile-modal-label">Bio</span>
@@ -183,21 +198,25 @@ export default function ProfilePage() {
 
               <label className="profile-modal-field">
                 <span className="profile-modal-label">Avatar Hue</span>
-                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <div className="profile-modal-hue-row">
                   <input
-                    className="profile-modal-input"
+                    className="profile-modal-input profile-modal-input-range"
+                    type="range"
+                    min="0"
+                    max="360"
+                    value={draft.avatar_hue}
+                    onChange={updateDraft("avatar_hue")}
+                  />
+                  <input
+                    className="profile-modal-input profile-modal-input-number"
                     type="number"
                     min="0"
                     max="360"
                     value={draft.avatar_hue}
                     onChange={updateDraft("avatar_hue")}
                   />
-                  <span
-                    className="hue-preview"
-                    style={{ background: `hsl(${Number(draft.avatar_hue) || 0} 75% 56%)` }}
-                    aria-hidden="true"
-                  />
                 </div>
+                <div className="profile-modal-hint">This changes the accent behind your avatar and profile identity.</div>
               </label>
 
               <div className="profile-modal-actions">
