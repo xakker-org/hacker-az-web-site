@@ -685,6 +685,8 @@ p { margin: 0; color: var(--ink-2); }
 
   .study-sidebar,
   .question-detail-side {
+    position: static;
+  }
 
   .q-choice {
     gap: 10px;
@@ -694,8 +696,6 @@ p { margin: 0; color: var(--ink-2); }
   .q-choice-letter {
     width: 24px;
     height: 24px;
-  }
-    position: static;
   }
 }
 

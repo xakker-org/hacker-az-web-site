@@ -127,6 +127,7 @@ CORS_ALLOWED_ORIGINS = [
     ),
 ]
 
+
 CSRF_TRUSTED_ORIGINS = [
     *get_list_env(
         "CSRF_TRUSTED_ORIGINS",
