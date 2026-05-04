@@ -1,6 +1,5 @@
 import { useEffect } from "react";
 import { Navigate, Route, Routes, useLocation } from "react-router-dom";
-import LandingPage from "./pages/LandingPage";
 import AuthPage from "./pages/AuthPage";
 import DashboardPage from "./pages/DashboardPage";
 import ExamAttemptPage from "./pages/ExamAttemptPage";
@@ -21,7 +20,7 @@ export default function App() {
   const location = useLocation();
 
   useEffect(() => {
-    document.body.classList.toggle("self-study-body", location.pathname !== "/");
+    document.body.classList.toggle("self-study-body", true);
     return () => {
       document.body.classList.remove("self-study-body");
     };
@@ -30,8 +29,8 @@ export default function App() {
   return (
     <>
       <Routes>
-        {/* Landing Page */}
-        <Route path="/" element={<LandingPage />} />
+        {/* Root redirect */}
+        <Route path="/" element={<Navigate to="/dashboard" replace />} />
         
         {/* Auth Pages */}
         <Route path="/auth" element={<Navigate to="/auth/login" replace />} />
@@ -55,7 +54,7 @@ export default function App() {
         <Route path="/courses/:slug/lessons/:lessonId" element={<LessonPage />} />
 
         {/* Catch-all */}
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
     </>
   );
