@@ -49,8 +49,11 @@ export default function AppShell({ children, title, searchPlaceholder, onSearch,
 
   const handleLogout = () => { clearTokens(); navigate("/auth/login"); };
 
-  const name     = profile?.username || "Hacker";
-  const initial  = name[0]?.toUpperCase() || "H";
+  const name      = profile?.full_name || profile?.username || "Hacker";
+  const initial   = (profile?.username || "H")[0]?.toUpperCase() || "H";
+  const avatarUrl = profile?.avatar_url || null;
+  const avatarHue = Number(profile?.avatar_hue) || 0;
+  const [avatarFailed, setAvatarFailed] = useState(false);
   const xp       = profile?.xp ?? 0;
   const rank     = profile?.rank || "recruit";
   const rankDisp = rank.replace("_", " ").replace(/\b\w/g, c => c.toUpperCase());
@@ -59,6 +62,10 @@ export default function AppShell({ children, title, searchPlaceholder, onSearch,
   const nextRank = profile?.next_rank;
   const streak   = profile?.streak_days ?? 0;
   const rankColor = RANK_COLORS[rank] || "var(--green)";
+
+  useEffect(() => {
+    setAvatarFailed(false);
+  }, [avatarUrl]);
 
   return (
     <>
@@ -106,7 +113,16 @@ export default function AppShell({ children, title, searchPlaceholder, onSearch,
           {/* User card */}
           <div className="xk-user-card">
             <div className="xk-user-row">
-              <div className="xk-avatar">{initial}</div>
+              <div
+                className="xk-avatar"
+                style={!avatarUrl || avatarFailed ? { background: `linear-gradient(135deg, hsl(${avatarHue} 75% 56%), hsl(${(avatarHue + 60) % 360} 82% 62%))`, color: "#08111d" } : {}}
+              >
+                {avatarUrl && !avatarFailed ? (
+                  <img src={avatarUrl} alt={name} style={{ width: 36, height: 36, borderRadius: 8, objectFit: "cover", display: "block" }} onError={() => setAvatarFailed(true)} />
+                ) : (
+                  initial
+                )}
+              </div>
               <div style={{ minWidth: 0, flex: 1 }}>
                 <div className="xk-user-name">{name}</div>
                 <div className="xk-user-rank" style={{ color: rankColor }}>{rankDisp}</div>

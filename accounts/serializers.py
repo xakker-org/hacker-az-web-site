@@ -56,6 +56,9 @@ class UserProfileSerializer(serializers.ModelSerializer):
     username = serializers.CharField(source="user.username", read_only=True)
     email = serializers.CharField(source="user.email", read_only=True)
     date_joined = serializers.DateTimeField(source="user.date_joined", read_only=True)
+    full_name = serializers.CharField(max_length=150, required=False, allow_blank=True)
+    avatar = serializers.ImageField(allow_null=True, required=False)
+    avatar_url = serializers.SerializerMethodField()
     next_rank = serializers.SerializerMethodField()
     xp_to_next = serializers.SerializerMethodField()
     rank_progress = serializers.SerializerMethodField()
@@ -66,6 +69,9 @@ class UserProfileSerializer(serializers.ModelSerializer):
         fields = [
             "username",
             "email",
+            "full_name",
+            "avatar",
+            "avatar_url",
             "xp",
             "rank",
             "streak_days",
@@ -73,6 +79,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
             "last_activity",
             "bio",
             "country",
+            "city",
             "avatar_hue",
             "tasks_completed",
             "rooms_completed",
@@ -127,9 +134,34 @@ class UserProfileSerializer(serializers.ModelSerializer):
         earned = UserBadge.objects.filter(user=obj.user).select_related("badge")
         return UserBadgeSerializer(earned, many=True).data
 
+    def get_avatar_url(self, obj):
+        request = self.context.get("request") if hasattr(self, "context") else None
+        if not obj.avatar:
+            return None
+        try:
+            url = obj.avatar.url
+        except Exception:
+            return None
+        if request:
+            return request.build_absolute_uri(url)
+        return url
+
 
 class LeaderboardEntrySerializer(serializers.ModelSerializer):
     username = serializers.CharField(source="user.username", read_only=True)
+    avatar_url = serializers.SerializerMethodField()
+
+    def get_avatar_url(self, obj):
+        request = self.context.get("request")
+        if not obj.avatar:
+            return None
+        try:
+            url = obj.avatar.url
+        except Exception:
+            return None
+        if request:
+            return request.build_absolute_uri(url)
+        return url
 
     class Meta:
         model = UserProfile
@@ -141,5 +173,6 @@ class LeaderboardEntrySerializer(serializers.ModelSerializer):
             "tasks_completed",
             "rooms_completed",
             "avatar_hue",
+            "avatar_url",
             "country",
         ]

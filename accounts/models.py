@@ -45,7 +45,10 @@ class UserProfile(models.Model):
     last_activity = models.DateTimeField(null=True, blank=True)
     bio = models.TextField(blank=True, default="")
     country = models.CharField(max_length=80, blank=True, default="")
+    city = models.CharField(max_length=80, blank=True, default="")
+    full_name = models.CharField(max_length=150, blank=True, default="")
     avatar_hue = models.PositiveIntegerField(default=210)
+    avatar = models.ImageField(upload_to="avatars/", null=True, blank=True)
     tasks_completed = models.PositiveIntegerField(default=0)
     rooms_completed = models.PositiveIntegerField(default=0)
 

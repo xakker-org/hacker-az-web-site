@@ -7,5 +7,5 @@ django-hosts==7.0.0
 python-decouple==3.8
 gunicorn>=22.0.0
 psycopg[binary]==3.2.13
-# Add Pillow only if/when you use ImageField:
-# pillow>=11.1.0
+# Pillow is required for ImageField usage
+pillow>=11.1.0

@@ -33,6 +33,44 @@ const TABS = [
   { key: "streak", label: "Ardıcıllıq",  icon: "🔥" },
 ];
 
+function UserAvatar({ entry, size = 48, borderRadius = 12, boxShadow, style = {} }) {
+  const [failed, setFailed] = useState(false);
+  const color = RANK_COLORS[entry?.rank] || "var(--green)";
+  const hue = Number(entry?.avatar_hue) || 0;
+  const initial = entry?.username?.[0]?.toUpperCase() || "?";
+
+  useEffect(() => { setFailed(false); }, [entry?.avatar_url]);
+
+  const base = {
+    width: size, height: size, borderRadius, flexShrink: 0,
+    display: "flex", alignItems: "center", justifyContent: "center",
+    overflow: "hidden", position: "relative", boxShadow, ...style,
+  };
+
+  if (entry?.avatar_url && !failed) {
+    return (
+      <div style={base}>
+        <img
+          src={entry.avatar_url}
+          alt={entry.username}
+          onError={() => setFailed(true)}
+          style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+        />
+      </div>
+    );
+  }
+
+  const bg = entry?.avatar_hue != null
+    ? `linear-gradient(135deg, hsl(${hue} 75% 56%), hsl(${(hue + 60) % 360} 82% 62%))`
+    : `linear-gradient(135deg, ${color}, var(--blue))`;
+
+  return (
+    <div style={{ ...base, background: bg, fontWeight: 800, fontSize: size * 0.4, color: "#08111d" }}>
+      {initial}
+    </div>
+  );
+}
+
 function Podium({ entry, pos, isMe }) {
   if (!entry) return <div className="podium-slot" />;
   const color = RANK_COLORS[entry.rank] || "var(--green)";
@@ -41,14 +79,13 @@ function Podium({ entry, pos, isMe }) {
   return (
     <div className={`podium-slot ${cls[pos - 1]}`}>
       <div className="podium-medal">{medals[pos - 1]}</div>
-      <div
-        className="podium-avatar"
-        style={{
-          background: `linear-gradient(135deg, ${color}, var(--blue))`,
-          boxShadow: isMe ? "0 0 0 3px var(--green), 0 0 20px rgba(158,255,0,0.4)" : `0 0 20px ${color}44`,
-        }}
-      >
-        {entry.username?.[0]?.toUpperCase() || "?"}
+      <div style={{ position: "relative", display: "inline-flex" }}>
+        <UserAvatar
+          entry={entry}
+          size={64}
+          borderRadius={16}
+          boxShadow={isMe ? "0 0 0 3px var(--green), 0 0 20px rgba(158,255,0,0.4)" : `0 0 20px ${color}44`}
+        />
         {isMe && <span className="podium-me-dot" />}
       </div>
       <div className="podium-name" style={{ color: isMe ? "var(--green)" : "var(--t1)" }}>
@@ -122,17 +159,12 @@ export default function LeaderboardPage() {
             <span className="lb-me-pos-num">#{myGlobalRank}</span>
             <span className="lb-me-pos-lbl">mövqeyiniz</span>
           </div>
-          <div
-            className="podium-avatar"
-            style={{
-              width: 52, height: 52, fontSize: 20,
-              background: `linear-gradient(135deg, ${RANK_COLORS[myEntry.rank] || "var(--green)"}, var(--blue))`,
-              boxShadow: "0 0 20px rgba(158,255,0,0.3)",
-              flexShrink: 0,
-            }}
-          >
-            {myEntry.username?.[0]?.toUpperCase()}
-          </div>
+          <UserAvatar
+            entry={myEntry}
+            size={52}
+            borderRadius={13}
+            boxShadow="0 0 20px rgba(158,255,0,0.3)"
+          />
           <div className="lb-me-info">
             <div className="lb-me-name">
               {myEntry.username}
@@ -239,15 +271,12 @@ export default function LeaderboardPage() {
                     </td>
                     <td>
                       <div className="lb-user-cell">
-                        <div
-                          className="lb-mini-avatar"
-                          style={{
-                            background: `linear-gradient(135deg, ${color}, var(--blue))`,
-                            boxShadow: isTop ? `0 0 14px ${color}55` : "none",
-                          }}
-                        >
-                          {entry.username?.[0]?.toUpperCase() || "?"}
-                        </div>
+                        <UserAvatar
+                          entry={entry}
+                          size={36}
+                          borderRadius={9}
+                          boxShadow={isTop ? `0 0 14px ${color}55` : "none"}
+                        />
                         <div>
                           <div className="lb-uname">
                             {entry.username}

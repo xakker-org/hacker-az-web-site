@@ -1,19 +1,36 @@
+import { useEffect, useState } from "react";
+
 export default function ProfileSidebar({ profile, stats, onEdit }) {
   const initial = (profile?.username || "H").slice(0, 1).toUpperCase();
   const avatarHue = Number(profile?.avatar_hue) || 0;
+  const avatarUrl = profile?.avatar_url || null;
   const progress = Math.max(0, Math.min(100, Number(profile?.rank_progress) || 0));
+  const [avatarFailed, setAvatarFailed] = useState(false);
+
+  useEffect(() => {
+    setAvatarFailed(false);
+  }, [avatarUrl]);
 
   return (
     <aside className="profile-sidebar">
       <section className="profile-panel">
         <div className="profile-avatar-wrap">
           <div className="profile-avatar-shell">
-            <div
-              className="profile-avatar-circle"
-              style={{ background: `linear-gradient(135deg, hsl(${avatarHue} 75% 56%), hsl(${(avatarHue + 60) % 360} 82% 62%))` }}
-            >
-              {initial}
-            </div>
+            {avatarUrl && !avatarFailed ? (
+              <img
+                className="profile-avatar-image"
+                src={avatarUrl}
+                alt={profile?.username || "avatar"}
+                onError={() => setAvatarFailed(true)}
+              />
+            ) : (
+              <div
+                className="profile-avatar-circle"
+                style={{ background: `linear-gradient(135deg, hsl(${avatarHue} 75% 56%), hsl(${(avatarHue + 60) % 360} 82% 62%))` }}
+              >
+                {initial}
+              </div>
+            )}
           </div>
 
           <div className="profile-avatar-copy">
@@ -24,6 +41,7 @@ export default function ProfileSidebar({ profile, stats, onEdit }) {
               <span className="profile-chip">{profile?.rank || "Recruit"}</span>
               <span className="profile-chip muted">#{stats?.leaderboard_rank || "-"}</span>
               {profile?.country && <span className="profile-chip muted">{profile.country}</span>}
+              {profile?.city && <span className="profile-chip muted">{profile.city}</span>}
             </div>
           </div>
         </div>
@@ -33,10 +51,20 @@ export default function ProfileSidebar({ profile, stats, onEdit }) {
             <span className="profile-sidebar-meta-ico">✉</span>
             <span>{profile?.email || "No email"}</span>
           </div>
-          <div className="profile-sidebar-meta-item">
-            <span className="profile-sidebar-meta-ico">◎</span>
-            <span>{profile?.country || "No country"}</span>
-          </div>
+          {(profile?.country || profile?.city) && (
+            <div className="profile-sidebar-meta-item">
+              <span className="profile-sidebar-meta-ico">◎</span>
+              <span>
+                {[profile?.city, profile?.country].filter(Boolean).join(", ") || "No location"}
+              </span>
+            </div>
+          )}
+          {!profile?.country && !profile?.city && (
+            <div className="profile-sidebar-meta-item">
+              <span className="profile-sidebar-meta-ico">◎</span>
+              <span>No location</span>
+            </div>
+          )}
           <div className="profile-sidebar-meta-item">
             <span className="profile-sidebar-meta-ico">☰</span>
             <span>Rank #{stats?.leaderboard_rank || "-"}</span>

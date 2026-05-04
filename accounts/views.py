@@ -6,6 +6,7 @@ from django.db.models import Count, Q, Sum
 from django.db.models.functions import TruncDate
 from django.utils import timezone
 from rest_framework import generics
+from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -44,21 +45,39 @@ class MeView(generics.GenericAPIView):
                 "is_staff": request.user.is_staff,
                 "is_superuser": request.user.is_superuser,
                 "account_type": "admin" if request.user.is_staff or request.user.is_superuser else "client",
-                "profile": UserProfileSerializer(profile).data,
+                "profile": UserProfileSerializer(profile, context={"request": request}).data,
             }
         )
 
 
 class MyProfileView(APIView):
     permission_classes = [IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
 
     def get(self, request):
         profile, _ = UserProfile.objects.get_or_create(user=request.user)
-        return Response(UserProfileSerializer(profile).data)
+        return Response(UserProfileSerializer(profile, context={"request": request}).data)
 
     def patch(self, request):
         profile, _ = UserProfile.objects.get_or_create(user=request.user)
-        serializer = UserProfileSerializer(profile, data=request.data, partial=True)
+        payload = request.data.copy() if hasattr(request.data, "copy") else dict(request.data)
+
+        remove_avatar = str(payload.pop("remove_avatar", "")).lower() in {"1", "true", "yes", "on"}
+        if remove_avatar and profile.avatar:
+            profile.avatar.delete(save=False)
+            profile.avatar = None
+            profile.save(update_fields=["avatar"])
+
+        email_val = payload.pop("email", None)
+        if email_val:
+            if isinstance(email_val, list):
+                email_val = email_val[0]
+            email_val = str(email_val).strip()
+            if email_val:
+                request.user.email = email_val
+                request.user.save(update_fields=["email"])
+
+        serializer = UserProfileSerializer(profile, data=payload, partial=True, context={"request": request})
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data)
@@ -71,7 +90,7 @@ class PublicProfileView(APIView):
         except User.DoesNotExist:
             return Response({"detail": "Profile not found."}, status=404)
         profile, _ = UserProfile.objects.get_or_create(user=user)
-        data = UserProfileSerializer(profile).data
+        data = UserProfileSerializer(profile, context={"request": request}).data
         activity = Activity.objects.filter(user=user)[:20]
         data["activity"] = ActivitySerializer(activity, many=True).data
         return Response(data)
@@ -93,7 +112,7 @@ class LeaderboardView(APIView):
         qs = qs.order_by("-xp")[:50]
         return Response({
             "scope": scope,
-            "entries": LeaderboardEntrySerializer(qs, many=True).data,
+            "entries": LeaderboardEntrySerializer(qs, many=True, context={"request": request}).data,
         })
 
 
@@ -133,7 +152,7 @@ class ProfileDetailStatsView(APIView):
 
         user = request.user
         profile, _ = UserProfile.objects.get_or_create(user=user)
-        data = UserProfileSerializer(profile).data
+        data = UserProfileSerializer(profile, context={"request": request}).data
 
         qa_agg = QuestionAttempt.objects.filter(user=user).aggregate(
             total_attempts=Count("id"),

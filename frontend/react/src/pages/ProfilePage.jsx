@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import AppShell from "../components/AppShell";
 import ContributionGraph from "../components/profile/ContributionGraph";
 import PerformanceSummary from "../components/profile/PerformanceSummary";
@@ -12,8 +12,10 @@ import "../styles/profile.css";
 const EMPTY_PROFILE = {
   username: "",
   email: "",
+  full_name: "",
   bio: "",
   country: "",
+  city: "",
   avatar_hue: 0,
   xp: 0,
   rank: "Recruit",
@@ -46,9 +48,10 @@ export default function ProfilePage() {
   const [error, setError] = useState("");
 
   const [editOpen, setEditOpen] = useState(false);
-  const [draft, setDraft] = useState({ bio: "", country: "", avatar_hue: 0 });
+  const [draft, setDraft] = useState({ bio: "", full_name: "", email: "", country: "", city: "", avatar_hue: 0 });
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
+  const objectUrlRef = useRef(null);
 
   const loadProfileData = async (year = null) => {
     setLoading(true);
@@ -75,8 +78,13 @@ export default function ProfilePage() {
 
       setDraft({
         bio: profileData.bio || "",
+        full_name: profileData.full_name || "",
+        email: profileData.email || "",
         country: profileData.country || "",
+        city: profileData.city || "",
         avatar_hue: Number(profileData.avatar_hue) || 0,
+        avatar_file: null,
+        avatar_preview: profileData.avatar_url || null,
       });
     } catch (loadError) {
       setError(loadError?.response?.data?.detail || "Failed to load profile data.");
@@ -89,8 +97,43 @@ export default function ProfilePage() {
     loadProfileData();
   }, []);
 
+  useEffect(() => {
+    return () => {
+      if (objectUrlRef.current) {
+        URL.revokeObjectURL(objectUrlRef.current);
+      }
+    };
+  }, []);
+
   const updateDraft = (field) => (event) => {
-    setDraft((current) => ({ ...current, [field]: event.target.value }));
+    const value = event?.target?.files ? event.target.files[0] : event.target.value;
+    setDraft((current) => ({ ...current, [field]: value }));
+  };
+
+  const handleAvatarPick = (event) => {
+    const file = event.target.files?.[0] || null;
+    if (objectUrlRef.current) {
+      URL.revokeObjectURL(objectUrlRef.current);
+      objectUrlRef.current = null;
+    }
+
+    const preview = file ? URL.createObjectURL(file) : null;
+    objectUrlRef.current = preview;
+
+    setDraft((cur) => ({
+      ...cur,
+      avatar_file: file,
+      avatar_preview: preview || cur.avatar_preview || null,
+      remove_avatar: false,
+    }));
+  };
+
+  const removeAvatar = () => {
+    if (objectUrlRef.current) {
+      URL.revokeObjectURL(objectUrlRef.current);
+      objectUrlRef.current = null;
+    }
+    setDraft((cur) => ({ ...cur, avatar_file: null, avatar_preview: null, remove_avatar: true }));
   };
 
   const saveProfile = async (event) => {
@@ -98,14 +141,35 @@ export default function ProfilePage() {
     setSaving(true);
     setMessage("");
     try {
-      const { data } = await endpoints.updateProfile({
-        bio: draft.bio,
-        country: draft.country,
-        avatar_hue: Number(draft.avatar_hue) || 0,
-      });
-      setProfile((current) => ({ ...current, ...data }));
-      setMessage("Profile updated successfully.");
+      let payload;
+      if (draft.avatar_file) {
+        payload = new FormData();
+        payload.append("bio", draft.bio || "");
+        payload.append("full_name", draft.full_name || "");
+        payload.append("email", draft.email || "");
+        payload.append("country", draft.country || "");
+        payload.append("city", draft.city || "");
+        payload.append("avatar_hue", Number(draft.avatar_hue) || 0);
+        payload.append("avatar", draft.avatar_file);
+        payload.append("remove_avatar", "false");
+      } else {
+        payload = {
+          bio: draft.bio,
+          full_name: draft.full_name,
+          email: draft.email,
+          country: draft.country,
+          city: draft.city,
+          avatar_hue: Number(draft.avatar_hue) || 0,
+          remove_avatar: Boolean(draft.remove_avatar),
+        };
+      }
+
+      await endpoints.updateProfile(payload);
       setEditOpen(false);
+      setMessage("Profile updated successfully.");
+      await loadProfileData();
+    } catch (err) {
+      setMessage(err?.response?.data?.detail || "Failed to save profile.");
     } finally {
       setSaving(false);
     }
@@ -164,17 +228,45 @@ export default function ProfilePage() {
           <div className="profile-modal-overlay" role="dialog" aria-modal="true" aria-label="Edit profile">
             <form className="profile-modal" onSubmit={saveProfile}>
               <div className="profile-modal-hero">
-                <div
-                  className="profile-modal-avatar"
-                  style={{ background: `linear-gradient(135deg, hsl(${Number(draft.avatar_hue) || 0} 75% 56%), hsl(${(Number(draft.avatar_hue) + 60) % 360} 82% 62%))` }}
-                >
-                  {(profile?.username || "H").slice(0, 1).toUpperCase()}
+                <div className="profile-modal-avatar-wrap">
+                  {draft.avatar_preview ? (
+                    <img className="profile-modal-preview" src={draft.avatar_preview} alt="avatar preview" />
+                  ) : (
+                    <div
+                      className="profile-modal-avatar"
+                      style={{ background: `linear-gradient(135deg, hsl(${Number(draft.avatar_hue) || 0} 75% 56%), hsl(${(Number(draft.avatar_hue) + 60) % 360} 82% 62%))` }}
+                    >
+                      {(profile?.username || "H").slice(0, 1).toUpperCase()}
+                    </div>
+                  )}
                 </div>
                 <div>
                   <h2 className="profile-modal-title">Edit Profile</h2>
-                  <p className="profile-modal-subtitle">Tune your bio, location, and avatar tone.</p>
+                  <p className="profile-modal-subtitle">Make your profile cleaner and more personal.</p>
                 </div>
               </div>
+
+              <label className="profile-modal-field">
+                <span className="profile-modal-label">Full Name</span>
+                <input
+                  className="profile-modal-input"
+                  value={draft.full_name}
+                  onChange={updateDraft("full_name")}
+                  placeholder="Your full name"
+                  maxLength={150}
+                />
+              </label>
+
+              <label className="profile-modal-field">
+                <span className="profile-modal-label">Email</span>
+                <input
+                  className="profile-modal-input"
+                  type="email"
+                  value={draft.email}
+                  onChange={updateDraft("email")}
+                  placeholder="your@email.com"
+                />
+              </label>
 
               <label className="profile-modal-field">
                 <span className="profile-modal-label">Bio</span>
@@ -183,18 +275,49 @@ export default function ProfilePage() {
                   value={draft.bio}
                   onChange={updateDraft("bio")}
                   placeholder="Tell about your learning focus"
+                  maxLength={240}
                 />
+                <div className="profile-modal-counter">{(draft.bio || "").length}/240</div>
               </label>
 
               <label className="profile-modal-field">
-                <span className="profile-modal-label">Country</span>
+                <span className="profile-modal-label">Profile picture</span>
                 <input
-                  className="profile-modal-input"
-                  value={draft.country}
-                  onChange={updateDraft("country")}
-                  placeholder="Country"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleAvatarPick}
                 />
+                <div className="profile-modal-file-actions">
+                  <span className="profile-modal-file-hint">PNG, JPG, WEBP</span>
+                  {draft.avatar_preview && (
+                    <button type="button" className="profile-modal-remove" onClick={removeAvatar}>
+                      Remove
+                    </button>
+                  )}
+                </div>
               </label>
+
+              <div className="profile-modal-two-col">
+                <label className="profile-modal-field">
+                  <span className="profile-modal-label">Country</span>
+                  <input
+                    className="profile-modal-input"
+                    value={draft.country}
+                    onChange={updateDraft("country")}
+                    placeholder="Country"
+                  />
+                </label>
+
+                <label className="profile-modal-field">
+                  <span className="profile-modal-label">City</span>
+                  <input
+                    className="profile-modal-input"
+                    value={draft.city}
+                    onChange={updateDraft("city")}
+                    placeholder="City"
+                  />
+                </label>
+              </div>
 
               <label className="profile-modal-field">
                 <span className="profile-modal-label">Avatar Hue</span>
