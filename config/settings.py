@@ -27,7 +27,7 @@ ALLOWED_HOSTS = list(
 INSTALLED_APPS = [
     "django_hosts",
     "jazzmin",
-    "django.contrib.admin",
+    "config.apps.CustomAdminConfig",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
@@ -149,3 +149,14 @@ if not DEBUG:
     CSRF_COOKIE_SECURE = True
     SECURE_BROWSER_XSS_FILTER = True
     SECURE_CONTENT_TYPE_NOSNIFF = True
+
+
+# Jazzmin Admin Panel Configuration
+JAZZMIN_SETTINGS = {
+    "site_title": "Xəkər Admin",
+    "site_header": "İdarəçilik",
+    "site_brand": "xəkər",
+    "welcome_sign": "İdarəçilik Panelində Xoş Gəldiniz",
+    "copyright": "Xəkər Platform",
+    "show_sidebar": True,
+}

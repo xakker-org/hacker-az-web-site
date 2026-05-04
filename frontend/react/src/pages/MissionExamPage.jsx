@@ -35,26 +35,41 @@ function Timer({ totalSeconds, onExpire }) {
 }
 
 /* ── Question card ───────────────────────────────────────────── */
-function QuestionCard({ question, index, selectedChoices, onToggle, locked }) {
+function QuestionCard({ question, index, selectedChoices, answerText, onToggle, onTextChange, locked }) {
+  const isOpen = question.question_type === "open";
+  const answered = isOpen ? answerText.trim().length > 0 : selectedChoices.length > 0;
+
   return (
-    <div className={`ms-question-card${selectedChoices.length > 0 ? " answered" : ""}`}>
+    <div className={`ms-question-card${answered ? " answered" : ""}`}>
       <div className="ms-question-num">Question {index + 1}</div>
       <div className="ms-question-text">{question.question_text}</div>
-      <div className="ms-choices">
-        {question.choices.map((c) => {
-          const sel = selectedChoices.includes(c.id);
-          return (
-            <div
-              key={c.id}
-              className={`ms-choice${sel ? " selected" : ""}`}
-              onClick={() => !locked && onToggle(question.id, c.id, question.is_multiple)}
-            >
-              <div className="ms-choice-indicator">{sel ? "✓" : ""}</div>
-              <div className="ms-choice-text">{c.choice_text}</div>
-            </div>
-          );
-        })}
-      </div>
+      {isOpen ? (
+        <textarea
+          className="xk-input"
+          value={answerText}
+          onChange={(e) => !locked && onTextChange(question.id, e.target.value)}
+          placeholder="Cavabınızı yazın..."
+          rows={5}
+          style={{ width: "100%", resize: "vertical" }}
+          disabled={locked}
+        />
+      ) : (
+        <div className="ms-choices">
+          {question.choices.map((c) => {
+            const sel = selectedChoices.includes(c.id);
+            return (
+              <div
+                key={c.id}
+                className={`ms-choice${sel ? " selected" : ""}`}
+                onClick={() => !locked && onToggle(question.id, c.id, question.is_multiple)}
+              >
+                <div className="ms-choice-indicator">{sel ? "✓" : ""}</div>
+                <div className="ms-choice-text">{c.choice_text}</div>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
@@ -104,6 +119,7 @@ function ResultView({ result, exam, missionSlug, onRetry, canRetry }) {
           </div>
           {result.answers_detail.map((a, i) => {
             const correct = a.is_correct;
+            const isOpen = a.question_type === "open";
             return (
               <div key={a.question_id} className="ms-explanation-card">
                 <div className="ms-explanation-q">
@@ -113,31 +129,42 @@ function ResultView({ result, exam, missionSlug, onRetry, canRetry }) {
                   </div>
                 </div>
                 <div className="ms-explanation-body">
-                  <div style={{ marginBottom: 8 }}>
-                    {a.choices.map((c) => {
-                      const wasSelected = a.selected_choice_ids.includes(c.id);
-                      const isCorrect   = a.correct_choice_ids.includes(c.id);
-                      let color = "var(--t3)";
-                      if (isCorrect) color = "var(--green)";
-                      if (wasSelected && !isCorrect) color = "var(--hard)";
-                      return (
-                        <div
-                          key={c.id}
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 8,
-                            padding: "4px 0",
-                            color,
-                            fontSize: 13,
-                          }}
-                        >
-                          <span>{isCorrect ? "✓" : wasSelected ? "✗" : "○"}</span>
-                          <span>{c.choice_text}</span>
-                        </div>
-                      );
-                    })}
-                  </div>
+                  {isOpen ? (
+                    <div style={{ display: "grid", gap: 8, fontSize: 13 }}>
+                      <div>
+                        <strong>Your answer:</strong> {a.submitted_answer || "—"}
+                      </div>
+                      <div>
+                        <strong>Accepted answer:</strong> {a.expected_answers?.join(" / ") || "—"}
+                      </div>
+                    </div>
+                  ) : (
+                    <div style={{ marginBottom: 8 }}>
+                      {a.choices.map((c) => {
+                        const wasSelected = a.selected_choice_ids.includes(c.id);
+                        const isCorrect   = a.correct_choice_ids.includes(c.id);
+                        let color = "var(--t3)";
+                        if (isCorrect) color = "var(--green)";
+                        if (wasSelected && !isCorrect) color = "var(--hard)";
+                        return (
+                          <div
+                            key={c.id}
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 8,
+                              padding: "4px 0",
+                              color,
+                              fontSize: 13,
+                            }}
+                          >
+                            <span>{isCorrect ? "✓" : wasSelected ? "✗" : "○"}</span>
+                            <span>{c.choice_text}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                   {a.explanation && (
                     <div style={{ color: "var(--t3)", borderTop: "1px solid var(--b1)", paddingTop: 8, marginTop: 4 }}>
                       💡 {a.explanation}
@@ -170,6 +197,7 @@ export default function MissionExamPage() {
 
   // answers: { [questionId]: [choiceId, ...] }
   const [answers, setAnswers] = useState({});
+  const [openAnswers, setOpenAnswers] = useState({});
 
   useEffect(() => {
     Promise.all([
@@ -226,7 +254,9 @@ export default function MissionExamPage() {
       const payload = {
         answers: (exam?.questions || []).map((q) => ({
           question_id: q.id,
-          choice_ids: answers[q.id] || [],
+          ...(q.question_type === "open"
+            ? { answer_text: openAnswers[q.id] || "" }
+            : { choice_ids: answers[q.id] || [] }),
         })),
       };
       const { data } = await endpoints.missionExamSubmit(slug, attemptId, payload);
@@ -244,6 +274,7 @@ export default function MissionExamPage() {
     setStarted(false);
     setAttemptId(null);
     setAnswers({});
+    setOpenAnswers({});
     // Reload exam to update attempts_used
     endpoints.missionExamDetail(slug).then(({ data }) => setExam(data));
   };
@@ -256,7 +287,12 @@ export default function MissionExamPage() {
   if (error && !exam) return <AppShell title="Final Exam"><div className="ms-empty">{error}</div></AppShell>;
 
   const questions = exam?.questions || [];
-  const answeredCount = Object.values(answers).filter((v) => v.length > 0).length;
+  const answeredCount = questions.filter((q) => {
+    if (q.question_type === "open") {
+      return (openAnswers[q.id] || "").trim().length > 0;
+    }
+    return (answers[q.id] || []).length > 0;
+  }).length;
   const allAnswered = answeredCount === questions.length;
   const canAttempt = exam?.can_attempt;
   const attemptsUsed = exam?.attempts_used ?? 0;
@@ -419,7 +455,9 @@ export default function MissionExamPage() {
                     question={q}
                     index={i}
                     selectedChoices={answers[q.id] || []}
+                    answerText={openAnswers[q.id] || ""}
                     onToggle={handleToggleChoice}
+                    onTextChange={(questionId, value) => setOpenAnswers((prev) => ({ ...prev, [questionId]: value }))}
                     locked={submitting}
                   />
                 ))}

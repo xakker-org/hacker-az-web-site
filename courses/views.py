@@ -76,6 +76,18 @@ from .serializers import (
 from .services import get_user_question_progress, submit_question_answer, submit_task_answer
 
 
+def _normalize_exam_text(value):
+    return " ".join((value or "").split()).casefold()
+
+
+def _normalize_exam_answers(raw_value):
+    return {
+        _normalize_exam_text(part)
+        for part in (raw_value or "").replace("|", "\n").splitlines()
+        if part.strip()
+    }
+
+
 # ----- Categories / tags -----
 
 class CategoryListView(generics.ListAPIView):
@@ -923,9 +935,8 @@ class MissionExamSubmitView(APIView):
         answers_data = serializer.validated_data["answers"]
 
         questions = exam.questions.prefetch_related("choices").all()
-        question_map = {q.id: q for q in questions}
         answers_by_question = {
-            int(a["question_id"]): a.get("choice_ids", [])
+            int(a["question_id"]): a
             for a in answers_data
             if "question_id" in a
         }
@@ -935,16 +946,29 @@ class MissionExamSubmitView(APIView):
             total_count = questions.count()
 
             for q in questions:
-                selected_ids = answers_by_question.get(q.id, [])
-                correct_ids = set(q.choices.filter(is_correct=True).values_list("id", flat=True))
-                selected_set = set(selected_ids)
-
                 ans_obj, _ = MissionExamAnswer.objects.get_or_create(
                     attempt=attempt, question=q
                 )
-                ans_obj.selected_choices.set(
-                    q.choices.filter(id__in=selected_ids)
-                )
+                payload = answers_by_question.get(q.id, {})
+
+                if q.question_type == "open":
+                    submitted_answer = (payload.get("answer_text") or "").strip()
+                    ans_obj.submitted_answer = submitted_answer
+                    ans_obj.save(update_fields=["submitted_answer"])
+                    ans_obj.selected_choices.clear()
+
+                    expected_answers = _normalize_exam_answers(q.expected_answer)
+                    if expected_answers and _normalize_exam_text(submitted_answer) in expected_answers:
+                        correct_count += 1
+                    continue
+
+                selected_ids = payload.get("choice_ids", [])
+                correct_ids = set(q.choices.filter(is_correct=True).values_list("id", flat=True))
+                selected_set = set(selected_ids)
+
+                ans_obj.submitted_answer = ""
+                ans_obj.save(update_fields=["submitted_answer"])
+                ans_obj.selected_choices.set(q.choices.filter(id__in=selected_ids))
 
                 if selected_set == correct_ids:
                     correct_count += 1

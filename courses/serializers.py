@@ -674,12 +674,16 @@ class MissionExamChoiceFullSerializer(serializers.ModelSerializer):
         fields = ["id", "choice_text", "is_correct", "order"]
 
 
+def _normalize_exam_text(value):
+    return " ".join((value or "").split()).casefold()
+
+
 class MissionExamQuestionSerializer(serializers.ModelSerializer):
     choices = MissionExamChoiceSerializer(many=True, read_only=True)
 
     class Meta:
         model = MissionExamQuestion
-        fields = ["id", "question_text", "order", "is_multiple", "choices"]
+        fields = ["id", "question_text", "question_type", "order", "is_multiple", "choices"]
 
 
 class MissionExamSerializer(serializers.ModelSerializer):
@@ -817,11 +821,31 @@ class MissionExamAttemptResultSerializer(serializers.ModelSerializer):
         result = []
         for ans in obj.answers.prefetch_related("selected_choices", "question__choices"):
             q = ans.question
+            if q.question_type == "open":
+                expected_answers = [
+                    part.strip()
+                    for part in q.expected_answer.replace("|", "\n").splitlines()
+                    if part.strip()
+                ]
+                selected = (ans.submitted_answer or "").strip()
+                result.append({
+                    "question_id": q.id,
+                    "question_text": q.question_text,
+                    "question_type": q.question_type,
+                    "explanation": q.explanation,
+                    "submitted_answer": ans.submitted_answer or "",
+                    "expected_answers": expected_answers,
+                    "is_correct": _normalize_exam_text(selected) in {_normalize_exam_text(x) for x in expected_answers} if expected_answers else False,
+                    "choices": [],
+                })
+                continue
+
             selected_ids = set(ans.selected_choices.values_list("id", flat=True))
             correct_ids = set(q.choices.filter(is_correct=True).values_list("id", flat=True))
             result.append({
                 "question_id": q.id,
                 "question_text": q.question_text,
+                "question_type": q.question_type,
                 "explanation": q.explanation,
                 "selected_choice_ids": list(selected_ids),
                 "correct_choice_ids": list(correct_ids),

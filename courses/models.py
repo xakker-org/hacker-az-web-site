@@ -507,12 +507,25 @@ class MissionExam(models.Model):
         return f"Final Exam: {self.mission.title}"
 
 
+class MissionExamQuestionTypeChoices(models.TextChoices):
+    CLOSED = "closed", "Closed"
+    OPEN = "open", "Open"
+
+
 class MissionExamQuestion(models.Model):
     exam = models.ForeignKey(MissionExam, on_delete=models.CASCADE, related_name="questions")
     question_text = models.TextField()
+    question_type = models.CharField(
+        max_length=20,
+        choices=MissionExamQuestionTypeChoices.choices,
+        default=MissionExamQuestionTypeChoices.CLOSED,
+    )
     order = models.PositiveSmallIntegerField(default=0)
     is_multiple = models.BooleanField(
         default=False, help_text="Allow multiple correct answers to be selected"
+    )
+    expected_answer = models.TextField(
+        blank=True, default="", help_text="Expected answer for open questions."
     )
     explanation = models.TextField(
         blank=True, help_text="Shown after the exam to explain the correct answer"
@@ -613,6 +626,7 @@ class MissionExamAnswer(models.Model):
         MissionExamAttempt, on_delete=models.CASCADE, related_name="answers"
     )
     question = models.ForeignKey(MissionExamQuestion, on_delete=models.CASCADE)
+    submitted_answer = models.TextField(blank=True, default="")
     selected_choices = models.ManyToManyField(MissionExamChoice, blank=True)
 
     class Meta:

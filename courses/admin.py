@@ -20,6 +20,7 @@ from .models import (
     MissionExamAttempt,
     MissionExamChoice,
     MissionExamQuestion,
+    MissionExamQuestionTypeChoices,
     MissionPass,
     MissionPassCompletion,
     MissionProgress,
@@ -36,6 +37,17 @@ from .models import (
     UserQuestionAttempt,
     UserTaskProgress,
 )
+
+
+class ReadOnlyAdminMixin:
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
 
 
 # ─── Category ─────────────────────────────────────────────────────────────────
@@ -116,12 +128,16 @@ class CourseAdmin(admin.ModelAdmin):
     prepopulated_fields = {"slug": ("title",)}
     list_editable = ("is_published",)
     inlines = [LessonInline]
+    fieldsets = (
+        ("Əsas məlumatlar", {"fields": ("title", "slug", "category", "icon", "cover_color", "is_published")}),
+        ("Məzmun", {"fields": ("description",)}),
+    )
 
     @admin.display(description="Dərslər")
     def lesson_count(self, obj):
         return obj.lessons.count()
 
-    @admin.display(description="Rooms")
+    @admin.display(description="Otaqlar")
     def room_count(self, obj):
         return obj.rooms.count()
 
@@ -131,27 +147,19 @@ class CourseAdmin(admin.ModelAdmin):
 
 
 @admin.register(LessonQuestionAttempt)
-class LessonQuestionAttemptAdmin(admin.ModelAdmin):
+class LessonQuestionAttemptAdmin(ReadOnlyAdminMixin, admin.ModelAdmin):
     list_display    = ("user", "question", "is_correct", "points_awarded", "attempted_at")
     list_filter     = ("is_correct",)
     search_fields   = ("user__username",)
     readonly_fields = ("user", "question", "selected_choice", "is_correct", "points_awarded", "attempted_at")
     date_hierarchy  = "attempted_at"
 
-    def has_add_permission(self, _request): return False
-    def has_change_permission(self, _request, _obj=None): return False
-
-
 @admin.register(UserLessonProgress)
-class UserLessonProgressAdmin(admin.ModelAdmin):
+class UserLessonProgressAdmin(ReadOnlyAdminMixin, admin.ModelAdmin):
     list_display    = ("user", "lesson", "is_completed", "completed_at")
     list_filter     = ("is_completed",)
     search_fields   = ("user__username", "lesson__title")
     readonly_fields = ("user", "lesson", "is_completed", "completed_at")
-
-    def has_add_permission(self, _request): return False
-    def has_change_permission(self, _request, _obj=None): return False
-
 
 # ─── Room / Task ──────────────────────────────────────────────────────────────
 
@@ -234,27 +242,19 @@ class TaskQuestionAdmin(admin.ModelAdmin):
 
 
 @admin.register(UserTaskProgress)
-class UserTaskProgressAdmin(admin.ModelAdmin):
+class UserTaskProgressAdmin(ReadOnlyAdminMixin, admin.ModelAdmin):
     list_display    = ("user", "task", "completed", "earned_points", "hint_used", "completed_at")
     list_filter     = ("completed", "hint_used")
     search_fields   = ("user__username", "task__title")
     readonly_fields = ("user", "task", "completed", "earned_points", "hint_used", "first_attempt_at", "completed_at", "updated_at")
 
-    def has_add_permission(self, request): return False
-    def has_change_permission(self, request, obj=None): return False
-
-
 @admin.register(UserQuestionAttempt)
-class UserQuestionAttemptAdmin(admin.ModelAdmin):
+class UserQuestionAttemptAdmin(ReadOnlyAdminMixin, admin.ModelAdmin):
     list_display    = ("user", "question", "is_correct", "awarded_points", "hint_used", "attempted_at")
     list_filter     = ("is_correct", "hint_used")
     search_fields   = ("user__username", "question__prompt")
     readonly_fields = ("user", "question", "submitted_answer", "is_correct", "awarded_points", "hint_used", "attempted_at")
     date_hierarchy  = "attempted_at"
-
-    def has_add_permission(self, request): return False
-    def has_change_permission(self, request, obj=None): return False
-
 
 # ─── Self-Study Question ──────────────────────────────────────────────────────
 
@@ -347,6 +347,8 @@ class QuestionAdmin(admin.ModelAdmin):
     list_select_related = ("course",)
     ordering      = ("course__title", "order", "id")
     list_editable = ("order",)
+    save_on_top   = True
+    list_per_page = 20
     fieldsets = (
         ("Əsas məlumatlar", {
             "fields": ("course", "title", "prompt", "question_type", "level", "points", "order"),
@@ -356,16 +358,16 @@ class QuestionAdmin(admin.ModelAdmin):
                 "<b>Terminal</b> → komanda cavabı."
             ),
         }),
-        ("🅰️ Closed — variantlar", {
-            "classes": ("question-section", "question-section-closed"),
+        ("Closed suallar", {
+            "classes": ("question-section", "question-section-closed", "collapse"),
             "fields": ("option_a", "option_b", "option_c", "option_d", "option_e", "correct_option"),
         }),
-        ("✍️ Open / 💻 Terminal — gözlənilən cavab", {
-            "classes": ("question-section", "question-section-openterminal"),
+        ("Open / Terminal cavablar", {
+            "classes": ("question-section", "question-section-openterminal", "collapse"),
             "fields": ("expected_answer",),
         }),
-        ("💻 Terminal — başlanğıc kodu", {
-            "classes": ("question-section", "question-section-terminal"),
+        ("Terminal başlanğıc kodu", {
+            "classes": ("question-section", "question-section-terminal", "collapse"),
             "fields": ("starter_code",),
         }),
         ("İzah", {"fields": ("explanation",)}),
@@ -380,17 +382,13 @@ class QuestionAdmin(admin.ModelAdmin):
 
 
 @admin.register(QuestionAttempt)
-class QuestionAttemptAdmin(admin.ModelAdmin):
+class QuestionAttemptAdmin(ReadOnlyAdminMixin, admin.ModelAdmin):
     list_display    = ("user", "question", "attempt_number", "is_correct", "points_awarded", "hint_used", "attempted_at")
     list_filter     = ("is_correct", "hint_used", "question__question_type", "question__level", "question__course")
     search_fields   = ("user__username", "question__title", "question__course__title")
     readonly_fields = ("user", "question", "submitted_answer", "is_correct", "points_awarded", "attempt_number", "hint_used", "attempted_at")
     list_select_related = ("user", "question", "question__course")
     date_hierarchy  = "attempted_at"
-
-    def has_add_permission(self, request): return False
-    def has_change_permission(self, request, obj=None): return False
-
 
 # ─── Learning Plan ────────────────────────────────────────────────────────────
 
@@ -408,6 +406,11 @@ class LearningPlanAdmin(admin.ModelAdmin):
     prepopulated_fields = {"slug": ("title",)}
     list_editable = ("is_featured", "is_published")
     inlines       = [LearningPlanCourseInline]
+    fieldsets = (
+        ("Əsas məlumatlar", {"fields": ("title", "slug", "level", "icon")}),
+        ("Məzmun", {"fields": ("summary", "description")}),
+        ("Parametrlər", {"fields": ("estimated_hours", "is_featured", "is_published")}),
+    )
 
     @admin.display(description="Kurslar")
     def course_count(self, obj):
@@ -432,7 +435,7 @@ class ExamAdmin(admin.ModelAdmin):
     list_editable = ("is_published",)
     inlines       = [ExamQuestionInline]
     fieldsets = (
-        ("Əsas", {"fields": ("course", "title", "slug", "description", "instructions")}),
+        ("Əsas məlumatlar", {"fields": ("course", "title", "slug", "description", "instructions")}),
         ("Parametrlər", {"fields": ("level", "time_limit_minutes", "is_published")}),
     )
 
@@ -446,16 +449,12 @@ class ExamAdmin(admin.ModelAdmin):
 
 
 @admin.register(ExamAttempt)
-class ExamAttemptAdmin(admin.ModelAdmin):
+class ExamAttemptAdmin(ReadOnlyAdminMixin, admin.ModelAdmin):
     list_display    = ("user", "exam", "status", "score_percent", "review_pending", "started_at", "submitted_at")
     list_filter     = ("status", "review_pending", "exam")
     search_fields   = ("user__username", "exam__title")
     readonly_fields = ("user", "exam", "status", "score_percent", "review_pending", "started_at", "submitted_at")
     date_hierarchy  = "started_at"
-
-    def has_add_permission(self, request): return False
-    def has_change_permission(self, request, obj=None): return False
-
 
 # ─── Enrollment ───────────────────────────────────────────────────────────────
 
@@ -482,15 +481,16 @@ class MissionPassInline(admin.StackedInline):
 
 @admin.register(MissionPass)
 class MissionPassAdmin(admin.ModelAdmin):
-    list_display  = ("__str__", "mission", "order", "estimated_minutes", "is_published")
+    list_display  = ("title", "mission", "order", "estimated_minutes", "is_published")
     list_filter   = ("is_published", "mission")
     search_fields = ("title", "mission__title")
     list_editable = ("order", "is_published")
+    autocomplete_fields = ("mission",)
     fieldsets = (
-        (None, {"fields": ("mission", "title", "order", "estimated_minutes", "is_published")}),
-        ("Content (HTML)", {
+        ("Əsas məlumatlar", {"fields": ("mission", "title", "order", "estimated_minutes", "is_published")}),
+        ("Məzmun (HTML)", {
             "fields": ("content",),
-            "description": "Supports standard HTML. Use &lt;h2&gt;, &lt;p&gt;, &lt;ul&gt;, &lt;pre&gt;, &lt;code&gt; etc.",
+            "description": "Standart HTML dəstəklənir. &lt;h2&gt;, &lt;p&gt;, &lt;ul&gt;, &lt;pre&gt;, &lt;code&gt; və s. istifadə edin.",
         }),
     )
 
@@ -507,13 +507,13 @@ class MissionAdmin(admin.ModelAdmin):
     list_editable = ("is_published", "order")
     inlines       = [MissionPassInline]
     fieldsets = (
-        ("Core", {
-            "fields": ("title", "slug", "description", "short_description"),
+        ("Əsas məlumatlar", {
+            "fields": ("title", "slug", "short_description", "description"),
         }),
-        ("Appearance", {
+        ("Görünüş", {
             "fields": ("icon", "cover_color", "difficulty"),
         }),
-        ("Settings", {
+        ("Parametrlər", {
             "fields": ("estimated_hours", "xp_reward", "order", "is_published"),
         }),
     )
@@ -529,30 +529,137 @@ class MissionAdmin(admin.ModelAdmin):
 
 # ─── Mission Exam ─────────────────────────────────────────────────────────────
 
-class MissionExamChoiceInline(admin.TabularInline):
-    model  = MissionExamChoice
-    extra  = 4
-    fields = ("choice_text", "is_correct", "order")
+class MissionExamQuestionAdminForm(forms.ModelForm):
+    option_a = forms.CharField(required=False, label="Variant A", widget=forms.TextInput(attrs={"class": "vTextField"}))
+    option_b = forms.CharField(required=False, label="Variant B", widget=forms.TextInput(attrs={"class": "vTextField"}))
+    option_c = forms.CharField(required=False, label="Variant C", widget=forms.TextInput(attrs={"class": "vTextField"}))
+    option_d = forms.CharField(required=False, label="Variant D", widget=forms.TextInput(attrs={"class": "vTextField"}))
+    option_e = forms.CharField(required=False, label="Variant E", widget=forms.TextInput(attrs={"class": "vTextField"}))
+    correct_option = forms.ChoiceField(
+        required=False,
+        label="Düzgün variant",
+        choices=[("", "— Seçin —"), ("A", "A"), ("B", "B"), ("C", "C"), ("D", "D"), ("E", "E")],
+    )
 
+    class Meta:
+        model = MissionExamQuestion
+        fields = "__all__"
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["question_text"].label = "Sual mətni"
+        self.fields["question_type"].label = "Sual tipi"
+        self.fields["expected_answer"].label = "Gözlənilən cavab"
+        self.fields["expected_answer"].help_text = "Open sual üçün düzgün cavab. Bir neçə qəbul olunan cavab varsa, hərəsini yeni sətirdə yazın."
+        self.fields["expected_answer"].widget.attrs.update({"placeholder": "Məs: nmap -sV 10.10.10.10"})
+
+        if not self.instance.pk:
+            return
+
+        if self.instance.question_type == MissionExamQuestionTypeChoices.CLOSED:
+            choices = list(self.instance.choices.order_by("order", "id")[:5])
+            for idx, choice in enumerate(choices):
+                letter = ["a", "b", "c", "d", "e"][idx]
+                self.fields[f"option_{letter}"].initial = choice.choice_text
+                if choice.is_correct:
+                    self.fields["correct_option"].initial = letter.upper()
+        else:
+            self.fields["expected_answer"].initial = self.instance.expected_answer
+
+    def clean(self):
+        cleaned = super().clean()
+        q_type = cleaned.get("question_type")
+        expected = (cleaned.get("expected_answer") or "").strip()
+        opt_map = {k: (cleaned.get(f"option_{k.lower()}") or "").strip() for k in "ABCDE"}
+        correct = cleaned.get("correct_option")
+
+        if q_type == MissionExamQuestionTypeChoices.CLOSED:
+            if not all(opt_map.values()):
+                raise forms.ValidationError("Closed sual üçün A, B, C, D, E hamısı doldurulmalıdır.")
+            if not correct:
+                raise forms.ValidationError("Düzgün variantı seçin.")
+            cleaned["expected_answer"] = ""
+        else:
+            if not expected:
+                raise forms.ValidationError("Open sual üçün gözlənilən cavabı yazın.")
+            if any(opt_map.values()) or correct:
+                raise forms.ValidationError("Open sual üçün variant sahələri boş olmalıdır.")
+        return cleaned
+
+    def save(self, commit=True):
+        question = super().save(commit=False)
+        question.save()
+        self._sync_choices(question)
+        return question
+
+    def _sync_choices(self, question):
+        question.choices.all().delete()
+        if question.question_type != MissionExamQuestionTypeChoices.CLOSED:
+            return
+
+        opt_map = [
+            ("A", (self.cleaned_data.get("option_a") or "").strip()),
+            ("B", (self.cleaned_data.get("option_b") or "").strip()),
+            ("C", (self.cleaned_data.get("option_c") or "").strip()),
+            ("D", (self.cleaned_data.get("option_d") or "").strip()),
+            ("E", (self.cleaned_data.get("option_e") or "").strip()),
+        ]
+        correct = self.cleaned_data.get("correct_option")
+        for order, (letter, text) in enumerate(opt_map, start=1):
+            MissionExamChoice.objects.create(
+                question=question,
+                choice_text=text,
+                is_correct=(letter == correct),
+                order=order,
+            )
 
 class MissionExamQuestionInline(admin.StackedInline):
     model  = MissionExamQuestion
     extra  = 1
-    fields = ("question_text", "order", "is_multiple", "explanation")
+    form = MissionExamQuestionAdminForm
     show_change_link = True
     ordering = ("order",)
+
+    fieldsets = (
+        ("Əsas məlumatlar", {"fields": ("question_text", "question_type", "order")} ),
+        ("Closed suallar", {
+            "classes": ("question-section", "mission-exam-section-closed"),
+            "fields": ("option_a", "option_b", "option_c", "option_d", "option_e", "correct_option"),
+        }),
+        ("Open sualın cavabı", {
+            "classes": ("question-section", "mission-exam-section-open"),
+            "fields": ("expected_answer",),
+        }),
+        ("İzah", {"fields": ("explanation",)}),
+    )
+
+    class Media:
+        js = ("admin/js/mission_exam_question_admin.js",)
 
 
 @admin.register(MissionExamQuestion)
 class MissionExamQuestionAdmin(admin.ModelAdmin):
-    list_display  = ("__str__", "exam", "order", "is_multiple")
-    list_filter   = ("exam__mission",)
+    form          = MissionExamQuestionAdminForm
+    list_display  = ("question_text", "exam", "question_type", "order")
+    list_filter   = ("question_type", "exam__mission")
     search_fields = ("question_text", "exam__title")
-    inlines       = [MissionExamChoiceInline]
+    save_on_top   = True
+    list_per_page = 20
     fieldsets = (
-        (None, {"fields": ("exam", "question_text", "order", "is_multiple")}),
-        ("Explanation (shown after exam)", {"fields": ("explanation",)}),
+        ("Əsas məlumatlar", {"fields": ("exam", "question_text", "question_type", "order")} ),
+        ("Closed suallar", {
+            "classes": ("question-section", "mission-exam-section-closed", "collapse"),
+            "fields": ("option_a", "option_b", "option_c", "option_d", "option_e", "correct_option"),
+        }),
+        ("Open sualın cavabı", {
+            "classes": ("question-section", "mission-exam-section-open", "collapse"),
+            "fields": ("expected_answer",),
+        }),
+        ("İzah", {"fields": ("explanation",)}),
     )
+
+    class Media:
+        js = ("admin/js/mission_exam_question_admin.js",)
 
 
 @admin.register(MissionExam)
@@ -565,11 +672,14 @@ class MissionExamAdmin(admin.ModelAdmin):
     search_fields = ("title", "mission__title")
     list_editable = ("is_published",)
     inlines       = [MissionExamQuestionInline]
+    save_on_top   = True
+    list_per_page = 20
     fieldsets = (
-        ("Core", {"fields": ("mission", "title", "description")}),
-        ("Rules", {
+        ("Əsas məlumatlar", {"fields": ("mission", "title", "description")}),
+        ("Qaydalar", {
+            "classes": ("collapse",),
             "fields": ("passing_score", "time_limit_minutes", "max_attempts", "xp_reward", "is_published"),
-            "description": "passing_score is a percentage (0-100). Set time_limit_minutes=0 for no limit. Set max_attempts=0 for unlimited.",
+            "description": "passing_score faizdir (0-100). limitsiz vaxt üçün time_limit_minutes=0, limitsiz cəhd üçün max_attempts=0 yazın.",
         }),
     )
 
@@ -581,45 +691,31 @@ class MissionExamAdmin(admin.ModelAdmin):
 # ─── Mission Progress (read-only) ─────────────────────────────────────────────
 
 @admin.register(MissionProgress)
-class MissionProgressAdmin(admin.ModelAdmin):
+class MissionProgressAdmin(ReadOnlyAdminMixin, admin.ModelAdmin):
     list_display    = ("user", "mission", "is_completed", "exam_passed", "started_at", "completed_at")
     list_filter     = ("is_completed", "exam_passed", "mission")
     search_fields   = ("user__username", "mission__title")
     readonly_fields = ("user", "mission", "is_completed", "exam_passed", "started_at", "completed_at")
     date_hierarchy  = "started_at"
 
-    def has_add_permission(self, request): return False
-    def has_change_permission(self, request, obj=None): return False
-
-
 @admin.register(MissionPassCompletion)
-class MissionPassCompletionAdmin(admin.ModelAdmin):
+class MissionPassCompletionAdmin(ReadOnlyAdminMixin, admin.ModelAdmin):
     list_display    = ("user", "mission_pass", "completed_at")
     list_filter     = ("mission_pass__mission",)
     search_fields   = ("user__username", "mission_pass__title")
     readonly_fields = ("user", "mission_pass", "completed_at")
 
-    def has_add_permission(self, request): return False
-    def has_change_permission(self, request, obj=None): return False
-
-
 @admin.register(MissionExamAttempt)
-class MissionExamAttemptAdmin(admin.ModelAdmin):
+class MissionExamAttemptAdmin(ReadOnlyAdminMixin, admin.ModelAdmin):
     list_display    = ("user", "exam", "attempt_number", "score", "passed", "started_at", "submitted_at")
     list_filter     = ("passed", "exam__mission")
     search_fields   = ("user__username", "exam__title")
     readonly_fields = ("user", "exam", "attempt_number", "score", "passed", "started_at", "submitted_at")
     date_hierarchy  = "started_at"
 
-    def has_add_permission(self, request): return False
-    def has_change_permission(self, request, obj=None): return False
-
-
 @admin.register(MissionExamAnswer)
-class MissionExamAnswerAdmin(admin.ModelAdmin):
-    list_display    = ("attempt", "question")
-    search_fields   = ("attempt__user__username",)
-    readonly_fields = ("attempt", "question", "selected_choices")
+class MissionExamAnswerAdmin(ReadOnlyAdminMixin, admin.ModelAdmin):
+    list_display    = ("attempt", "question", "submitted_answer")
+    search_fields   = ("attempt__user__username", "question__question_text", "submitted_answer")
+    readonly_fields = ("attempt", "question", "submitted_answer", "selected_choices")
 
-    def has_add_permission(self, request): return False
-    def has_change_permission(self, request, obj=None): return False
