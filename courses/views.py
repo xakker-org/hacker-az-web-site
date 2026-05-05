@@ -1,3 +1,4 @@
+from django.db import transaction
 from django.db.models import Count, Q
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
@@ -64,6 +65,15 @@ from .serializers import (
     UserProgressSerializer,
 )
 from .services import get_user_question_progress, submit_question_answer, submit_task_answer
+
+
+def _normalize_exam_text(value):
+    return " ".join((value or "").split()).casefold()
+
+
+def _normalize_exam_answers(value):
+    parts = [part.strip() for part in (value or "").replace("|", "\n").splitlines()]
+    return {_normalize_exam_text(part) for part in parts if part}
 
 
 # ----- Categories / tags -----
@@ -828,6 +838,28 @@ class MissionExamSubmitView(APIView):
                 progress.is_completed = True
                 progress.completed_at = timezone.now()
                 progress.save(update_fields=["exam_passed", "is_completed", "completed_at"])
+
+                # Mark all published passes as completed when final exam is passed.
+                published_pass_ids = list(
+                    mission.passes.filter(is_published=True).values_list("id", flat=True)
+                )
+                if published_pass_ids:
+                    completed_pass_ids = set(
+                        MissionPassCompletion.objects.filter(
+                            user=request.user,
+                            mission_pass_id__in=published_pass_ids,
+                        ).values_list("mission_pass_id", flat=True)
+                    )
+                    to_create = [
+                        MissionPassCompletion(
+                            user=request.user,
+                            mission_pass_id=pass_id,
+                        )
+                        for pass_id in published_pass_ids
+                        if pass_id not in completed_pass_ids
+                    ]
+                    if to_create:
+                        MissionPassCompletion.objects.bulk_create(to_create, ignore_conflicts=True)
 
                 # Award XP
                 profile, _ = UserProfile.objects.get_or_create(user=request.user)

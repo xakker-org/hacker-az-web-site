@@ -754,45 +754,6 @@
   flex-wrap: wrap;
 }
 
-/* Submission mode / bulk textarea (cleaner controls) */
-.submission-mode {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  margin-bottom: 12px;
-}
-
-.submission-mode .label {
-  font-weight: 700;
-  color: var(--t2);
-  font-size: 13px;
-  margin-right: 6px;
-}
-
-.submission-mode .mode-btn {
-  padding: 8px 12px;
-  border-radius: 8px;
-  border: 1px solid var(--b2);
-  background: var(--s2);
-  color: var(--t2);
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.submission-mode .mode-btn.active {
-  background: var(--blue-dim);
-  border-color: var(--blue-ring);
-  color: var(--blue);
-}
-
-.bulk-textarea {
-  width: 100%;
-  min-height: 240px;
-  resize: vertical;
-  padding: 16px;
-  border-radius: 12px;
-  border: 1.5px solid var(--b1);\n  background: var(--s1);\n  color: var(--t2);\n  font-size: 15px;\n  line-height: 1.7;\n  font-family: var(--font);\n  transition: border-color 0.15s, box-shadow 0.15s;\n}\n\n.bulk-textarea:focus {\n  outline: none;\n  border-color: var(--b2);\n  box-shadow: 0 0 0 3px rgba(77,159,255,0.1);\n}\n\n.bulk-textarea::placeholder {\n  color: var(--t4);\n}
-
 /* Quill / WYSIWYG container styling to mimic clean editor */
 .quill-container {
   border-radius: 10px;
@@ -1053,6 +1014,21 @@
   color: var(--t1);
   line-height: 1.6;
   margin-bottom: 18px;
+}
+
+.ms-question-type {
+  display: inline-flex;
+  align-items: center;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: var(--t3);
+  border: 1px solid var(--b2);
+  background: var(--s2);
+  border-radius: var(--pill);
+  padding: 4px 10px;
+  margin-bottom: 14px;
 }
 
 /* Choice list */

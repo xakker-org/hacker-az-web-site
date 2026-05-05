@@ -521,7 +521,7 @@ class MissionExamQuestionAdminForm(forms.ModelForm):
     option_b = forms.CharField(required=False, label="Variant B", widget=forms.TextInput(attrs={"class": "vTextField"}))
     option_c = forms.CharField(required=False, label="Variant C", widget=forms.TextInput(attrs={"class": "vTextField"}))
     option_d = forms.CharField(required=False, label="Variant D", widget=forms.TextInput(attrs={"class": "vTextField"}))
-    option_e = forms.CharField(required=False, label="Variant E", widget=forms.TextInput(attrs={"class": "vTextField"}))
+    option_e = forms.CharField(required=False, label="Variant E (könüllü)", widget=forms.TextInput(attrs={"class": "vTextField"}))
     correct_option = forms.ChoiceField(
         required=False,
         label="Düzgün variant",
@@ -558,18 +558,21 @@ class MissionExamQuestionAdminForm(forms.ModelForm):
         q_type = cleaned.get("question_type")
         expected = (cleaned.get("expected_answer") or "").strip()
         opt_map = {k: (cleaned.get(f"option_{k.lower()}") or "").strip() for k in "ABCDE"}
+        filled = {k: v for k, v in opt_map.items() if v}
         correct = cleaned.get("correct_option")
 
         if q_type == MissionExamQuestionTypeChoices.CLOSED:
-            if not all(opt_map.values()):
-                raise forms.ValidationError("Closed sual üçün A, B, C, D, E hamısı doldurulmalıdır.")
+            if len(filled) < 2:
+                raise forms.ValidationError("Closed sual üçün minimum 2 variant doldurulmalıdır.")
             if not correct:
                 raise forms.ValidationError("Düzgün variantı seçin.")
+            if correct not in filled:
+                raise forms.ValidationError(f"Düzgün variant {correct} seçildi, lakin mətni boşdur.")
             cleaned["expected_answer"] = ""
         else:
             if not expected:
                 raise forms.ValidationError("Open sual üçün gözlənilən cavabı yazın.")
-            if any(opt_map.values()) or correct:
+            if filled or correct:
                 raise forms.ValidationError("Open sual üçün variant sahələri boş olmalıdır.")
         return cleaned
 
@@ -593,6 +596,8 @@ class MissionExamQuestionAdminForm(forms.ModelForm):
         ]
         correct = self.cleaned_data.get("correct_option")
         for order, (letter, text) in enumerate(opt_map, start=1):
+            if not text:
+                continue
             MissionExamChoice.objects.create(
                 question=question,
                 choice_text=text,
