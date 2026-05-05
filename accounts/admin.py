@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.utils.html import format_html
 
-from .models import Activity, Badge, UserBadge, UserProfile
+from .models import Activity, UserProfile
 
 
 @admin.register(UserProfile)
@@ -20,32 +20,6 @@ class UserProfileAdmin(admin.ModelAdmin):
     @admin.display(description="XP", ordering="xp")
     def xp_display(self, obj):
         return format_html('<strong style="color:#ff8099">★ {}</strong>', obj.xp)
-
-
-@admin.register(Badge)
-class BadgeAdmin(admin.ModelAdmin):
-    list_display  = ("icon_preview", "slug", "name", "criteria", "criteria_value", "order", "earned_count")
-    list_filter   = ("criteria",)
-    search_fields = ("slug", "name", "description")
-    prepopulated_fields = {"slug": ("name",)}
-    ordering      = ("order", "slug")
-
-    @admin.display(description="İkon")
-    def icon_preview(self, obj):
-        return format_html('<span style="font-size:22px">{}</span>', obj.icon or "✦")
-
-    @admin.display(description="Qazanılıb")
-    def earned_count(self, obj):
-        return obj.user_badges.count()
-
-
-@admin.register(UserBadge)
-class UserBadgeAdmin(admin.ModelAdmin):
-    list_display  = ("user", "badge", "earned_at")
-    list_filter   = ("badge",)
-    search_fields = ("user__username", "badge__name")
-    readonly_fields = ("earned_at",)
-    date_hierarchy = "earned_at"
 
 
 @admin.register(Activity)

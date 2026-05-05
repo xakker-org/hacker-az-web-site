@@ -74,54 +74,10 @@ class UserProfile(models.Model):
         self.save(update_fields=["xp", "rank", "last_activity"])
 
 
-class Badge(models.Model):
-    class Criteria(models.TextChoices):
-        FIRST_TASK = "first_task", "Complete first task"
-        FIRST_ROOM = "first_room", "Complete first room"
-        ROOM_COMPLETE = "room_complete", "Complete specific room"
-        TASKS_COUNT = "tasks_count", "Complete N tasks"
-        XP_THRESHOLD = "xp_threshold", "Reach XP threshold"
-        EXAM_PASS = "exam_pass", "Pass an exam"
-        STREAK = "streak", "Maintain streak"
-
-    slug = models.SlugField(unique=True)
-    name = models.CharField(max_length=80)
-    description = models.CharField(max_length=255)
-    icon = models.CharField(max_length=8, default="🏅")
-    color = models.CharField(max_length=16, default="#ff5672")
-    criteria = models.CharField(max_length=32, choices=Criteria.choices)
-    criteria_value = models.CharField(max_length=80, blank=True, default="")
-    order = models.PositiveIntegerField(default=0)
-
-    class Meta:
-        ordering = ["order", "id"]
-
-    def __str__(self):
-        return self.name
-
-
-class UserBadge(models.Model):
-    user = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        related_name="earned_badges",
-    )
-    badge = models.ForeignKey(Badge, on_delete=models.CASCADE, related_name="holders")
-    earned_at = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        unique_together = ("user", "badge")
-        ordering = ["-earned_at"]
-
-    def __str__(self):
-        return f"{self.user.username} → {self.badge.name}"
-
-
 class Activity(models.Model):
     class Kind(models.TextChoices):
         TASK_COMPLETE = "task_complete", "Task completed"
         ROOM_COMPLETE = "room_complete", "Room completed"
-        BADGE_EARNED = "badge_earned", "Badge earned"
         EXAM_SUBMIT = "exam_submit", "Exam submitted"
         ENROLL = "enroll", "Enrolled"
         RANK_UP = "rank_up", "Rank up"

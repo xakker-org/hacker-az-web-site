@@ -3,12 +3,10 @@ from rest_framework_simplejwt.views import TokenRefreshView
 
 from .views import (
     ActivityGraphView,
-    BadgeListView,
     ClientTokenObtainPairView,
     LeaderboardView,
     MeView,
     MyActivityView,
-    MyBadgesView,
     MyProfileView,
     ProfileDetailStatsView,
     PublicProfileView,
@@ -27,7 +25,5 @@ urlpatterns = [
     path("profile/recent-activity/", RecentStudyActivityView.as_view(), name="recent-study-activity"),
     path("profile/<str:username>/", PublicProfileView.as_view(), name="public-profile"),
     path("activity/", MyActivityView.as_view(), name="my-activity"),
-    path("badges/", BadgeListView.as_view(), name="badges"),
-    path("badges/mine/", MyBadgesView.as_view(), name="my-badges"),
     path("leaderboard/", LeaderboardView.as_view(), name="leaderboard"),
 ]

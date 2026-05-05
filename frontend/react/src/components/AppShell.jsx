@@ -13,14 +13,12 @@ const NAV = [
       { to: "/self-study",  label: "Self-Study",   icon: "🧪" },
       { to: "/plans",       label: "Learning Path", icon: "🗺" },
       { to: "/courses",     label: "Courses",      icon: "📚" },
-      { to: "/exams",       label: "Exams",        icon: "📝" },
     ],
   },
   {
     label: "Community",
     items: [
       { to: "/leaderboard", label: "Leaderboard",  icon: "🏆" },
-      { to: "/badges",      label: "Badges",       icon: "🎖" },
       { to: "/profile",     label: "Profile",      icon: "👤" },
     ],
   },

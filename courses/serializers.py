@@ -3,10 +3,6 @@ from rest_framework import serializers
 from .models import (
     Category,
     Course,
-    Exam,
-    ExamAttempt,
-    ExamAttemptAnswer,
-    ExamQuestion,
     Enrollment,
     LearningPlan,
     LearningPlanCourse,
@@ -479,98 +475,6 @@ class LessonQuestionSubmitSerializer(serializers.Serializer):
     selected_choice_id = serializers.IntegerField()
 
 
-class ExamQuestionSerializer(serializers.ModelSerializer):
-    question = QuestionSerializer(read_only=True)
-
-    class Meta:
-        model = ExamQuestion
-        fields = ["id", "order", "question"]
-
-
-class ExamListSerializer(serializers.ModelSerializer):
-    course = CourseSummarySerializer(read_only=True)
-    question_count = serializers.SerializerMethodField()
-
-    class Meta:
-        model = Exam
-        fields = [
-            "id",
-            "title",
-            "slug",
-            "description",
-            "instructions",
-            "level",
-            "time_limit_minutes",
-            "course",
-            "question_count",
-        ]
-
-    def get_question_count(self, obj):
-        return obj.questions.count()
-
-
-class ExamDetailSerializer(serializers.ModelSerializer):
-    course = CourseSummarySerializer(read_only=True)
-    questions = serializers.SerializerMethodField()
-
-    class Meta:
-        model = Exam
-        fields = [
-            "id",
-            "title",
-            "slug",
-            "description",
-            "instructions",
-            "level",
-            "time_limit_minutes",
-            "course",
-            "questions",
-        ]
-
-    def get_questions(self, obj):
-        items = obj.examquestion_set.select_related("question").prefetch_related("question__choices").order_by("order", "id")
-        return ExamQuestionSerializer(items, many=True).data
-
-
-class ExamAttemptAnswerSerializer(serializers.ModelSerializer):
-    question = serializers.PrimaryKeyRelatedField(read_only=True)
-    question_id = serializers.PrimaryKeyRelatedField(source="question", queryset=Question.objects.all(), write_only=True)
-    selected_choice = serializers.PrimaryKeyRelatedField(queryset=QuestionChoice.objects.all(), allow_null=True, required=False)
-
-    class Meta:
-        model = ExamAttemptAnswer
-        fields = [
-            "id",
-            "question",
-            "question_id",
-            "selected_choice",
-            "text_answer",
-            "is_correct",
-            "awarded_points",
-        ]
-        read_only_fields = ["is_correct", "awarded_points"]
-
-
-class ExamAttemptSerializer(serializers.ModelSerializer):
-    answers = ExamAttemptAnswerSerializer(many=True, read_only=True)
-    exam = ExamListSerializer(read_only=True)
-    status_label = serializers.CharField(source="get_status_display", read_only=True)
-
-    class Meta:
-        model = ExamAttempt
-        fields = [
-            "id",
-            "exam",
-            "status",
-            "status_label",
-            "score_percent",
-            "review_pending",
-            "started_at",
-            "submitted_at",
-            "answers",
-        ]
-
-
 # ----- Cabinet / course list / enrollment -----
 
 class CabinetSummarySerializer(serializers.Serializer):
@@ -583,7 +487,6 @@ class CabinetSummarySerializer(serializers.Serializer):
     plans = LearningPlanSerializer(many=True)
     rooms = RoomListSerializer(many=True)
     recommended_rooms = RoomListSerializer(many=True)
-    exams = ExamListSerializer(many=True)
     profile = serializers.DictField()
     recent_activity = serializers.ListField(child=serializers.DictField())
     stats = serializers.DictField()
@@ -630,7 +533,6 @@ class LessonSummarySerializer(serializers.ModelSerializer):
 class CourseDetailSerializer(serializers.ModelSerializer):
     lessons = serializers.SerializerMethodField()
     category = serializers.StringRelatedField()
-    exams = ExamListSerializer(many=True, read_only=True)
     learning_plans = LearningPlanSerializer(many=True, read_only=True)
     rooms = serializers.SerializerMethodField()
     lesson_count = serializers.IntegerField(source="lessons.count", read_only=True)
@@ -639,7 +541,7 @@ class CourseDetailSerializer(serializers.ModelSerializer):
         model = Course
         fields = [
             "id", "title", "slug", "description", "category", "icon", "cover_color",
-            "lessons", "lesson_count", "exams", "learning_plans", "rooms",
+            "lessons", "lesson_count", "learning_plans", "rooms",
         ]
 
     def get_lessons(self, obj):

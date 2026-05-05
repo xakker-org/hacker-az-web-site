@@ -2,7 +2,6 @@ import { useEffect } from "react";
 import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import AuthPage from "./pages/AuthPage";
 import DashboardPage from "./pages/DashboardPage";
-import ExamAttemptPage from "./pages/ExamAttemptPage";
 import MissionDetailPage from "./pages/MissionDetailPage";
 import MissionExamPage from "./pages/MissionExamPage";
 import MissionsPage from "./pages/MissionsPage";
@@ -11,9 +10,7 @@ import RoomsPage from "./pages/RoomsPage";
 import RoomDetailPage from "./pages/RoomDetailPage";
 import PlansPage from "./pages/PlansPage";
 import LeaderboardPage from "./pages/LeaderboardPage";
-import BadgesPage from "./pages/BadgesPage";
 import ProfilePage from "./pages/ProfilePage";
-import ExamsPage from "./pages/ExamsPage";
 import SelfStudyPage from "./pages/SelfStudyPage";
 import QuestionDetailPage from "./pages/QuestionDetailPage";
 import CoursesPage from "./pages/CoursesPage";
@@ -42,9 +39,6 @@ export default function App() {
 
         {/* Dashboard */}
         <Route path="/dashboard" element={<DashboardPage />} />
-        <Route path="/dashboard/exams/:slug" element={<ExamAttemptPage />} />
-        <Route path="/exams/:slug" element={<ExamAttemptPage />} />
-        <Route path="/exams" element={<ExamsPage />} />
 
         {/* ── Missions ── */}
         <Route path="/missions" element={<MissionsPage />} />
@@ -62,7 +56,6 @@ export default function App() {
 
         {/* Community */}
         <Route path="/leaderboard" element={<LeaderboardPage />} />
-        <Route path="/badges" element={<BadgesPage />} />
         <Route path="/profile" element={<ProfilePage />} />
 
         {/* Labs */}

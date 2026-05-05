@@ -1,6 +1,3 @@
-from decimal import Decimal
-
-from django.db import transaction
 from django.db.models import Count, Q
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
@@ -14,13 +11,9 @@ from accounts.serializers import ActivitySerializer, UserProfileSerializer
 from accounts.models import UserProfile
 
 from .models import (
-    AttemptStatusChoices,
     Category,
     Course,
     Enrollment,
-    Exam,
-    ExamAttempt,
-    ExamAttemptAnswer,
     LearningPlan,
     Lesson,
     LessonQuestion,
@@ -48,9 +41,6 @@ from .serializers import (
     CourseDetailSerializer,
     CourseListSerializer,
     EnrollmentSerializer,
-    ExamAttemptSerializer,
-    ExamDetailSerializer,
-    ExamListSerializer,
     LearningPlanSerializer,
     LessonQuestionChoiceFullSerializer,
     LessonQuestionSubmitSerializer,
@@ -76,18 +66,6 @@ from .serializers import (
 from .services import get_user_question_progress, submit_question_answer, submit_task_answer
 
 
-def _normalize_exam_text(value):
-    return " ".join((value or "").split()).casefold()
-
-
-def _normalize_exam_answers(raw_value):
-    return {
-        _normalize_exam_text(part)
-        for part in (raw_value or "").replace("|", "\n").splitlines()
-        if part.strip()
-    }
-
-
 # ----- Categories / tags -----
 
 class CategoryListView(generics.ListAPIView):
@@ -110,7 +88,6 @@ class CourseListView(generics.ListAPIView):
 class CourseDetailView(generics.RetrieveAPIView):
     queryset = Course.objects.filter(is_published=True).prefetch_related(
         "lessons",
-        "exams",
         "rooms",
         "rooms__tags",
         "learning_plans",
@@ -365,15 +342,6 @@ class CabinetView(generics.RetrieveAPIView):
             "learningplancourse_set__course__category",
         )
 
-        exams = (
-            Exam.objects.filter(is_published=True)
-            .select_related("course", "course__category")
-            .prefetch_related("questions")
-            .order_by("level", "title")
-        )
-        if enrolled_courses:
-            exams = exams.filter(course__in=enrolled_courses)
-
         rooms_qs = Room.objects.filter(is_published=True).select_related("course").prefetch_related("tags", "tasks")
         if enrolled_courses:
             active_rooms = rooms_qs.filter(course__in=enrolled_courses)
@@ -393,7 +361,6 @@ class CabinetView(generics.RetrieveAPIView):
             "active_courses": len(enrolled_courses),
             "active_plans": plans.count(),
             "available_rooms": active_rooms.count(),
-            "available_exams": exams.count(),
             "tasks_completed": profile.tasks_completed,
             "rooms_completed": profile.rooms_completed,
             "xp": profile.xp,
@@ -411,141 +378,12 @@ class CabinetView(generics.RetrieveAPIView):
             "plans": plans,
             "rooms": active_rooms[:8],
             "recommended_rooms": recommended,
-            "exams": exams[:6],
             "profile": UserProfileSerializer(profile).data,
             "recent_activity": ActivitySerializer(recent_activity, many=True).data,
             "stats": stats,
         }
         serializer = self.get_serializer(payload, context={"request": request})
         return Response(serializer.data)
-
-
-# ----- Legacy exam flow -----
-
-class ExamListView(generics.ListAPIView):
-    serializer_class = ExamListSerializer
-
-    def get_queryset(self):
-        queryset = Exam.objects.filter(is_published=True).select_related("course", "course__category")
-        course_slug = self.request.query_params.get("course")
-        if course_slug:
-            queryset = queryset.filter(course__slug=course_slug)
-        return queryset.prefetch_related("questions")
-
-
-class ExamDetailView(generics.RetrieveAPIView):
-    serializer_class = ExamDetailSerializer
-    lookup_field = "slug"
-
-    def get_queryset(self):
-        return Exam.objects.filter(is_published=True).select_related("course", "course__category").prefetch_related(
-            "examquestion_set__question__choices",
-            "examquestion_set__question",
-        )
-
-
-class ExamAttemptCreateView(generics.CreateAPIView):
-    permission_classes = [permissions.IsAuthenticated]
-    serializer_class = ExamAttemptSerializer
-
-    def get_exam(self):
-        return Exam.objects.get(slug=self.kwargs["slug"], is_published=True)
-
-    def create(self, request, *args, **kwargs):
-        exam = self.get_exam()
-        attempt = (
-            ExamAttempt.objects.filter(user=request.user, exam=exam, status=AttemptStatusChoices.IN_PROGRESS)
-            .prefetch_related("answers")
-            .first()
-        )
-        if not attempt:
-            attempt = ExamAttempt.objects.create(user=request.user, exam=exam)
-
-        serializer = self.get_serializer(attempt)
-        return Response(serializer.data, status=status.HTTP_201_CREATED if attempt.answers.count() == 0 else status.HTTP_200_OK)
-
-
-class ExamAttemptSubmitView(generics.GenericAPIView):
-    permission_classes = [permissions.IsAuthenticated]
-    serializer_class = ExamAttemptSerializer
-
-    def get_exam(self):
-        return Exam.objects.get(slug=self.kwargs["slug"], is_published=True)
-
-    def post(self, request, *args, **kwargs):
-        exam = self.get_exam()
-        attempt_id = request.data.get("attempt")
-        attempt = None
-        if attempt_id:
-            attempt = ExamAttempt.objects.filter(id=attempt_id, user=request.user, exam=exam).first()
-        if attempt is None:
-            attempt = ExamAttempt.objects.filter(user=request.user, exam=exam, status=AttemptStatusChoices.IN_PROGRESS).first()
-        if attempt is None:
-            attempt = ExamAttempt.objects.create(user=request.user, exam=exam)
-
-        answers = request.data.get("answers", [])
-        question_map = {
-            question.id: question
-            for question in exam.questions.select_related("course").prefetch_related("choices")
-        }
-        provided_answers = {answer["question_id"]: answer for answer in answers if answer.get("question_id")}
-
-        with transaction.atomic():
-            ExamAttemptAnswer.objects.filter(attempt=attempt).delete()
-
-            graded_points = Decimal("0")
-            earned_points = Decimal("0")
-            review_pending = False
-
-            for question_id, question in question_map.items():
-                answer_data = provided_answers.get(question_id, {})
-                selected_choice = answer_data.get("selected_choice")
-                text_answer = (answer_data.get("text_answer") or "").strip()
-
-                awarded_points = 0
-                is_correct = None
-                stored_choice = None
-
-                if question.question_type == QuestionTypeChoices.CLOSED:
-                    graded_points += Decimal(question.points)
-                    if selected_choice:
-                        stored_choice = question.choices.filter(id=selected_choice).first()
-                        is_correct = stored_choice is not None and stored_choice.is_correct
-                        if is_correct:
-                            awarded_points = question.points
-                            earned_points += Decimal(question.points)
-                else:
-                    review_pending = True
-
-                ExamAttemptAnswer.objects.create(
-                    attempt=attempt,
-                    question=question,
-                    selected_choice=stored_choice,
-                    text_answer=text_answer,
-                    is_correct=is_correct,
-                    awarded_points=awarded_points,
-                )
-
-            score_percent = Decimal("0")
-            if graded_points > 0:
-                score_percent = (earned_points / graded_points) * Decimal("100")
-
-            attempt.status = AttemptStatusChoices.SUBMITTED
-            attempt.score_percent = score_percent.quantize(Decimal("0.01"))
-            attempt.review_pending = review_pending
-            attempt.submitted_at = timezone.now()
-            attempt.save(update_fields=["status", "score_percent", "review_pending", "submitted_at"])
-
-            Activity.objects.create(
-                user=request.user,
-                kind=Activity.Kind.EXAM_SUBMIT,
-                title=f"Submitted exam: {exam.title}",
-                detail=f"Score {attempt.score_percent}%",
-                target_slug=exam.slug,
-            )
-
-        serializer = self.get_serializer(attempt)
-        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 # ----- Lesson detail & lesson question submit -----

@@ -6,10 +6,6 @@ from .views import (
     CourseDetailView,
     CourseListView,
     EnrollmentCreateView,
-    ExamAttemptCreateView,
-    ExamAttemptSubmitView,
-    ExamDetailView,
-    ExamListView,
     LearningPlanDetailView,
     LearningPlanListView,
     LessonCompleteView,
@@ -66,12 +62,6 @@ urlpatterns = [
 
     # Categories
     path("categories/", CategoryListView.as_view(), name="category-list"),
-
-    # Exams (legacy flow preserved)
-    path("exams/", ExamListView.as_view(), name="exam-list"),
-    path("exams/<slug:slug>/", ExamDetailView.as_view(), name="exam-detail"),
-    path("exams/<slug:slug>/attempts/", ExamAttemptCreateView.as_view(), name="exam-attempt-create"),
-    path("exams/<slug:slug>/submit/", ExamAttemptSubmitView.as_view(), name="exam-attempt-submit"),
 
     # Enrollment
     path("enroll/", EnrollmentCreateView.as_view(), name="course-enroll"),

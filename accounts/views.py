@@ -12,14 +12,12 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.views import TokenObtainPairView
 
-from .models import Activity, Badge, UserBadge, UserProfile
+from .models import Activity, UserProfile
 from .serializers import (
     ActivitySerializer,
-    BadgeSerializer,
     ClientTokenObtainPairSerializer,
     LeaderboardEntrySerializer,
     RegisterSerializer,
-    UserBadgeSerializer,
     UserProfileSerializer,
 )
 
@@ -114,33 +112,6 @@ class LeaderboardView(APIView):
             "scope": scope,
             "entries": LeaderboardEntrySerializer(qs, many=True, context={"request": request}).data,
         })
-
-
-class BadgeListView(APIView):
-    def get(self, request):
-        badges = Badge.objects.all()
-        holders_map = {}
-        if request.user.is_authenticated:
-            holders_map = {
-                ub.badge_id: ub
-                for ub in UserBadge.objects.filter(user=request.user)
-            }
-        payload = []
-        for badge in badges:
-            item = BadgeSerializer(badge).data
-            owned = holders_map.get(badge.id)
-            item["earned"] = bool(owned)
-            item["earned_at"] = owned.earned_at if owned else None
-            payload.append(item)
-        return Response(payload)
-
-
-class MyBadgesView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def get(self, request):
-        qs = UserBadge.objects.filter(user=request.user).select_related("badge")
-        return Response(UserBadgeSerializer(qs, many=True).data)
 
 
 class ProfileDetailStatsView(APIView):

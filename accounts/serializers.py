@@ -2,7 +2,7 @@ from django.contrib.auth.models import User
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
-from .models import Activity, Badge, UserBadge, UserProfile, RANK_THRESHOLDS
+from .models import Activity, UserProfile, RANK_THRESHOLDS
 
 
 class ClientTokenObtainPairSerializer(TokenObtainPairSerializer):
@@ -32,20 +32,6 @@ class RegisterSerializer(serializers.ModelSerializer):
         return user
 
 
-class BadgeSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Badge
-        fields = ["id", "slug", "name", "description", "icon", "color", "criteria", "criteria_value"]
-
-
-class UserBadgeSerializer(serializers.ModelSerializer):
-    badge = BadgeSerializer(read_only=True)
-
-    class Meta:
-        model = UserBadge
-        fields = ["id", "badge", "earned_at"]
-
-
 class ActivitySerializer(serializers.ModelSerializer):
     class Meta:
         model = Activity
@@ -62,7 +48,6 @@ class UserProfileSerializer(serializers.ModelSerializer):
     next_rank = serializers.SerializerMethodField()
     xp_to_next = serializers.SerializerMethodField()
     rank_progress = serializers.SerializerMethodField()
-    badges = serializers.SerializerMethodField()
 
     class Meta:
         model = UserProfile
@@ -87,7 +72,6 @@ class UserProfileSerializer(serializers.ModelSerializer):
             "next_rank",
             "xp_to_next",
             "rank_progress",
-            "badges",
         ]
         read_only_fields = [
             "xp",
@@ -129,10 +113,6 @@ class UserProfileSerializer(serializers.ModelSerializer):
         if high == low:
             return 100
         return round(((obj.xp - low) / (high - low)) * 100)
-
-    def get_badges(self, obj):
-        earned = UserBadge.objects.filter(user=obj.user).select_related("badge")
-        return UserBadgeSerializer(earned, many=True).data
 
     def get_avatar_url(self, obj):
         request = self.context.get("request") if hasattr(self, "context") else None

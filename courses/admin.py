@@ -5,9 +5,6 @@ from .models import (
     Category,
     Course,
     Enrollment,
-    Exam,
-    ExamAttempt,
-    ExamQuestion,
     LearningPlan,
     LearningPlanCourse,
     Lesson,
@@ -122,7 +119,7 @@ class LessonAdmin(admin.ModelAdmin):
 
 @admin.register(Course)
 class CourseAdmin(admin.ModelAdmin):
-    list_display  = ("title", "slug", "category", "icon", "is_published", "lesson_count", "room_count", "exam_count")
+    list_display  = ("title", "slug", "category", "icon", "is_published", "lesson_count", "room_count")
     list_filter   = ("is_published", "category")
     search_fields = ("title", "description")
     prepopulated_fields = {"slug": ("title",)}
@@ -140,10 +137,6 @@ class CourseAdmin(admin.ModelAdmin):
     @admin.display(description="Otaqlar")
     def room_count(self, obj):
         return obj.rooms.count()
-
-    @admin.display(description="İmtahanlar")
-    def exam_count(self, obj):
-        return obj.exams.count()
 
 
 @admin.register(LessonQuestionAttempt)
@@ -416,45 +409,6 @@ class LearningPlanAdmin(admin.ModelAdmin):
     def course_count(self, obj):
         return obj.courses.count()
 
-
-# ─── Exam ─────────────────────────────────────────────────────────────────────
-
-class ExamQuestionInline(admin.TabularInline):
-    model  = ExamQuestion
-    extra  = 2
-    fields = ("question", "order")
-    autocomplete_fields = ["question"]
-
-
-@admin.register(Exam)
-class ExamAdmin(admin.ModelAdmin):
-    list_display  = ("title", "slug", "course", "level", "time_limit_minutes", "is_published", "question_count", "attempt_count")
-    list_filter   = ("level", "is_published", "course")
-    search_fields = ("title", "description")
-    prepopulated_fields = {"slug": ("title",)}
-    list_editable = ("is_published",)
-    inlines       = [ExamQuestionInline]
-    fieldsets = (
-        ("Əsas məlumatlar", {"fields": ("course", "title", "slug", "description", "instructions")}),
-        ("Parametrlər", {"fields": ("level", "time_limit_minutes", "is_published")}),
-    )
-
-    @admin.display(description="Suallar")
-    def question_count(self, obj):
-        return obj.questions.count()
-
-    @admin.display(description="Cəhdlər")
-    def attempt_count(self, obj):
-        return obj.attempts.count()
-
-
-@admin.register(ExamAttempt)
-class ExamAttemptAdmin(ReadOnlyAdminMixin, admin.ModelAdmin):
-    list_display    = ("user", "exam", "status", "score_percent", "review_pending", "started_at", "submitted_at")
-    list_filter     = ("status", "review_pending", "exam")
-    search_fields   = ("user__username", "exam__title")
-    readonly_fields = ("user", "exam", "status", "score_percent", "review_pending", "started_at", "submitted_at")
-    date_hierarchy  = "started_at"
 
 # ─── Enrollment ───────────────────────────────────────────────────────────────
 

@@ -7,9 +7,9 @@ import { clearTokens, getAccessToken } from "../utils/tokens";
 const EMPTY = {
   username: "Hacker", email: "",
   enrolled_courses: [], plans: [], rooms: [],
-  recommended_rooms: [], exams: [], recent_activity: [],
+  recommended_rooms: [], recent_activity: [],
   profile: { xp: 0, rank: "Recruit", streak_days: 0, rank_progress: 0, next_rank: null, xp_to_next: 0 },
-  stats: { active_courses: 0, tasks_completed: 0, rooms_completed: 0, available_rooms: 0, available_exams: 0, xp: 0, streak: 0 },
+  stats: { active_courses: 0, tasks_completed: 0, rooms_completed: 0, available_rooms: 0, xp: 0, streak: 0 },
 };
 
 const DIFF_MAP = {
@@ -247,7 +247,6 @@ export default function DashboardPage() {
               </div>
             </div>
             <div className="dash-quick">
-              <Link to="/badges"      className="dash-quick-link">🎖 Nişanlar</Link>
               <Link to="/leaderboard" className="dash-quick-link">🏆 Liderlik</Link>
               <Link to="/courses"     className="dash-quick-link">📚 Kurslar</Link>
             </div>

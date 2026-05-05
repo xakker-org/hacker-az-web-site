@@ -1,7 +1,7 @@
 from django.utils import timezone
 from django.db import transaction
 
-from accounts.models import Activity, Badge, UserBadge, UserProfile
+from accounts.models import Activity, UserProfile
 
 from .models import (
     Question,
@@ -164,62 +164,6 @@ def evaluate_answer(question: TaskQuestion, submitted_text: str, selected_choice
     return bool(ok), question.points if ok else 0, question.explanation or ""
 
 
-def _award_badges(user, *, task=None, room_completed=None, exam_passed=None):
-    """Evaluate badges and award any missing ones for this user. Returns list of new badges."""
-    profile = _get_or_create_profile(user)
-    newly_earned = []
-
-    def grant(badge):
-        obj, created = UserBadge.objects.get_or_create(user=user, badge=badge)
-        if created:
-            newly_earned.append(badge)
-            Activity.objects.create(
-                user=user,
-                kind=Activity.Kind.BADGE_EARNED,
-                title=f"Earned: {badge.name}",
-                detail=badge.description,
-                target_slug=badge.slug,
-            )
-
-    for badge in Badge.objects.all():
-        if UserBadge.objects.filter(user=user, badge=badge).exists():
-            continue
-        criteria = badge.criteria
-        value = badge.criteria_value or ""
-
-        if criteria == Badge.Criteria.FIRST_TASK and profile.tasks_completed >= 1:
-            grant(badge)
-        elif criteria == Badge.Criteria.FIRST_ROOM and profile.rooms_completed >= 1:
-            grant(badge)
-        elif criteria == Badge.Criteria.TASKS_COUNT:
-            try:
-                threshold = int(value or 0)
-            except ValueError:
-                threshold = 0
-            if profile.tasks_completed >= threshold:
-                grant(badge)
-        elif criteria == Badge.Criteria.XP_THRESHOLD:
-            try:
-                threshold = int(value or 0)
-            except ValueError:
-                threshold = 0
-            if profile.xp >= threshold:
-                grant(badge)
-        elif criteria == Badge.Criteria.ROOM_COMPLETE and room_completed and room_completed.slug == value:
-            grant(badge)
-        elif criteria == Badge.Criteria.EXAM_PASS and exam_passed:
-            grant(badge)
-        elif criteria == Badge.Criteria.STREAK:
-            try:
-                threshold = int(value or 0)
-            except ValueError:
-                threshold = 0
-            if profile.streak_days >= threshold:
-                grant(badge)
-
-    return newly_earned
-
-
 def submit_task_answer(*, user, task: Task, question: TaskQuestion, submitted_text="", selected_choice_id=None, use_hint=False):
     """Record the attempt, update progress, award XP & badges. Returns a result dict."""
     profile = _get_or_create_profile(user)
@@ -331,12 +275,7 @@ def submit_task_answer(*, user, task: Task, question: TaskQuestion, submitted_te
             target_slug=task.slug,
         )
 
-    badges = _award_badges(
-        user,
-        task=task if task_completed_now else None,
-        room_completed=room if room_completed_now else None,
-    )
-    if new_rank and not any(b.criteria == Badge.Criteria.XP_THRESHOLD for b in badges):
+    if new_rank:
         Activity.objects.create(
             user=user,
             kind=Activity.Kind.RANK_UP,
@@ -354,15 +293,6 @@ def submit_task_answer(*, user, task: Task, question: TaskQuestion, submitted_te
         "hint": question.hint if use_hint else "",
         "task_completed": task_completed_now or (was_completed_before and auto_complete),
         "room_completed": room_completed_now,
-        "badges_earned": [
-            {
-                "slug": b.slug,
-                "name": b.name,
-                "icon": b.icon,
-                "description": b.description,
-                "color": b.color,
-            }
-            for b in badges
-        ],
+        "badges_earned": [],
         "new_rank": new_rank,
     }

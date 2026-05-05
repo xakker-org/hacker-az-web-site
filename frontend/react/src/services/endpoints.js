@@ -7,8 +7,6 @@ export const endpoints = {
   publicProfile: (username) => api.get(`/auth/profile/${encodeURIComponent(username)}/`),
   myActivity: (limit = 50) => api.get(`/auth/activity/?limit=${limit}`),
   leaderboard: (limit = 50) => api.get(`/auth/leaderboard/?limit=${limit}`),
-  badges: () => api.get("/auth/badges/"),
-  myBadges: () => api.get("/auth/badges/mine/"),
 
   cabinet: () => api.get("/courses/cabinet/"),
   categories: () => api.get("/courses/categories/"),
@@ -44,11 +42,6 @@ export const endpoints = {
   questionDetail: (id) => api.get(`/courses/questions/${id}/`),
   submitQuestionAnswer: (id, payload) => api.post(`/courses/questions/${id}/submit-answer/`, payload),
   questionProgress: () => api.get("/courses/user/questions-progress/"),
-
-  exams: () => api.get("/courses/exams/"),
-  exam: (slug) => api.get(`/courses/exams/${slug}/`),
-  startExamAttempt: (slug) => api.post(`/courses/exams/${slug}/attempts/`),
-  submitExam: (slug, payload) => api.post(`/courses/exams/${slug}/submit/`, payload),
 
   // Profile extended endpoints
   profileStats: () => api.get("/auth/profile/stats/"),

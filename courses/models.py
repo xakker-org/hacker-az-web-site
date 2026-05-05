@@ -15,12 +15,6 @@ class QuestionTypeChoices(models.TextChoices):
     TERMINAL = "terminal", "Terminal"
 
 
-class AttemptStatusChoices(models.TextChoices):
-    IN_PROGRESS = "in_progress", "In progress"
-    SUBMITTED = "submitted", "Submitted"
-    REVIEWED = "reviewed", "Reviewed"
-
-
 class TaskAnswerKind(models.TextChoices):
     TEXT = "text", "Text match"
     FLAG = "flag", "Flag string"
@@ -355,66 +349,6 @@ class QuestionAttempt(models.Model):
 
     def __str__(self):
         return f"{self.user.username} · {self.question.title} · try {self.attempt_number}"
-
-
-class Exam(models.Model):
-    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="exams")
-    title = models.CharField(max_length=200)
-    slug = models.SlugField(unique=True)
-    description = models.TextField()
-    instructions = models.TextField(blank=True)
-    level = models.CharField(max_length=20, choices=LevelChoices.choices, default=LevelChoices.BEGINNER)
-    time_limit_minutes = models.PositiveIntegerField(default=45)
-    is_published = models.BooleanField(default=True)
-    questions = models.ManyToManyField(Question, through="ExamQuestion", related_name="exams")
-
-    def __str__(self):
-        return self.title
-
-
-class ExamQuestion(models.Model):
-    exam = models.ForeignKey(Exam, on_delete=models.CASCADE)
-    question = models.ForeignKey(Question, on_delete=models.CASCADE)
-    order = models.PositiveIntegerField(default=1)
-
-    class Meta:
-        ordering = ["order", "id"]
-        unique_together = ("exam", "question")
-
-    def __str__(self):
-        return f"{self.exam.title} -> {self.question.title}"
-
-
-class ExamAttempt(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="exam_attempts")
-    exam = models.ForeignKey(Exam, on_delete=models.CASCADE, related_name="attempts")
-    status = models.CharField(max_length=20, choices=AttemptStatusChoices.choices, default=AttemptStatusChoices.IN_PROGRESS)
-    score_percent = models.DecimalField(max_digits=5, decimal_places=2, default=0)
-    review_pending = models.BooleanField(default=False)
-    started_at = models.DateTimeField(auto_now_add=True)
-    submitted_at = models.DateTimeField(null=True, blank=True)
-
-    class Meta:
-        ordering = ["-started_at", "-id"]
-
-    def __str__(self):
-        return f"{self.user.username} - {self.exam.title}"
-
-
-class ExamAttemptAnswer(models.Model):
-    attempt = models.ForeignKey(ExamAttempt, on_delete=models.CASCADE, related_name="answers")
-    question = models.ForeignKey(Question, on_delete=models.CASCADE)
-    selected_choice = models.ForeignKey(QuestionChoice, on_delete=models.SET_NULL, null=True, blank=True)
-    text_answer = models.TextField(blank=True)
-    is_correct = models.BooleanField(null=True, blank=True)
-    awarded_points = models.PositiveIntegerField(default=0)
-    submitted_at = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        unique_together = ("attempt", "question")
-
-    def __str__(self):
-        return f"{self.attempt.id} - {self.question.title}"
 
 
 # ═══════════════════════════════════════════════════════════════

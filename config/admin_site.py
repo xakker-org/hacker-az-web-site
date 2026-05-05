@@ -33,14 +33,11 @@ MODEL_GROUPS = [
         },
     ),
     (
-        "Exams",
+        "Self-Study Questions",
         {
             "Question",
             "QuestionChoice",
             "QuestionAttempt",
-            "Exam",
-            "ExamQuestion",
-            "ExamAttempt",
         },
     ),
     (
@@ -68,8 +65,6 @@ MODEL_GROUPS = [
         "Users / Gamification",
         {
             "UserProfile",
-            "Badge",
-            "UserBadge",
             "Activity",
         },
     ),
