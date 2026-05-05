@@ -34,6 +34,7 @@ from .models import (
     UserQuestionAttempt,
     UserTaskProgress,
 )
+from django.utils import timezone
 
 
 class ReadOnlyAdminMixin:
@@ -431,6 +432,16 @@ class MissionPassInline(admin.StackedInline):
     fields = ("title", "content", "order", "estimated_minutes", "is_published")
     show_change_link = True
     ordering = ("order",)
+    class Media:
+        css = {
+            "all": (
+                "https://cdn.quilljs.com/1.3.6/quill.snow.css",
+            )
+        }
+        js = (
+            "https://cdn.quilljs.com/1.3.6/quill.min.js",
+            "admin/js/mission_pass_admin.js",
+        )
 
 
 @admin.register(MissionPass)
@@ -447,6 +458,28 @@ class MissionPassAdmin(admin.ModelAdmin):
             "description": "Standart HTML dəstəklənir. &lt;h2&gt;, &lt;p&gt;, &lt;ul&gt;, &lt;pre&gt;, &lt;code&gt; və s. istifadə edin.",
         }),
     )
+    class Media:
+        css = {
+            "all": (
+                "https://cdn.quilljs.com/1.3.6/quill.snow.css",
+            )
+        }
+        js = (
+            "https://cdn.quilljs.com/1.3.6/quill.min.js",
+            "admin/js/mission_pass_admin.js",
+        )
+
+
+class MissionPassAdminForm(forms.ModelForm):
+    class Meta:
+        model = MissionPass
+        fields = "__all__"
+        widgets = {
+            "content": forms.Textarea(attrs={"class": "vLargeTextField", "rows": 20}),
+        }
+
+# attach the form to the admin
+MissionPassAdmin.form = MissionPassAdminForm
 
 
 @admin.register(Mission)
@@ -660,12 +693,30 @@ class MissionPassCompletionAdmin(ReadOnlyAdminMixin, admin.ModelAdmin):
     readonly_fields = ("user", "mission_pass", "completed_at")
 
 @admin.register(MissionExamAttempt)
-class MissionExamAttemptAdmin(ReadOnlyAdminMixin, admin.ModelAdmin):
+class MissionExamAttemptAdmin(admin.ModelAdmin):
     list_display    = ("user", "exam", "attempt_number", "score", "passed", "started_at", "submitted_at")
     list_filter     = ("passed", "exam__mission")
     search_fields   = ("user__username", "exam__title")
-    readonly_fields = ("user", "exam", "attempt_number", "score", "passed", "started_at", "submitted_at")
+    readonly_fields = ("user", "exam", "attempt_number", "started_at")
     date_hierarchy  = "started_at"
+    actions = ["mark_passed"]
+
+    def mark_passed(self, request, queryset):
+        updated = 0
+        for attempt in queryset:
+            if not attempt.passed:
+                attempt.passed = True
+                attempt.score = 100.0
+                attempt.submitted_at = attempt.submitted_at or timezone.now()
+                attempt.save(update_fields=["passed", "score", "submitted_at"])
+                # update mission progress
+                prod, _ = MissionProgress.objects.get_or_create(user=attempt.user, mission=attempt.exam.mission)
+                if not prod.exam_passed:
+                    prod.exam_passed = True
+                    prod.save(update_fields=["exam_passed"])
+                updated += 1
+        self.message_user(request, f"Marked {updated} attempt(s) as passed.")
+    mark_passed.short_description = "Mark selected attempts as passed (score=100)"
 
 @admin.register(MissionExamAnswer)
 class MissionExamAnswerAdmin(ReadOnlyAdminMixin, admin.ModelAdmin):

@@ -193,6 +193,8 @@ export default function MissionExamPage() {
   const [starting, setStarting]   = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult]       = useState(null);
+  const [bulkMode, setBulkMode] = useState(false);
+  const [bulkText, setBulkText] = useState("");
   const [error, setError]         = useState(null);
 
   // answers: { [questionId]: [choiceId, ...] }
@@ -251,14 +253,21 @@ export default function MissionExamPage() {
     setSubmitting(true);
     setError(null);
     try {
-      const payload = {
-        answers: (exam?.questions || []).map((q) => ({
-          question_id: q.id,
-          ...(q.question_type === "open"
-            ? { answer_text: openAnswers[q.id] || "" }
-            : { choice_ids: answers[q.id] || [] }),
-        })),
-      };
+        const payload = bulkMode
+          ? {
+              answers: (exam?.questions || []).map((q) => ({
+                question_id: q.id,
+                answer_text: bulkText || "",
+              })),
+            }
+          : {
+              answers: (exam?.questions || []).map((q) => ({
+                question_id: q.id,
+                ...(q.question_type === "open"
+                  ? { answer_text: openAnswers[q.id] || "" }
+                  : { choice_ids: answers[q.id] || [] }),
+              })),
+            };
       const { data } = await endpoints.missionExamSubmit(slug, attemptId, payload);
       setResult(data);
       setStarted(false);
@@ -288,12 +297,15 @@ export default function MissionExamPage() {
 
   const questions = exam?.questions || [];
   const answeredCount = questions.filter((q) => {
+    if (bulkMode) {
+      return bulkText.trim().length > 0;
+    }
     if (q.question_type === "open") {
       return (openAnswers[q.id] || "").trim().length > 0;
     }
     return (answers[q.id] || []).length > 0;
   }).length;
-  const allAnswered = answeredCount === questions.length;
+  const allAnswered = bulkMode ? bulkText.trim().length > 0 : answeredCount === questions.length;
   const canAttempt = exam?.can_attempt;
   const attemptsUsed = exam?.attempts_used ?? 0;
   const maxAttempts = exam?.max_attempts ?? 0;
@@ -449,18 +461,49 @@ export default function MissionExamPage() {
             {/* Questions */}
             {started && (
               <>
-                {questions.map((q, i) => (
-                  <QuestionCard
-                    key={q.id}
-                    question={q}
-                    index={i}
-                    selectedChoices={answers[q.id] || []}
-                    answerText={openAnswers[q.id] || ""}
-                    onToggle={handleToggleChoice}
-                    onTextChange={(questionId, value) => setOpenAnswers((prev) => ({ ...prev, [questionId]: value }))}
-                    locked={submitting}
-                  />
-                ))}
+                <div className="submission-mode">
+                  <div className="label">Submission mode:</div>
+                  <button
+                    className={`mode-btn ${!bulkMode ? 'active' : ''}`}
+                    onClick={() => setBulkMode(false)}
+                    type="button"
+                  >
+                    Per-question
+                  </button>
+                  <button
+                    className={`mode-btn ${bulkMode ? 'active' : ''}`}
+                    onClick={() => setBulkMode(true)}
+                    type="button"
+                  >
+                    Single text area
+                  </button>
+                </div>
+
+                {bulkMode ? (
+                  <div style={{ marginBottom: 16 }}>
+                    <div style={{ marginBottom: 8, fontWeight: 600 }}>Write all answers here</div>
+                    <textarea
+                      className="bulk-textarea"
+                      value={bulkText}
+                      onChange={(e) => setBulkText(e.target.value)}
+                      placeholder={"Write answers for all questions. You can reference question numbers if you like."}
+                      rows={12}
+                    />
+                  </div>
+                ) : (
+                  questions.map((q, i) => (
+                    <QuestionCard
+                      key={q.id}
+                      question={q}
+                      index={i}
+                      selectedChoices={answers[q.id] || []}
+                      answerText={openAnswers[q.id] || ""}
+                      onToggle={handleToggleChoice}
+                      onTextChange={(questionId, value) => setOpenAnswers((prev) => ({ ...prev, [questionId]: value }))}
+                      locked={submitting}
+                    />
+                  ))
+                )}
 
                 {/* Submit bar */}
                 <div className="ms-exam-submit-bar">

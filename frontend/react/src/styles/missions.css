@@ -527,57 +527,44 @@
 .ms-pass-page {
   max-width: 800px;
   margin: 0 auto;
-  padding: 28px 0 80px;
+  padding: 28px 16px 80px;
   animation: fadeUp 0.4s var(--ease) both;
 }
 
 .ms-pass-nav {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-bottom: 20px;
-  font-size: 13px;
-  color: var(--t3);
-}
-
-.ms-pass-nav a {
-  color: var(--t3);
-  text-decoration: none;
-  transition: color 0.15s;
-}
-
-.ms-pass-nav a:hover { color: var(--t1); }
-
-.ms-pass-nav-sep { color: var(--t4); }
-
-.ms-pass-current { color: var(--t2); font-weight: 500; }
+  gap: 10px;
+  margin-bottom: 22px;\n  font-size: 13px;\n  color: var(--t3);\n  flex-wrap: wrap;\n}\n\n.ms-pass-nav a {\n  color: var(--t3);\n  text-decoration: none;\n  transition: color 0.15s;\n  border-radius: 4px;\n  padding: 2px 4px;\n}\n\n.ms-pass-nav a:hover {\n  color: var(--t1);\n  background: rgba(255,255,255,0.02);\n}\n\n.ms-pass-nav-sep { color: var(--t4); font-weight: 300; }\n\n.ms-pass-current {\n  color: var(--t1);\n  font-weight: 600;\n  padding: 2px 6px;\n  background: rgba(77,159,255,0.08);\n  border-radius: 4px;\n}
 
 /* Pass header card */
 .ms-pass-header-card {
   background: var(--s1);
   border: 1.5px solid var(--b1);
-  border-radius: var(--r4);
+  border-radius: 12px;
   padding: 24px;
   margin-bottom: 20px;
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 18px;
+  box-shadow: 0 2px 8px rgba(8,12,20,0.04);
 }
 
 .ms-pass-num {
-  width: 44px;
-  height: 44px;
-  border-radius: var(--r2);
+  width: 48px;
+  height: 48px;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-family: var(--mono);
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 700;
   color: var(--blue);
-  background: var(--blue-dim);
-  border: 1.5px solid rgba(77, 159, 255, 0.25);
+  background: rgba(77,159,255,0.12);
+  border: 1.5px solid rgba(77,159,255,0.25);
   flex-shrink: 0;
+  letter-spacing: -0.5px;
 }
 
 .ms-pass-header-info { flex: 1; }
@@ -587,14 +574,16 @@
   font-size: 20px;
   font-weight: 700;
   color: var(--t1);
-  margin-bottom: 6px;
+  margin-bottom: 8px;
+  letter-spacing: -0.3px;
 }
 
 .ms-pass-header-meta {
   display: flex;
-  gap: 12px;
-  font-size: 12px;
+  gap: 14px;
+  font-size: 13px;
   color: var(--t3);
+  flex-wrap: wrap;
 }
 
 /* Content area */
@@ -630,79 +619,112 @@
 
 .ms-pass-content-card ul,
 .ms-pass-content-card ol {
-  padding-left: 24px;
+  padding-left: 28px;
   margin-bottom: 14px;
   color: var(--t2);
-  line-height: 1.75;
+  line-height: 1.8;
 }
 
-.ms-pass-content-card li { margin-bottom: 4px; }
+.ms-pass-content-card li {
+  margin-bottom: 8px;
+  color: var(--t2);
+}
+
+.ms-pass-content-card ul ul,
+.ms-pass-content-card ol ol {
+  margin-top: 6px;
+  margin-bottom: 6px;
+}
 
 .ms-pass-content-card pre,
 .ms-pass-content-card code {
   font-family: var(--mono);
-  background: rgba(0, 0, 0, 0.35);
-  border: 1px solid var(--b2);
-  border-radius: var(--r2);
-  color: var(--green);
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(10, 180, 100, 0.15);
+  border-radius: 8px;
+  color: #9aff00;
   font-size: 13px;
 }
 
 .ms-pass-content-card pre {
   padding: 16px;
   overflow-x: auto;
-  margin-bottom: 14px;
+  margin: 14px 0;
   line-height: 1.6;
+  background: rgba(0, 0, 0, 0.6);
 }
 
 .ms-pass-content-card code {
-  padding: 2px 6px;
+  padding: 3px 8px;
+  margin: 0 2px;
+  white-space: nowrap;
 }
 
 .ms-pass-content-card pre code {
   padding: 0;
   background: none;
   border: none;
+  color: #9aff00;
+  white-space: pre;
 }
 
 .ms-pass-content-card blockquote {
-  border-left: 3px solid var(--blue);
-  padding: 10px 16px;
+  border-left: 4px solid var(--blue);
+  padding: 12px 16px;
   margin: 16px 0;
-  background: var(--blue-dim);
-  border-radius: 0 var(--r2) var(--r2) 0;
+  background: rgba(77,159,255,0.06);
+  border-radius: 0 8px 8px 0;
   color: var(--t2);
   font-style: italic;
+  font-size: 14px;
 }
 
 .ms-pass-content-card a {
   color: var(--blue);
-  text-decoration: underline;
-  text-underline-offset: 3px;
+  text-decoration: none;
+  border-bottom: 1px solid rgba(77,159,255,0.4);
+  transition: border-color 0.15s;
+  padding-bottom: 1px;
 }
 
-.ms-pass-content-card strong { color: var(--t1); font-weight: 700; }
+.ms-pass-content-card a:hover {
+  border-bottom-color: var(--blue);
+}
+
+.ms-pass-content-card strong {
+  color: var(--t1);
+  font-weight: 700;
+}
+
+.ms-pass-content-card em {
+  color: var(--t2);
+  font-style: italic;
+}
 
 .ms-pass-content-card table {
   width: 100%;
   border-collapse: collapse;
-  margin-bottom: 14px;
+  margin: 16px 0 14px;
   font-size: 14px;
 }
 
 .ms-pass-content-card th {
-  background: var(--s3);
+  background: rgba(77,159,255,0.08);
   color: var(--t1);
   font-weight: 600;
-  padding: 8px 12px;
+  padding: 10px 12px;
   text-align: left;
   border: 1px solid var(--b2);
 }
 
 .ms-pass-content-card td {
   color: var(--t2);
-  padding: 8px 12px;
+  padding: 10px 12px;
   border: 1px solid var(--b1);
+}
+
+.ms-pass-content-card tr:hover td {
+  background: rgba(255,255,255,0.01);
 }
 
 /* Pass footer actions */
@@ -710,11 +732,15 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: 16px;
   background: var(--s1);
   border: 1.5px solid var(--b1);
-  border-radius: var(--r4);
-  padding: 16px 20px;
+  border-radius: 12px;
+  padding: 18px 22px;
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
+  box-shadow: 0 -4px 16px rgba(8,12,20,0.1);
 }
 
 .ms-pass-actions-left { display: flex; gap: 10px; }
@@ -724,7 +750,117 @@
   color: var(--t3);
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* Submission mode / bulk textarea (cleaner controls) */
+.submission-mode {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.submission-mode .label {
+  font-weight: 700;
+  color: var(--t2);
+  font-size: 13px;
+  margin-right: 6px;
+}
+
+.submission-mode .mode-btn {
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--b2);
+  background: var(--s2);
+  color: var(--t2);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.submission-mode .mode-btn.active {
+  background: var(--blue-dim);
+  border-color: var(--blue-ring);
+  color: var(--blue);
+}
+
+.bulk-textarea {
+  width: 100%;
+  min-height: 240px;
+  resize: vertical;
+  padding: 16px;
+  border-radius: 12px;
+  border: 1.5px solid var(--b1);\n  background: var(--s1);\n  color: var(--t2);\n  font-size: 15px;\n  line-height: 1.7;\n  font-family: var(--font);\n  transition: border-color 0.15s, box-shadow 0.15s;\n}\n\n.bulk-textarea:focus {\n  outline: none;\n  border-color: var(--b2);\n  box-shadow: 0 0 0 3px rgba(77,159,255,0.1);\n}\n\n.bulk-textarea::placeholder {\n  color: var(--t4);\n}
+
+/* Quill / WYSIWYG container styling to mimic clean editor */
+.quill-container {
+  border-radius: 10px;
+  border: 1px solid var(--b1);
+  background: var(--s1);
+  padding: 12px;
+  margin-top: 10px;
+}
+
+.quill-container .ql-toolbar.ql-snow {
+  border: none;
+  padding: 6px 0 8px;
+}
+
+.quill-container .ql-container.ql-snow {
+  border: none;
+  font-size: 15px;
+  line-height: 1.7;
+  min-height: 160px;
+}
+
+/* Ensure pasted images/content scale nicely */
+.ms-pass-content-card img,
+.quill-container img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 12px 0;
+  border-radius: 8px;
+}
+
+.ms-pass-content-card iframe {
+  max-width: 100%;
+}
+
+/* Slightly tighter content layout to look more like Notion */
+.ms-pass-content-card {
+  background: var(--s1);
+  border: 1px solid var(--b1);
+  border-radius: 12px;
+  padding: 28px;
+  margin-bottom: 24px;
+  min-height: 200px;
+  box-shadow: 0 4px 12px rgba(8,12,20,0.05);
+  line-height: 1.8;
+}
+
+.ms-pass-content-card h1,
+.ms-pass-content-card h2,
+.ms-pass-content-card h3,
+.ms-pass-content-card h4,
+.ms-pass-content-card h5,
+.ms-pass-content-card h6 {
+  color: var(--t1);
+  font-family: var(--display);
+  font-weight: 700;
+  letter-spacing: -0.3px;
+}
+
+.ms-pass-content-card h1 { font-size: 28px; margin: 16px 0 12px; line-height: 1.2; }
+.ms-pass-content-card h2 { font-size: 22px; margin: 20px 0 10px; }
+.ms-pass-content-card h3 { font-size: 18px; margin: 16px 0 8px; }
+.ms-pass-content-card h4 { font-size: 16px; margin: 14px 0 6px; }
+
+.ms-pass-content-card p {
+  font-size: 15px;
+  color: var(--t2);
+  margin-bottom: 12px;
 }
 
 /* Buttons */
@@ -732,8 +868,8 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 10px 20px;
-  border-radius: var(--r3);
+  padding: 11px 22px;
+  border-radius: 10px;
   font-family: var(--font);
   font-size: 14px;
   font-weight: 600;
@@ -742,6 +878,7 @@
   transition: all 0.18s var(--fast);
   text-decoration: none;
   white-space: nowrap;
+  letter-spacing: 0.3px;
 }
 
 .ms-btn:disabled {
@@ -752,13 +889,13 @@
 .ms-btn-primary {
   background: var(--green);
   color: #0a0b0f;
-  box-shadow: 0 0 16px rgba(158, 255, 0, 0.3);
+  box-shadow: 0 4px 16px rgba(158, 255, 0, 0.25);
 }
 
 .ms-btn-primary:hover:not(:disabled) {
   background: #b3ff33;
-  box-shadow: 0 0 24px rgba(158, 255, 0, 0.5);
-  transform: translateY(-1px);
+  box-shadow: 0 8px 24px rgba(158, 255, 0, 0.4);
+  transform: translateY(-2px);
 }
 
 .ms-btn-secondary {
@@ -770,6 +907,7 @@
 .ms-btn-secondary:hover:not(:disabled) {
   background: var(--s3);
   border-color: var(--b3);
+  transform: translateY(-1px);
 }
 
 .ms-btn-ghost {
@@ -781,119 +919,140 @@
 .ms-btn-ghost:hover:not(:disabled) {
   color: var(--t1);
   border-color: var(--b3);
+  background: rgba(255,255,255,0.01);
 }
 
 .ms-btn-completed {
-  background: var(--green-dim);
+  background: rgba(158,255,0,0.08);
   color: var(--green);
   border: 1.5px solid var(--green-ring);
   cursor: default;
 }
 
 .ms-btn-sm {
-  padding: 7px 14px;
+  padding: 8px 14px;
   font-size: 13px;
 }
 
 /* ── Exam page ───────────────────────────────────────────────── */
 .ms-exam-page {
-  max-width: 760px;
+  max-width: 800px;
   margin: 0 auto;
-  padding: 28px 0 80px;
+  padding: 28px 16px 80px;
   animation: fadeUp 0.4s var(--ease) both;
 }
 
 .ms-exam-header {
   background: var(--s1);
-  border: 1.5px solid rgba(255, 179, 0, 0.2);
-  border-radius: var(--r4);
-  padding: 24px;
-  margin-bottom: 20px;
+  border: 1.5px solid rgba(255, 179, 0, 0.25);
+  border-radius: 16px;
+  padding: 28px;
+  margin-bottom: 24px;
   display: flex;
-  gap: 16px;
+  gap: 20px;
   align-items: flex-start;
+  box-shadow: 0 4px 12px rgba(255,179,0,0.05);
 }
 
 .ms-exam-header-icon {
-  width: 52px;
-  height: 52px;
-  border-radius: var(--r3);
+  width: 56px;
+  height: 56px;
+  border-radius: 12px;
   background: rgba(255, 179, 0, 0.12);
   border: 1.5px solid rgba(255, 179, 0, 0.3);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 26px;
+  font-size: 28px;
   flex-shrink: 0;
 }
 
 .ms-exam-header-title {
   font-family: var(--display);
-  font-size: 20px;
+  font-size: 22px;
   font-weight: 700;
   color: var(--t1);
-  margin-bottom: 6px;
+  margin-bottom: 8px;
+  letter-spacing: -0.3px;
 }
 
 .ms-exam-header-desc {
   font-size: 14px;
   color: var(--t2);
   line-height: 1.6;
-  margin-bottom: 12px;
+  margin-bottom: 14px;
 }
 
 .ms-exam-header-meta {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 10px;
 }
 
 /* Timer */
 .ms-timer {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 7px;
   font-family: var(--mono);
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 700;
   color: var(--amber);
-  background: rgba(255, 179, 0, 0.1);
-  border: 1px solid rgba(255, 179, 0, 0.25);
-  padding: 5px 12px;
-  border-radius: var(--pill);
+  background: rgba(255, 179, 0, 0.12);
+  border: 1.5px solid rgba(255, 179, 0, 0.3);
+  padding: 7px 14px;
+  border-radius: 8px;
+  letter-spacing: 0.5px;
 }
 
-.ms-timer.warning { color: var(--hard); background: var(--hard-dim); border-color: rgba(255, 61, 90, 0.3); }
+.ms-timer.warning {
+  color: var(--hard);
+  background: var(--hard-dim);
+  border-color: rgba(255, 61, 90, 0.3);
+  animation: pulse 0.8s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
 
 /* Question card */
 .ms-question-card {
   background: var(--s1);
   border: 1.5px solid var(--b1);
-  border-radius: var(--r4);
-  padding: 22px;
-  margin-bottom: 14px;
-  transition: border-color 0.15s;
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 16px;
+  transition: border-color 0.18s, box-shadow 0.18s;
+  box-shadow: 0 2px 6px rgba(8,12,20,0.03);
 }
 
 .ms-question-card.answered {
-  border-color: var(--b2);
+  border-color: rgba(77,159,255,0.3);
+  background: rgba(77,159,255,0.01);
 }
 
 .ms-question-num {
-  font-size: 11px;
-  font-weight: 600;
+  font-size: 12px;
+  font-weight: 700;
   color: var(--t4);
   text-transform: uppercase;
-  letter-spacing: 0.8px;
-  margin-bottom: 8px;
+  letter-spacing: 1px;
+  margin-bottom: 10px;
+  display: inline-block;
+  padding: 4px 8px;
+  background: rgba(77,159,255,0.08);
+  border-radius: 6px;
+  color: var(--blue);
 }
 
 .ms-question-text {
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 600;
   color: var(--t1);
-  line-height: 1.55;
-  margin-bottom: 16px;
+  line-height: 1.6;
+  margin-bottom: 18px;
 }
 
 /* Choice list */
@@ -906,10 +1065,10 @@
 .ms-choice {
   display: flex;
   align-items: flex-start;
-  gap: 10px;
-  padding: 11px 14px;
+  gap: 12px;
+  padding: 13px 16px;
   border: 1.5px solid var(--b1);
-  border-radius: var(--r3);
+  border-radius: 10px;
   cursor: pointer;
   transition: all 0.15s;
   background: var(--s2);
@@ -919,35 +1078,38 @@
 .ms-choice:hover {
   border-color: var(--b3);
   background: var(--s3);
+  transform: translateX(2px);
 }
 
 .ms-choice.selected {
   border-color: var(--blue-ring);
-  background: var(--blue-dim);
+  background: rgba(77,159,255,0.08);
 }
 
 .ms-choice.correct {
   border-color: var(--green-ring);
-  background: var(--green-dim);
+  background: rgba(158,255,0,0.06);
 }
 
 .ms-choice.incorrect {
   border-color: rgba(255, 61, 90, 0.35);
-  background: var(--hard-dim);
+  background: rgba(255,61,90,0.06);
 }
 
 .ms-choice-indicator {
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
   border-radius: 50%;
   border: 2px solid var(--b3);
   flex-shrink: 0;
-  margin-top: 1px;
+  margin-top: 2px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 10px;
+  font-size: 11px;
+  font-weight: 700;
   transition: all 0.15s;
+  background: transparent;
 }
 
 .ms-choice.selected .ms-choice-indicator {
@@ -971,53 +1133,67 @@
 .ms-choice-text {
   font-size: 14px;
   color: var(--t2);
-  line-height: 1.5;
+  line-height: 1.55;
+  flex: 1;
 }
 
-.ms-choice.selected .ms-choice-text { color: var(--t1); }
+.ms-choice.selected .ms-choice-text { color: var(--t1); font-weight: 500; }
 
 /* Exam submit bar */
 .ms-exam-submit-bar {
   background: var(--s1);
   border: 1.5px solid var(--b1);
-  border-radius: var(--r4);
-  padding: 16px 20px;
-  margin-top: 20px;
+  border-radius: 12px;
+  padding: 18px 22px;
+  margin-top: 24px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: 16px;
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
+  box-shadow: 0 -4px 16px rgba(8,12,20,0.1);
 }
 
 .ms-exam-progress-text {
-  font-size: 13px;
-  color: var(--t3);
+  font-size: 14px;
+  color: var(--t2);
+  font-weight: 500;
 }
 
 /* ── Exam result ─────────────────────────────────────────────── */
 .ms-result-card {
   background: var(--s1);
   border: 1.5px solid var(--b1);
-  border-radius: var(--r4);
-  padding: 32px;
+  border-radius: 16px;
+  padding: 40px;
   text-align: center;
-  margin-bottom: 24px;
+  margin-bottom: 28px;
 }
 
-.ms-result-card.passed  { border-color: var(--green-ring); }
-.ms-result-card.failed  { border-color: rgba(255, 61, 90, 0.3); }
+.ms-result-card.passed { border-color: var(--green-ring); background: rgba(158,255,0,0.02); }
+.ms-result-card.failed { border-color: rgba(255, 61, 90, 0.35); background: rgba(255,61,90,0.02); }
 
 .ms-result-icon {
-  font-size: 52px;
-  margin-bottom: 16px;
+  font-size: 56px;
+  margin-bottom: 18px;
   line-height: 1;
+  animation: bounce 0.6s var(--ease);
+}
+
+@keyframes bounce {
+  0% { transform: scale(0.8); opacity: 0; }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); opacity: 1; }
 }
 
 .ms-result-title {
   font-family: var(--display);
-  font-size: 24px;
+  font-size: 26px;
   font-weight: 700;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
+  letter-spacing: -0.3px;
 }
 
 .ms-result-title.passed { color: var(--green); }
@@ -1025,25 +1201,26 @@
 
 .ms-result-score {
   font-family: var(--mono);
-  font-size: 48px;
+  font-size: 52px;
   font-weight: 700;
-  margin: 16px 0;
+  margin: 18px 0;
+  letter-spacing: -1px;
 }
 
 .ms-result-score.passed { color: var(--green); }
 .ms-result-score.failed { color: var(--hard); }
 
 .ms-result-desc {
-  font-size: 14px;
+  font-size: 15px;
   color: var(--t3);
-  max-width: 420px;
-  margin: 0 auto 20px;
+  max-width: 480px;
+  margin: 0 auto 28px;
   line-height: 1.7;
 }
 
 .ms-result-actions {
   display: flex;
-  gap: 10px;
+  gap: 12px;
   justify-content: center;
   flex-wrap: wrap;
 }
@@ -1052,22 +1229,28 @@
 .ms-explanation-card {
   background: var(--s1);
   border: 1.5px solid var(--b1);
-  border-radius: var(--r4);
-  margin-bottom: 12px;
+  border-radius: 12px;
+  margin-bottom: 14px;
   overflow: hidden;
+  transition: border-color 0.15s;
+}
+
+.ms-explanation-card:hover {
+  border-color: var(--b2);
 }
 
 .ms-explanation-q {
-  padding: 14px 18px;
+  padding: 16px 18px;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   border-bottom: 1px solid var(--b1);
+  background: rgba(255,255,255,0.01);
 }
 
 .ms-explanation-q-icon {
-  font-size: 14px;
-  width: 20px;
+  font-size: 16px;
+  width: 22px;
   text-align: center;
   flex-shrink: 0;
 }
@@ -1076,32 +1259,33 @@
   font-size: 14px;
   font-weight: 600;
   color: var(--t1);
-  line-height: 1.4;
+  line-height: 1.5;
 }
 
 .ms-explanation-body {
-  padding: 12px 18px;
+  padding: 14px 18px;
   font-size: 13px;
   color: var(--t3);
-  line-height: 1.6;
+  line-height: 1.7;
 }
 
 .ms-explanation-body strong {
   color: var(--t2);
+  font-weight: 600;
 }
 
 /* ── Locked / unavailable states ─────────────────────────────── */
 .ms-locked-banner {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 16px;
-  background: rgba(255, 179, 0, 0.06);
-  border: 1.5px solid rgba(255, 179, 0, 0.2);
-  border-radius: var(--r3);
+  gap: 14px;
+  padding: 16px 18px;
+  background: rgba(255, 179, 0, 0.08);
+  border: 1.5px solid rgba(255, 179, 0, 0.25);
+  border-radius: 12px;
   font-size: 14px;
   color: var(--t2);
-  margin-bottom: 16px;
+  margin-bottom: 18px;
 }
 
 .ms-locked-banner-icon { font-size: 18px; flex-shrink: 0; }
@@ -1109,28 +1293,28 @@
 /* ── Empty / loading ─────────────────────────────────────────── */
 .ms-empty {
   text-align: center;
-  padding: 60px 20px;
+  padding: 80px 20px;
   color: var(--t3);
   font-size: 15px;
 }
 
-.ms-empty-icon { font-size: 36px; margin-bottom: 12px; }
+.ms-empty-icon { font-size: 44px; margin-bottom: 16px; display: block; }
 
 .ms-spinner {
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 60px;
+  padding: 80px 20px;
 }
 
 .ms-spinner::after {
   content: "";
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   border: 3px solid var(--b2);
   border-top-color: var(--green);
   border-radius: 50%;
-  animation: spin 0.7s linear infinite;
+  animation: spin 0.8s linear infinite;
 }
 
 /* ── Keyframes ───────────────────────────────────────────────── */

@@ -399,6 +399,64 @@
   font-size: 34px;
 }
 
+/* ── Cabinet / profile snap refinements ───────────────────────────────── */
+.dash-prof-snap {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 18px;
+}
+
+.dash-prof-avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  font-size: 28px;
+  font-weight: 800;
+  color: #071017;
+  background: linear-gradient(135deg, rgba(142,216,232,0.95), rgba(255,255,255,0.95));
+}
+
+.dash-prof-name {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.dash-prof-email {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.dash-prof-chips { display: flex; gap: 8px; margin-top: 6px; }
+
+.xk-chip {
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.xk-chip.green { background: rgba(77,159,255,0.08); color: var(--blue-light); border: 1px solid rgba(77,159,255,0.08); }
+.xk-chip.amber { background: rgba(255,179,0,0.08); color: var(--amber); border: 1px solid rgba(255,179,0,0.08); }
+
+.dash-quick { display: flex; gap: 8px; margin-top: 12px; }
+.dash-quick-link { padding: 8px 10px; border-radius: 10px; background: rgba(255,255,255,0.02); color: var(--text-primary); text-decoration: none; }
+
+/* Make hero and stats sections breathe more */
+.dash-hero { display: flex; justify-content: space-between; gap: 24px; align-items: center; padding: 22px; border-radius: 16px; }
+.dash-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; }
+
+@media (max-width: 900px) {
+  .dashboard { grid-template-columns: 1fr; }
+  .sidebar { position: relative; width: 100%; transform: none; }
+  .dashboard-main { grid-column: 1; }
+  .dash-hero { flex-direction: column; align-items: flex-start; }
+}
+
+
 .course-card h3,
 .path-card h3,
 .lab-card h4,
