@@ -5,7 +5,7 @@
 - **Backend**: Django + Django REST Framework + django-hosts
 - **Frontend**: React + Vite
 - **Multi-domain Routing**: xakker.org (Landing) + self-study.xakker.org (Platform)
-- **Database**: SQLite (local) / PostgreSQL (production)
+- **Database**: PostgreSQL
 
 ---
 
@@ -341,7 +341,7 @@ CORS_ALLOWED_ORIGINS = [
 ### Before Production:
 1. Set `DEBUG = False` in settings.py
 2. Update `ALLOWED_HOSTS` and `CORS_ALLOWED_ORIGINS`
-3. Use PostgreSQL instead of SQLite
+3. Configure PostgreSQL connection settings
 4. Set strong `SECRET_KEY`
 5. Enable HTTPS/SSL
 6. Use a production WSGI server (Gunicorn)

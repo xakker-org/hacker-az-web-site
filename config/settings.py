@@ -78,21 +78,14 @@ DATABASES = {
     "default": {}
 }
 
-DB_ENGINE = config("DB_ENGINE", default="sqlite")
-if DB_ENGINE == "postgres":
-    DATABASES["default"] = {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": config("POSTGRES_DB", default="xakker_db"),
-        "USER": config("POSTGRES_USER", default="xakker_user"),
-        "PASSWORD": config("POSTGRES_PASSWORD", default="xakker_password"),
-        "HOST": config("POSTGRES_HOST", default="127.0.0.1"),
-        "PORT": config("POSTGRES_PORT", default="5432"),
-    }
-else:
-    DATABASES["default"] = {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
-    }
+DATABASES["default"] = {
+    "ENGINE": "django.db.backends.postgresql",
+    "NAME": config("POSTGRES_DB", default="xakker_db"),
+    "USER": config("POSTGRES_USER", default="xakker_user"),
+    "PASSWORD": config("POSTGRES_PASSWORD", default="xakker_password"),
+    "HOST": config("POSTGRES_HOST", default="127.0.0.1"),
+    "PORT": config("POSTGRES_PORT", default="5432"),
+}
 
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
