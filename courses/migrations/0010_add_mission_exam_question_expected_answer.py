@@ -1,4 +1,4 @@
-from django.db import migrations, models
+from django.db import migrations
 
 
 class Migration(migrations.Migration):
@@ -10,14 +10,12 @@ class Migration(migrations.Migration):
     operations = [
         migrations.SeparateDatabaseAndState(
             database_operations=[
-                migrations.AddField(
-                    model_name="missionexamquestion",
-                    name="expected_answer",
-                    field=models.TextField(
-                        blank=True,
-                        default="",
-                        help_text="Expected answer for open questions.",
-                    ),
+                migrations.RunSQL(
+                    sql="""
+                    ALTER TABLE "courses_missionexamquestion"
+                        ADD COLUMN IF NOT EXISTS "expected_answer" text NOT NULL DEFAULT '';
+                    """,
+                    reverse_sql=migrations.RunSQL.noop,
                 ),
             ],
             state_operations=[],
