@@ -29,6 +29,8 @@ C:\Windows\System32\drivers\etc\hosts
 
 ### Option 1: Standard Django Development Server
 
+Before running `manage.py`, make sure PostgreSQL is running on your machine and `POSTGRES_HOST` points to `127.0.0.1` in your local `.env`. The `db` host only exists inside Docker Compose.
+
 ```bash
 cd /home/maharrammasimov/hacker-az-web-site
 .venv/bin/python manage.py runserver 0.0.0.0:8000
