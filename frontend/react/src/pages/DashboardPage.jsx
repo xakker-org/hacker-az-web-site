@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import AppShell from "../components/AppShell";
 import { endpoints } from "../services/endpoints";
 import { clearTokens, getAccessToken } from "../utils/tokens";
+import "../styles/dashboard.css";
 
 const EMPTY = {
   username: "Hacker", email: "",

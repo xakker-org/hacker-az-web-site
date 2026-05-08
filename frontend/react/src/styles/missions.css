@@ -1,1330 +1,644 @@
 /* ================================================================
-   MISSIONS CSS — Mission / Pass system UI
-   Uses platform.css tokens (--bg, --green, --blue, --t1, etc.)
+   XAKKER — Missions / Mission Detail / Pass Content
+   Precision Dark — Production v4
    ================================================================ */
 
-/* ── Page header ─────────────────────────────────────────────── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Page shell ── */
 .ms-page {
   padding: 28px 0 60px;
-  animation: fadeUp 0.45s var(--ease) both;
+  animation: fadeUp 0.4s var(--ease) both;
 }
-
-.ms-page-header {
-  margin-bottom: 28px;
-}
-
+.ms-page-header { margin-bottom: 28px; }
 .ms-page-title {
   font-family: var(--display);
   font-size: 26px;
-  font-weight: 700;
+  font-weight: 800;
   color: var(--t1);
-  letter-spacing: -0.3px;
+  letter-spacing: -0.03em;
   margin-bottom: 4px;
 }
+.ms-page-subtitle { font-size: 14px; color: var(--t3); }
 
-.ms-page-subtitle {
-  font-size: 14px;
-  color: var(--t3);
-}
-
-/* ── Filter bar ──────────────────────────────────────────────── */
+/* ── Filter bar ── */
 .ms-filters {
   display: flex;
-  gap: 8px;
+  gap: 6px;
   flex-wrap: wrap;
   margin-bottom: 24px;
 }
-
 .ms-filter-btn {
   padding: 7px 16px;
   border-radius: var(--pill);
-  border: 1.5px solid var(--b2);
+  border: 1px solid var(--b2);
   background: var(--s1);
   color: var(--t2);
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.18s var(--fast);
+  transition: all 0.15s var(--fast);
   font-family: var(--font);
 }
-
 .ms-filter-btn:hover {
   border-color: var(--b3);
   color: var(--t1);
   background: var(--s2);
 }
-
 .ms-filter-btn.active {
   background: var(--green-dim);
-  border-color: var(--green);
+  border-color: var(--green-ring);
   color: var(--green);
+  font-weight: 600;
 }
 
-/* ── Mission grid ────────────────────────────────────────────── */
+/* ── Mission cards grid ── */
 .ms-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 20px;
-}
-
-/* ── Mission card ────────────────────────────────────────────── */
-.ms-card {
-  background: var(--s1);
-  border: 1.5px solid var(--b1);
-  border-radius: var(--r4);
-  overflow: hidden;
-  cursor: pointer;
-  transition: transform 0.22s var(--ease), border-color 0.22s, box-shadow 0.22s;
-  display: flex;
-  flex-direction: column;
-  text-decoration: none;
-}
-
-.ms-card:hover {
-  transform: translateY(-4px);
-  border-color: var(--b3);
-  box-shadow: var(--sh2);
-}
-
-.ms-card.completed {
-  border-color: rgba(158, 255, 0, 0.25);
-}
-
-.ms-card.completed:hover {
-  border-color: var(--green);
-  box-shadow: 0 8px 28px rgba(158, 255, 0, 0.15);
-}
-
-/* Card accent bar (top border in mission color) */
-.ms-card-accent {
-  height: 3px;
-  background: var(--accent-color, var(--blue));
-  flex-shrink: 0;
-}
-
-/* Card body */
-.ms-card-body {
-  padding: 20px;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
   gap: 14px;
 }
 
-/* Icon + title row */
+/* ── Mission card ── */
+.ms-card {
+  position: relative;
+  background: var(--bg-1);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: var(--r4);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  text-decoration: none;
+  overflow: hidden;
+  transition: border-color 0.2s, transform 0.2s;
+}
+.ms-card:hover {
+  border-color: rgba(255,255,255,0.12);
+  transform: translateY(-2px);
+}
+.ms-card.completed {
+  border-color: rgba(61,232,160,0.12);
+}
+.ms-card.completed:hover {
+  border-color: rgba(61,232,160,0.22);
+}
+
+/* Accent top bar using CSS custom property set per-card */
+.ms-card-accent {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  border-radius: var(--pill) var(--pill) 0 0;
+}
+
+.ms-card-body { display: flex; flex-direction: column; gap: 12px; flex: 1; }
+
 .ms-card-header {
   display: flex;
   align-items: flex-start;
-  gap: 12px;
+  gap: 14px;
 }
-
 .ms-card-icon {
-  width: 44px;
-  height: 44px;
+  width: 44px; height: 44px;
   border-radius: var(--r3);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 22px;
   flex-shrink: 0;
-  background: var(--icon-bg, rgba(77, 159, 255, 0.12));
 }
-
-.ms-card-title-group {
-  flex: 1;
-  min-width: 0;
-}
-
+.ms-card-title-group { flex: 1; min-width: 0; }
 .ms-card-title {
   font-family: var(--display);
   font-size: 15px;
   font-weight: 700;
   color: var(--t1);
   line-height: 1.3;
+  letter-spacing: -0.01em;
   margin-bottom: 4px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
-
 .ms-card-desc {
   font-size: 13px;
-  color: var(--t3);
+  color: var(--t2);
   line-height: 1.5;
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
 
-/* Meta row (difficulty / passes / time) */
 .ms-card-meta {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 6px;
   flex-wrap: wrap;
 }
 
+/* Difficulty / info badges */
 .ms-badge {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  padding: 3px 9px;
+  padding: 5px 10px;
   border-radius: var(--pill);
+  font-family: var(--mono);
   font-size: 11px;
   font-weight: 600;
-  letter-spacing: 0.3px;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
+  border: 1px solid transparent;
 }
-
-.ms-badge-easy   { background: var(--easy-dim);   color: var(--easy);   border: 1px solid rgba(57,211,83,.25); }
-.ms-badge-medium { background: var(--medium-dim);  color: var(--medium); border: 1px solid rgba(255,179,0,.25); }
-.ms-badge-hard   { background: var(--hard-dim);    color: var(--hard);   border: 1px solid rgba(255,61,90,.25); }
-.ms-badge-expert { background: var(--expert-dim);  color: var(--expert); border: 1px solid rgba(168,85,247,.25); }
-
-.ms-badge-info {
+.ms-badge-easy   { background: rgba(61,232,160,0.10);  color: #3de8a0;  border-color: rgba(61,232,160,0.25); }
+.ms-badge-medium { background: rgba(245,166,35,0.10);  color: #f5a623;  border-color: rgba(245,166,35,0.25); }
+.ms-badge-hard   { background: rgba(255,77,103,0.10);  color: #ff4d67;  border-color: rgba(255,77,103,0.25); }
+.ms-badge-expert { background: rgba(139,92,246,0.10);  color: #8b5cf6;  border-color: rgba(139,92,246,0.25); }
+.ms-badge-info   {
   background: var(--s2);
   color: var(--t3);
-  border: 1px solid var(--b2);
+  border-color: var(--b2);
 }
-
-.ms-badge-exam {
-  background: rgba(255, 179, 0, 0.12);
+.ms-badge-exam   {
+  background: rgba(245,166,35,0.10);
   color: var(--amber);
-  border: 1px solid rgba(255, 179, 0, 0.25);
+  border-color: rgba(245,166,35,0.25);
 }
 
-/* Progress section */
-.ms-card-progress {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
+/* Progress within card */
+.ms-card-progress { display: flex; flex-direction: column; gap: 5px; margin-top: auto; }
 .ms-progress-label {
   display: flex;
   justify-content: space-between;
-  font-size: 12px;
+  font-size: 11.5px;
   color: var(--t3);
 }
-
 .ms-progress-track {
-  height: 5px;
-  background: var(--b1);
+  width: 100%;
+  height: 4px;
+  background: rgba(255,255,255,0.05);
   border-radius: var(--pill);
   overflow: hidden;
 }
-
 .ms-progress-fill {
   height: 100%;
   border-radius: var(--pill);
-  background: linear-gradient(90deg, var(--green), var(--green-2));
-  box-shadow: 0 0 8px rgba(158, 255, 0, 0.4);
   transition: width 0.5s var(--ease);
 }
 
-.ms-progress-fill.blue {
-  background: linear-gradient(90deg, var(--blue), #7bb8ff);
-  box-shadow: 0 0 8px rgba(77, 159, 255, 0.4);
+/* ── Spinner / empty ── */
+.ms-spinner {
+  width: 32px; height: 32px;
+  border: 2px solid var(--b2);
+  border-top-color: var(--green);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin: 80px auto;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.ms-empty {
+  text-align: center;
+  padding: 64px 24px;
+  color: var(--t3);
+  font-size: 15px;
 }
 
-/* Card footer (XP + status) */
-.ms-card-footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding-top: 12px;
-  border-top: 1px solid var(--b1);
-}
-
-.ms-xp-badge {
-  font-family: var(--mono);
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--green);
-}
-
-.ms-status-badge {
-  font-size: 11px;
-  font-weight: 600;
-  padding: 3px 8px;
-  border-radius: var(--pill);
-}
-
-.ms-status-badge.not-started { color: var(--t4); background: var(--s2); border: 1px solid var(--b1); }
-.ms-status-badge.in-progress { color: var(--blue); background: var(--blue-dim); border: 1px solid rgba(77,159,255,.25); }
-.ms-status-badge.completed   { color: var(--green); background: var(--green-dim); border: 1px solid var(--green-ring); }
-
-/* ── Mission detail page ─────────────────────────────────────── */
+/* ── Mission Detail ── */
 .ms-detail {
   display: grid;
-  grid-template-columns: 1fr 360px;
-  gap: 24px;
+  grid-template-columns: 1fr 340px;
+  gap: 20px;
   align-items: start;
 }
 
-@media (max-width: 900px) {
-  .ms-detail {
-    grid-template-columns: 1fr;
-  }
-}
-
-/* Detail hero */
+/* Detail hero banner */
 .ms-detail-hero {
-  background: var(--s1);
-  border: 1.5px solid var(--b1);
+  background: var(--bg-1);
+  border: 1px solid rgba(255,255,255,0.06);
   border-radius: var(--r4);
   overflow: hidden;
-  margin-bottom: 20px;
-}
-
-.ms-detail-hero-bar {
-  height: 4px;
-}
-
-.ms-detail-hero-body {
-  padding: 28px;
-  display: flex;
-  gap: 20px;
-  align-items: flex-start;
-}
-
-.ms-detail-icon {
-  width: 60px;
-  height: 60px;
-  border-radius: var(--r3);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 30px;
-  flex-shrink: 0;
-}
-
-.ms-detail-info {
-  flex: 1;
-  min-width: 0;
-}
-
-.ms-detail-title {
-  font-family: var(--display);
-  font-size: 22px;
-  font-weight: 700;
-  color: var(--t1);
-  margin-bottom: 8px;
-  line-height: 1.25;
-}
-
-.ms-detail-desc {
-  font-size: 14px;
-  color: var(--t2);
-  line-height: 1.7;
-  margin-bottom: 14px;
-}
-
-.ms-detail-meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-/* Pass list card */
-.ms-pass-list-card {
-  background: var(--s1);
-  border: 1.5px solid var(--b1);
-  border-radius: var(--r4);
-  overflow: hidden;
-}
-
-.ms-pass-list-header {
-  padding: 16px 20px;
-  border-bottom: 1px solid var(--b1);
-  font-family: var(--display);
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--t1);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-/* Pass item */
-.ms-pass-item {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 14px 20px;
-  border-bottom: 1px solid var(--b1);
-  cursor: pointer;
-  transition: background 0.15s;
-  text-decoration: none;
-  color: inherit;
-}
-
-.ms-pass-item:last-child {
-  border-bottom: none;
-}
-
-.ms-pass-item:hover:not(.locked) {
-  background: var(--s2);
-}
-
-.ms-pass-item.locked {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
-
-.ms-pass-item.active {
-  background: var(--blue-dim);
-}
-
-.ms-pass-item.completed {
-  background: rgba(158, 255, 0, 0.04);
-}
-
-/* Pass state icon */
-.ms-pass-state {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 14px;
-  flex-shrink: 0;
-  border: 2px solid var(--b2);
-  background: var(--s2);
-}
-
-.ms-pass-state.done {
-  background: var(--green-dim);
-  border-color: var(--green-ring);
-  color: var(--green);
-}
-
-.ms-pass-state.active-state {
-  background: var(--blue-dim);
-  border-color: var(--blue-ring);
-  color: var(--blue);
-}
-
-.ms-pass-state.locked-state {
-  border-style: dashed;
-}
-
-/* Pass item text */
-.ms-pass-item-info {
-  flex: 1;
-  min-width: 0;
-}
-
-.ms-pass-item-title {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--t1);
-  line-height: 1.3;
-  margin-bottom: 2px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.ms-pass-item-sub {
-  font-size: 12px;
-  color: var(--t3);
-}
-
-.ms-pass-item-time {
-  font-size: 12px;
-  color: var(--t3);
-  flex-shrink: 0;
-}
-
-/* Final exam row */
-.ms-exam-row {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 16px 20px;
-  cursor: pointer;
-  text-decoration: none;
-  background: rgba(255, 179, 0, 0.04);
-  border-top: 1px solid var(--b1);
-  transition: background 0.15s;
-}
-
-.ms-exam-row:hover:not(.locked) {
-  background: rgba(255, 179, 0, 0.08);
-}
-
-.ms-exam-row.locked {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-.ms-exam-icon {
-  width: 36px;
-  height: 36px;
-  border-radius: var(--r2);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 18px;
-  background: rgba(255, 179, 0, 0.12);
-  border: 1.5px solid rgba(255, 179, 0, 0.25);
-  flex-shrink: 0;
-}
-
-.ms-exam-info {
-  flex: 1;
-}
-
-.ms-exam-title {
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--amber);
-  margin-bottom: 2px;
-}
-
-.ms-exam-sub {
-  font-size: 12px;
-  color: var(--t3);
-}
-
-/* Sidebar summary card */
-.ms-sidebar-card {
-  background: var(--s1);
-  border: 1.5px solid var(--b1);
-  border-radius: var(--r4);
-  padding: 20px;
   margin-bottom: 16px;
 }
-
-.ms-sidebar-card h3 {
-  font-family: var(--display);
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--t2);
-  text-transform: uppercase;
-  letter-spacing: 0.8px;
-  margin-bottom: 14px;
-}
-
-.ms-stat-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 9px 0;
-  border-bottom: 1px solid var(--b1);
-  font-size: 13px;
-}
-
-.ms-stat-row:last-child { border-bottom: none; }
-
-.ms-stat-label { color: var(--t3); }
-.ms-stat-value { font-weight: 600; color: var(--t1); font-family: var(--mono); }
-
-/* ── Pass content page ───────────────────────────────────────── */
-.ms-pass-page {
-  max-width: 800px;
-  margin: 0 auto;
-  padding: 28px 16px 80px;
-  animation: fadeUp 0.4s var(--ease) both;
-}
-
-.ms-pass-nav {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 22px;\n  font-size: 13px;\n  color: var(--t3);\n  flex-wrap: wrap;\n}\n\n.ms-pass-nav a {\n  color: var(--t3);\n  text-decoration: none;\n  transition: color 0.15s;\n  border-radius: 4px;\n  padding: 2px 4px;\n}\n\n.ms-pass-nav a:hover {\n  color: var(--t1);\n  background: rgba(255,255,255,0.02);\n}\n\n.ms-pass-nav-sep { color: var(--t4); font-weight: 300; }\n\n.ms-pass-current {\n  color: var(--t1);\n  font-weight: 600;\n  padding: 2px 6px;\n  background: rgba(77,159,255,0.08);\n  border-radius: 4px;\n}
-
-/* Pass header card */
-.ms-pass-header-card {
-  background: var(--s1);
-  border: 1.5px solid var(--b1);
-  border-radius: 12px;
-  padding: 24px;
-  margin-bottom: 20px;
-  display: flex;
-  align-items: center;
-  gap: 18px;
-  box-shadow: 0 2px 8px rgba(8,12,20,0.04);
-}
-
-.ms-pass-num {
-  width: 48px;
-  height: 48px;
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: var(--mono);
-  font-size: 18px;
-  font-weight: 700;
-  color: var(--blue);
-  background: rgba(77,159,255,0.12);
-  border: 1.5px solid rgba(77,159,255,0.25);
-  flex-shrink: 0;
-  letter-spacing: -0.5px;
-}
-
-.ms-pass-header-info { flex: 1; }
-
-.ms-pass-header-title {
-  font-family: var(--display);
-  font-size: 20px;
-  font-weight: 700;
-  color: var(--t1);
-  margin-bottom: 8px;
-  letter-spacing: -0.3px;
-}
-
-.ms-pass-header-meta {
-  display: flex;
-  gap: 14px;
-  font-size: 13px;
-  color: var(--t3);
-  flex-wrap: wrap;
-}
-
-/* Content area */
-.ms-pass-content-card {
-  background: var(--s1);
-  border: 1.5px solid var(--b1);
-  border-radius: var(--r4);
-  padding: 32px;
-  margin-bottom: 24px;
-  min-height: 200px;
-}
-
-.ms-pass-content-card h1,
-.ms-pass-content-card h2,
-.ms-pass-content-card h3 {
-  font-family: var(--display);
-  color: var(--t1);
-  margin-top: 24px;
-  margin-bottom: 10px;
-  line-height: 1.3;
-}
-
-.ms-pass-content-card h1 { font-size: 22px; margin-top: 0; }
-.ms-pass-content-card h2 { font-size: 18px; }
-.ms-pass-content-card h3 { font-size: 15px; }
-
-.ms-pass-content-card p {
-  color: var(--t2);
-  line-height: 1.75;
-  margin-bottom: 14px;
-  font-size: 15px;
-}
-
-.ms-pass-content-card ul,
-.ms-pass-content-card ol {
-  padding-left: 28px;
-  margin-bottom: 14px;
-  color: var(--t2);
-  line-height: 1.8;
-}
-
-.ms-pass-content-card li {
-  margin-bottom: 8px;
-  color: var(--t2);
-}
-
-.ms-pass-content-card ul ul,
-.ms-pass-content-card ol ol {
-  margin-top: 6px;
-  margin-bottom: 6px;
-}
-
-.ms-pass-content-card pre,
-.ms-pass-content-card code {
-  font-family: var(--mono);
-  background: rgba(0, 0, 0, 0.5);
-  border: 1px solid rgba(10, 180, 100, 0.15);
-  border-radius: 8px;
-  color: #9aff00;
-  font-size: 13px;
-}
-
-.ms-pass-content-card pre {
-  padding: 16px;
-  overflow-x: auto;
-  margin: 14px 0;
-  line-height: 1.6;
-  background: rgba(0, 0, 0, 0.6);
-}
-
-.ms-pass-content-card code {
-  padding: 3px 8px;
-  margin: 0 2px;
-  white-space: nowrap;
-}
-
-.ms-pass-content-card pre code {
-  padding: 0;
-  background: none;
-  border: none;
-  color: #9aff00;
-  white-space: pre;
-}
-
-.ms-pass-content-card blockquote {
-  border-left: 4px solid var(--blue);
-  padding: 12px 16px;
-  margin: 16px 0;
-  background: rgba(77,159,255,0.06);
-  border-radius: 0 8px 8px 0;
-  color: var(--t2);
-  font-style: italic;
-  font-size: 14px;
-}
-
-.ms-pass-content-card a {
-  color: var(--blue);
-  text-decoration: none;
-  border-bottom: 1px solid rgba(77,159,255,0.4);
-  transition: border-color 0.15s;
-  padding-bottom: 1px;
-}
-
-.ms-pass-content-card a:hover {
-  border-bottom-color: var(--blue);
-}
-
-.ms-pass-content-card strong {
-  color: var(--t1);
-  font-weight: 700;
-}
-
-.ms-pass-content-card em {
-  color: var(--t2);
-  font-style: italic;
-}
-
-.ms-pass-content-card table {
+.ms-detail-hero-bar {
+  height: 3px;
   width: 100%;
-  border-collapse: collapse;
-  margin: 16px 0 14px;
-  font-size: 14px;
 }
-
-.ms-pass-content-card th {
-  background: rgba(77,159,255,0.08);
-  color: var(--t1);
-  font-weight: 600;
-  padding: 10px 12px;
-  text-align: left;
-  border: 1px solid var(--b2);
-}
-
-.ms-pass-content-card td {
-  color: var(--t2);
-  padding: 10px 12px;
-  border: 1px solid var(--b1);
-}
-
-.ms-pass-content-card tr:hover td {
-  background: rgba(255,255,255,0.01);
-}
-
-/* Pass footer actions */
-.ms-pass-actions {
+.ms-detail-hero-body {
+  padding: 24px;
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  background: var(--s1);
-  border: 1.5px solid var(--b1);
-  border-radius: 12px;
-  padding: 18px 22px;
-  position: sticky;
-  bottom: 0;
-  z-index: 10;
-  box-shadow: 0 -4px 16px rgba(8,12,20,0.1);
-}
-
-.ms-pass-actions-left { display: flex; gap: 10px; }
-
-.ms-pass-indicator {
-  font-size: 13px;
-  color: var(--t3);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-/* Quill / WYSIWYG container styling to mimic clean editor */
-.quill-container {
-  border-radius: 10px;
-  border: 1px solid var(--b1);
-  background: var(--s1);
-  padding: 12px;
-  margin-top: 10px;
-}
-
-.quill-container .ql-toolbar.ql-snow {
-  border: none;
-  padding: 6px 0 8px;
-}
-
-.quill-container .ql-container.ql-snow {
-  border: none;
-  font-size: 15px;
-  line-height: 1.7;
-  min-height: 160px;
-}
-
-/* Ensure pasted images/content scale nicely */
-.ms-pass-content-card img,
-.quill-container img {
-  max-width: 100%;
-  height: auto;
-  display: block;
-  margin: 12px 0;
-  border-radius: 8px;
-}
-
-.ms-pass-content-card iframe {
-  max-width: 100%;
-}
-
-/* Slightly tighter content layout to look more like Notion */
-.ms-pass-content-card {
-  background: var(--s1);
-  border: 1px solid var(--b1);
-  border-radius: 12px;
-  padding: 28px;
-  margin-bottom: 24px;
-  min-height: 200px;
-  box-shadow: 0 4px 12px rgba(8,12,20,0.05);
-  line-height: 1.8;
-}
-
-.ms-pass-content-card h1,
-.ms-pass-content-card h2,
-.ms-pass-content-card h3,
-.ms-pass-content-card h4,
-.ms-pass-content-card h5,
-.ms-pass-content-card h6 {
-  color: var(--t1);
-  font-family: var(--display);
-  font-weight: 700;
-  letter-spacing: -0.3px;
-}
-
-.ms-pass-content-card h1 { font-size: 28px; margin: 16px 0 12px; line-height: 1.2; }
-.ms-pass-content-card h2 { font-size: 22px; margin: 20px 0 10px; }
-.ms-pass-content-card h3 { font-size: 18px; margin: 16px 0 8px; }
-.ms-pass-content-card h4 { font-size: 16px; margin: 14px 0 6px; }
-
-.ms-pass-content-card p {
-  font-size: 15px;
-  color: var(--t2);
-  margin-bottom: 12px;
-}
-
-/* Buttons */
-.ms-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 11px 22px;
-  border-radius: 10px;
-  font-family: var(--font);
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  border: none;
-  transition: all 0.18s var(--fast);
-  text-decoration: none;
-  white-space: nowrap;
-  letter-spacing: 0.3px;
-}
-
-.ms-btn:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
-
-.ms-btn-primary {
-  background: var(--green);
-  color: #0a0b0f;
-  box-shadow: 0 4px 16px rgba(158, 255, 0, 0.25);
-}
-
-.ms-btn-primary:hover:not(:disabled) {
-  background: #b3ff33;
-  box-shadow: 0 8px 24px rgba(158, 255, 0, 0.4);
-  transform: translateY(-2px);
-}
-
-.ms-btn-secondary {
-  background: var(--s2);
-  color: var(--t1);
-  border: 1.5px solid var(--b2);
-}
-
-.ms-btn-secondary:hover:not(:disabled) {
-  background: var(--s3);
-  border-color: var(--b3);
-  transform: translateY(-1px);
-}
-
-.ms-btn-ghost {
-  background: transparent;
-  color: var(--t2);
-  border: 1.5px solid var(--b2);
-}
-
-.ms-btn-ghost:hover:not(:disabled) {
-  color: var(--t1);
-  border-color: var(--b3);
-  background: rgba(255,255,255,0.01);
-}
-
-.ms-btn-completed {
-  background: rgba(158,255,0,0.08);
-  color: var(--green);
-  border: 1.5px solid var(--green-ring);
-  cursor: default;
-}
-
-.ms-btn-sm {
-  padding: 8px 14px;
-  font-size: 13px;
-}
-
-/* ── Exam page ───────────────────────────────────────────────── */
-.ms-exam-page {
-  max-width: 800px;
-  margin: 0 auto;
-  padding: 28px 16px 80px;
-  animation: fadeUp 0.4s var(--ease) both;
-}
-
-.ms-exam-header {
-  background: var(--s1);
-  border: 1.5px solid rgba(255, 179, 0, 0.25);
-  border-radius: 16px;
-  padding: 28px;
-  margin-bottom: 24px;
-  display: flex;
-  gap: 20px;
   align-items: flex-start;
-  box-shadow: 0 4px 12px rgba(255,179,0,0.05);
+  gap: 20px;
 }
-
-.ms-exam-header-icon {
-  width: 56px;
-  height: 56px;
-  border-radius: 12px;
-  background: rgba(255, 179, 0, 0.12);
-  border: 1.5px solid rgba(255, 179, 0, 0.3);
+.ms-detail-icon {
+  width: 56px; height: 56px;
+  border-radius: var(--r3);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 28px;
   flex-shrink: 0;
 }
-
-.ms-exam-header-title {
+.ms-detail-info { flex: 1; min-width: 0; }
+.ms-detail-title {
   font-family: var(--display);
   font-size: 22px;
-  font-weight: 700;
+  font-weight: 800;
   color: var(--t1);
+  letter-spacing: -0.03em;
   margin-bottom: 8px;
-  letter-spacing: -0.3px;
 }
-
-.ms-exam-header-desc {
+.ms-detail-desc {
   font-size: 14px;
   color: var(--t2);
-  line-height: 1.6;
-  margin-bottom: 14px;
+  line-height: 1.65;
+  margin-bottom: 12px;
 }
-
-.ms-exam-header-meta {
+.ms-detail-meta {
   display: flex;
+  gap: 6px;
   flex-wrap: wrap;
-  gap: 10px;
 }
 
-/* Timer */
-.ms-timer {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  font-family: var(--mono);
-  font-size: 15px;
-  font-weight: 700;
-  color: var(--amber);
-  background: rgba(255, 179, 0, 0.12);
-  border: 1.5px solid rgba(255, 179, 0, 0.3);
-  padding: 7px 14px;
-  border-radius: 8px;
-  letter-spacing: 0.5px;
-}
-
-.ms-timer.warning {
-  color: var(--hard);
-  background: var(--hard-dim);
-  border-color: rgba(255, 61, 90, 0.3);
-  animation: pulse 0.8s ease-in-out infinite;
-}
-
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.7; }
-}
-
-/* Question card */
-.ms-question-card {
-  background: var(--s1);
-  border: 1.5px solid var(--b1);
-  border-radius: 12px;
-  padding: 24px;
+/* Progress header */
+.ms-prog-header {
+  background: var(--bg-1);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: var(--r4);
+  padding: 20px;
   margin-bottom: 16px;
-  transition: border-color 0.18s, box-shadow 0.18s;
-  box-shadow: 0 2px 6px rgba(8,12,20,0.03);
 }
-
-.ms-question-card.answered {
-  border-color: rgba(77,159,255,0.3);
-  background: rgba(77,159,255,0.01);
-}
-
-.ms-question-num {
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--t4);
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  margin-bottom: 10px;
-  display: inline-block;
-  padding: 4px 8px;
-  background: rgba(77,159,255,0.08);
-  border-radius: 6px;
-  color: var(--blue);
-}
-
-.ms-question-text {
-  font-size: 16px;
+.ms-prog-title {
+  font-size: 13px;
   font-weight: 600;
-  color: var(--t1);
-  line-height: 1.6;
-  margin-bottom: 18px;
-}
-
-.ms-question-type {
-  display: inline-flex;
-  align-items: center;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.4px;
-  text-transform: uppercase;
-  color: var(--t3);
-  border: 1px solid var(--b2);
-  background: var(--s2);
-  border-radius: var(--pill);
-  padding: 4px 10px;
-  margin-bottom: 14px;
-}
-
-/* Choice list */
-.ms-choices {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.ms-choice {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  padding: 13px 16px;
-  border: 1.5px solid var(--b1);
-  border-radius: 10px;
-  cursor: pointer;
-  transition: all 0.15s;
-  background: var(--s2);
-  user-select: none;
-}
-
-.ms-choice:hover {
-  border-color: var(--b3);
-  background: var(--s3);
-  transform: translateX(2px);
-}
-
-.ms-choice.selected {
-  border-color: var(--blue-ring);
-  background: rgba(77,159,255,0.08);
-}
-
-.ms-choice.correct {
-  border-color: var(--green-ring);
-  background: rgba(158,255,0,0.06);
-}
-
-.ms-choice.incorrect {
-  border-color: rgba(255, 61, 90, 0.35);
-  background: rgba(255,61,90,0.06);
-}
-
-.ms-choice-indicator {
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  border: 2px solid var(--b3);
-  flex-shrink: 0;
-  margin-top: 2px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 11px;
-  font-weight: 700;
-  transition: all 0.15s;
-  background: transparent;
-}
-
-.ms-choice.selected .ms-choice-indicator {
-  background: var(--blue);
-  border-color: var(--blue);
-  color: #fff;
-}
-
-.ms-choice.correct .ms-choice-indicator {
-  background: var(--green);
-  border-color: var(--green);
-  color: #000;
-}
-
-.ms-choice.incorrect .ms-choice-indicator {
-  background: var(--hard);
-  border-color: var(--hard);
-  color: #fff;
-}
-
-.ms-choice-text {
-  font-size: 14px;
   color: var(--t2);
-  line-height: 1.55;
-  flex: 1;
+  margin-bottom: 10px;
 }
-
-.ms-choice.selected .ms-choice-text { color: var(--t1); font-weight: 500; }
-
-/* Exam submit bar */
-.ms-exam-submit-bar {
-  background: var(--s1);
-  border: 1.5px solid var(--b1);
-  border-radius: 12px;
-  padding: 18px 22px;
-  margin-top: 24px;
+.ms-prog-stats {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
-  position: sticky;
-  bottom: 0;
-  z-index: 10;
-  box-shadow: 0 -4px 16px rgba(8,12,20,0.1);
-}
-
-.ms-exam-progress-text {
-  font-size: 14px;
-  color: var(--t2);
-  font-weight: 500;
-}
-
-/* ── Exam result ─────────────────────────────────────────────── */
-.ms-result-card {
-  background: var(--s1);
-  border: 1.5px solid var(--b1);
-  border-radius: 16px;
-  padding: 40px;
-  text-align: center;
-  margin-bottom: 28px;
-}
-
-.ms-result-card.passed { border-color: var(--green-ring); background: rgba(158,255,0,0.02); }
-.ms-result-card.failed { border-color: rgba(255, 61, 90, 0.35); background: rgba(255,61,90,0.02); }
-
-.ms-result-icon {
-  font-size: 56px;
-  margin-bottom: 18px;
-  line-height: 1;
-  animation: bounce 0.6s var(--ease);
-}
-
-@keyframes bounce {
-  0% { transform: scale(0.8); opacity: 0; }
-  50% { transform: scale(1.05); }
-  100% { transform: scale(1); opacity: 1; }
-}
-
-.ms-result-title {
-  font-family: var(--display);
-  font-size: 26px;
-  font-weight: 700;
-  margin-bottom: 10px;
-  letter-spacing: -0.3px;
-}
-
-.ms-result-title.passed { color: var(--green); }
-.ms-result-title.failed { color: var(--hard); }
-
-.ms-result-score {
-  font-family: var(--mono);
-  font-size: 52px;
-  font-weight: 700;
-  margin: 18px 0;
-  letter-spacing: -1px;
-}
-
-.ms-result-score.passed { color: var(--green); }
-.ms-result-score.failed { color: var(--hard); }
-
-.ms-result-desc {
-  font-size: 15px;
-  color: var(--t3);
-  max-width: 480px;
-  margin: 0 auto 28px;
-  line-height: 1.7;
-}
-
-.ms-result-actions {
-  display: flex;
-  gap: 12px;
-  justify-content: center;
-  flex-wrap: wrap;
-}
-
-/* Explanation row (after results) */
-.ms-explanation-card {
-  background: var(--s1);
-  border: 1.5px solid var(--b1);
-  border-radius: 12px;
-  margin-bottom: 14px;
-  overflow: hidden;
-  transition: border-color 0.15s;
-}
-
-.ms-explanation-card:hover {
-  border-color: var(--b2);
-}
-
-.ms-explanation-q {
-  padding: 16px 18px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  border-bottom: 1px solid var(--b1);
-  background: rgba(255,255,255,0.01);
-}
-
-.ms-explanation-q-icon {
-  font-size: 16px;
-  width: 22px;
-  text-align: center;
-  flex-shrink: 0;
-}
-
-.ms-explanation-q-text {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--t1);
-  line-height: 1.5;
-}
-
-.ms-explanation-body {
-  padding: 14px 18px;
   font-size: 13px;
   color: var(--t3);
-  line-height: 1.7;
+  margin-bottom: 8px;
+}
+.ms-prog-pct {
+  font-family: var(--mono);
+  font-weight: 700;
+  color: var(--t1);
 }
 
-.ms-explanation-body strong {
-  color: var(--t2);
-  font-weight: 600;
-}
+/* Passes list */
+.ms-passes { display: flex; flex-direction: column; gap: 8px; }
 
-/* ── Locked / unavailable states ─────────────────────────────── */
-.ms-locked-banner {
+.ms-pass-item {
   display: flex;
   align-items: center;
   gap: 14px;
   padding: 16px 18px;
-  background: rgba(255, 179, 0, 0.08);
-  border: 1.5px solid rgba(255, 179, 0, 0.25);
-  border-radius: 12px;
-  font-size: 14px;
-  color: var(--t2);
-  margin-bottom: 18px;
+  border-radius: var(--r3);
+  background: var(--bg-1);
+  border: 1px solid rgba(255,255,255,0.06);
+  text-decoration: none;
+  transition: all 0.18s var(--fast);
+  position: relative;
+}
+.ms-pass-item:hover {
+  border-color: rgba(255,255,255,0.12);
+  background: var(--bg-2);
+}
+.ms-pass-item.active {
+  border-color: var(--green-ring);
+  background: var(--green-dim);
+}
+.ms-pass-item.locked {
+  opacity: 0.45;
+  pointer-events: none;
+}
+.ms-pass-item.completed {
+  border-color: rgba(61,232,160,0.15);
 }
 
-.ms-locked-banner-icon { font-size: 18px; flex-shrink: 0; }
-
-/* ── Empty / loading ─────────────────────────────────────────── */
-.ms-empty {
-  text-align: center;
-  padding: 80px 20px;
-  color: var(--t3);
-  font-size: 15px;
-}
-
-.ms-empty-icon { font-size: 44px; margin-bottom: 16px; display: block; }
-
-.ms-spinner {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 80px 20px;
-}
-
-.ms-spinner::after {
-  content: "";
-  width: 36px;
-  height: 36px;
-  border: 3px solid var(--b2);
-  border-top-color: var(--green);
+.ms-pass-num {
+  width: 32px; height: 32px;
   border-radius: 50%;
-  animation: spin 0.8s linear infinite;
+  border: 1.5px solid var(--b2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--t3);
+  flex-shrink: 0;
+}
+.ms-pass-item.active .ms-pass-num {
+  border-color: var(--green);
+  color: var(--green);
+  background: var(--green-dim);
+}
+.ms-pass-item.completed .ms-pass-num {
+  border-color: rgba(61,232,160,0.4);
+  color: var(--cyan);
+  background: rgba(61,232,160,0.08);
 }
 
-/* ── Keyframes ───────────────────────────────────────────────── */
-@keyframes fadeUp {
-  from { opacity: 0; transform: translateY(12px); }
-  to   { opacity: 1; transform: translateY(0); }
+.ms-pass-info { flex: 1; min-width: 0; }
+.ms-pass-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--t1);
+  margin-bottom: 2px;
+}
+.ms-pass-sub { font-size: 12px; color: var(--t3); }
+
+.ms-pass-state {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: var(--pill);
+  flex-shrink: 0;
+}
+.ms-pass-state.completed {
+  background: rgba(61,232,160,0.10);
+  color: var(--cyan);
+  border: 1px solid rgba(61,232,160,0.25);
+}
+.ms-pass-state.active {
+  background: var(--green-dim);
+  color: var(--green);
+  border: 1px solid var(--green-ring);
+}
+.ms-pass-state.locked {
+  background: var(--s2);
+  color: var(--t4);
+  border: 1px solid var(--b1);
 }
 
-@keyframes spin {
-  to { transform: rotate(360deg); }
+/* Detail sidebar */
+.ms-sidebar-panel {
+  background: var(--bg-1);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: var(--r4);
+  overflow: hidden;
+  position: sticky;
+  top: calc(var(--topbar) + 16px);
+}
+.ms-sidebar-section {
+  padding: 20px;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+.ms-sidebar-section:last-child { border-bottom: none; }
+.ms-sidebar-title {
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--t3);
+  margin-bottom: 12px;
+}
+.ms-sidebar-stat {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 0;
+  font-size: 13.5px;
+  color: var(--t2);
+  border-bottom: 1px solid rgba(255,255,255,0.03);
+}
+.ms-sidebar-stat:last-child { border-bottom: none; }
+.ms-sidebar-stat-val {
+  font-family: var(--mono);
+  font-weight: 600;
+  color: var(--t1);
+  font-size: 13px;
 }
 
-/* ── Responsive ──────────────────────────────────────────────── */
+/* ── Pass content page ── */
+.ms-pass-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 20px;
+  font-size: 14px;
+  color: var(--t3);
+}
+.ms-pass-nav a {
+  color: var(--t3);
+  text-decoration: none;
+  transition: color 0.18s;
+}
+.ms-pass-nav a:hover { color: var(--green); }
+
+.ms-pass-layout {
+  display: grid;
+  grid-template-columns: minmax(0,1fr) 280px;
+  gap: 20px;
+  align-items: start;
+}
+
+.ms-content-panel {
+  background: var(--bg-1);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: var(--r4);
+  overflow: hidden;
+}
+.ms-content-header {
+  padding: 20px 24px;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.ms-content-step {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--t3);
+  letter-spacing: 0.08em;
+}
+.ms-content-title {
+  font-family: var(--display);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--t1);
+  letter-spacing: -0.02em;
+}
+.ms-content-body {
+  padding: 24px;
+  font-size: 15px;
+  line-height: 1.75;
+  color: var(--t2);
+}
+.ms-content-body h2, .ms-content-body h3 { color: var(--t1); margin: 24px 0 12px; }
+.ms-content-body p { margin-bottom: 14px; }
+.ms-content-body code {
+  font-family: var(--mono);
+  font-size: 13px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--b1);
+  border-radius: 4px;
+  padding: 2px 6px;
+  color: var(--cyan);
+}
+.ms-content-body pre {
+  background: #060810;
+  border: 1px solid var(--b1);
+  border-radius: var(--r2);
+  padding: 16px;
+  overflow-x: auto;
+  margin: 16px 0;
+}
+.ms-content-body pre code {
+  background: transparent;
+  border: none;
+  padding: 0;
+  font-size: 13px;
+  color: var(--t1);
+}
+
+/* Terminal block in content */
+.ms-terminal {
+  background: #060810;
+  border: 1px solid var(--b1);
+  border-radius: var(--r3);
+  overflow: hidden;
+  margin: 16px 0;
+}
+.ms-terminal-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: #0c0f18;
+  border-bottom: 1px solid var(--b1);
+}
+.ms-terminal-dot {
+  width: 12px; height: 12px;
+  border-radius: 50%;
+}
+.ms-terminal-dot:nth-child(1) { background: #ff5f57; }
+.ms-terminal-dot:nth-child(2) { background: #ffbd2e; }
+.ms-terminal-dot:nth-child(3) { background: #28c840; }
+.ms-terminal-label {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--t3);
+  letter-spacing: 0.06em;
+  margin-left: 4px;
+}
+.ms-terminal-body {
+  padding: 16px;
+  font-family: var(--mono);
+  font-size: 13px;
+  line-height: 1.7;
+}
+.ms-terminal-prompt { color: var(--t3); }
+.ms-terminal-cmd    { color: var(--t1); }
+.ms-terminal-out    { color: var(--cyan); }
+.ms-terminal-warn   { color: var(--amber); }
+.ms-terminal-err    { color: var(--green); }
+.ms-terminal-comment{ color: #3a4259; }
+
+/* Answer form */
+.ms-answer-form {
+  margin-top: 20px;
+  padding: 20px;
+  background: var(--s1);
+  border: 1px solid var(--b1);
+  border-radius: var(--r3);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.ms-answer-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--t2);
+}
+.ms-answer-input {
+  width: 100%;
+  padding: 10px 14px;
+  background: var(--bg);
+  border: 1px solid var(--b2);
+  border-radius: var(--r2);
+  color: var(--t1);
+  font-family: var(--mono);
+  font-size: 14px;
+  transition: border-color 0.18s;
+}
+.ms-answer-input:focus {
+  outline: none;
+  border-color: var(--green-ring);
+  box-shadow: 0 0 0 3px rgba(255,77,103,0.08);
+}
+.ms-answer-result {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: var(--r2);
+  font-size: 14px;
+  font-weight: 600;
+}
+.ms-answer-result.correct {
+  background: rgba(61,232,160,0.08);
+  border: 1px solid rgba(61,232,160,0.2);
+  color: var(--cyan);
+}
+.ms-answer-result.wrong {
+  background: rgba(255,77,103,0.08);
+  border: 1px solid rgba(255,77,103,0.2);
+  color: var(--green);
+}
+
+/* Pass actions footer */
+.ms-pass-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 24px;
+  border-top: 1px solid rgba(255,255,255,0.04);
+  flex-wrap: wrap;
+}
+
+/* Exam unlock card */
+.ms-exam-card {
+  margin-top: 16px;
+  padding: 20px;
+  background: linear-gradient(135deg, rgba(245,166,35,0.08) 0%, rgba(255,77,103,0.05) 100%);
+  border: 1px solid rgba(245,166,35,0.2);
+  border-radius: var(--r4);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.ms-exam-icon {
+  font-size: 32px;
+  flex-shrink: 0;
+}
+.ms-exam-title {
+  font-family: var(--display);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--t1);
+  margin-bottom: 4px;
+}
+.ms-exam-sub { font-size: 13px; color: var(--t2); }
+.ms-exam-actions { margin-left: auto; flex-shrink: 0; }
+
+/* ── Responsive ── */
+@media (max-width: 1024px) {
+  .ms-detail      { grid-template-columns: 1fr; }
+  .ms-sidebar-panel { position: static; }
+  .ms-pass-layout { grid-template-columns: 1fr; }
+}
 @media (max-width: 640px) {
-  .ms-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .ms-pass-actions {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .ms-pass-actions-left {
-    justify-content: space-between;
-  }
-
-  .ms-exam-submit-bar {
-    flex-direction: column;
-    align-items: stretch;
-    text-align: center;
-  }
-
-  .ms-detail-hero-body {
-    flex-direction: column;
-  }
+  .ms-grid { grid-template-columns: 1fr; }
+  .ms-detail-hero-body { flex-direction: column; gap: 14px; }
+  .ms-exam-card { flex-direction: column; align-items: flex-start; }
+  .ms-exam-actions { margin-left: 0; }
 }

@@ -29,11 +29,10 @@ export function ContainerScroll({ titleComponent, children }) {
         display: "flex",
         alignItems: "flex-start",
         justifyContent: "center",
-        padding: isMobile ? "80px 16px" : "0 20px",
-        background: "linear-gradient(180deg,#04070c 0%,#08111b 60%,#0f1b2d 100%)",
+        padding: isMobile ? "80px 16px" : "0 clamp(16px,4vw,48px)",
+        background: "transparent",
       }}
     >
-      {/* sticky içlik */}
       <div
         style={{
           position: isMobile ? "relative" : "sticky",
@@ -45,41 +44,45 @@ export function ContainerScroll({ titleComponent, children }) {
           flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
-          gap: "40px",
+          gap: "44px",
           overflow: "hidden",
         }}
       >
-        {/* Başlıq */}
         <motion.div
           style={{ translateY, width: "100%", textAlign: "center", zIndex: 2 }}
         >
           {titleComponent}
         </motion.div>
 
-        {/* 3D kart */}
+        {/* 3D perspective card */}
         <motion.div
           style={{
             rotateX: rotate,
             scale,
-            transformPerspective: 1200,
+            transformPerspective: 1400,
             transformOrigin: "50% 0%",
             width: "100%",
             maxWidth: "1000px",
-            borderRadius: "30px",
-            border: "4px solid #6c6c6c",
-            background: "#222",
-            padding: "6px",
+            borderRadius: "18px",
+            border: "2px solid rgba(255,255,255,0.08)",
+            background: "#0a0d14",
+            padding: "4px",
             boxShadow:
-              "0 0 #0000004d,0 9px 20px #0000004a,0 37px 37px #00000042," +
-              "0 84px 50px #00000026,0 149px 60px #0000000a,0 233px 65px #00000003",
+              "0 0 0 1px rgba(255,77,103,0.06)," +
+              "0 4px 8px rgba(0,0,0,0.3)," +
+              "0 16px 32px rgba(0,0,0,0.4)," +
+              "0 40px 80px rgba(0,0,0,0.4)," +
+              "0 80px 160px rgba(0,0,0,0.3)",
           }}
         >
           <div
             style={{
-              background: "#111318",
-              borderRadius: "22px",
+              background: "#07090f",
+              borderRadius: "15px",
               overflow: "hidden",
-              height: isMobile ? "300px" : "500px",
+              height: isMobile ? "280px" : "480px",
+              display: "flex",
+              flexDirection: "column",
             }}
           >
             {children}
