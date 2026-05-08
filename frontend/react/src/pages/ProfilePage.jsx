@@ -19,6 +19,11 @@ const RANK_LABELS = {
   architect: "Architect", operator: "Operator", ghost: "Ghost",
 };
 
+const RANK_ICONS = {
+  recruit: "◌", script_kiddie: "◎", operative: "◉", hunter: "⊕",
+  specialist: "⊗", analyst: "⊘", architect: "⊙", operator: "⊛", ghost: "✦",
+};
+
 const EMPTY_PROFILE = {
   username: "", email: "", full_name: "", bio: "", country: "", city: "",
   avatar_hue: 0, xp: 0, rank: "recruit", streak_days: 0,
@@ -44,7 +49,7 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError]     = useState("");
   const [edit, setEdit]       = useState(false);
-  const [msg, setMsg]         = useState("");
+  const [toast, setToast]     = useState(null);
 
   const THIS_YEAR = new Date().getFullYear();
 
@@ -91,14 +96,20 @@ export default function ProfilePage() {
   const xp       = stats.total_points_earned || profile.xp || 0;
   const accuracy = stats.accuracy_rate || 0;
   const rankDisp = RANK_LABELS[profile.rank] || profile.rank || "Recruit";
+  const rankIcon = RANK_ICONS[profile.rank] || "◌";
+
+  const showToast = (msg, type = "ok") => {
+    setToast({ msg, type });
+    setTimeout(() => setToast(null), 4000);
+  };
 
   if (loading) {
     return (
       <AppShell>
         <div className="bento">
+          <div className="span-12"><TileSkeleton height={300} /></div>
+          {[3,3,3,3].map((_, i) => <div key={i} className="span-3"><TileSkeleton height={120} /></div>)}
           <div className="span-12"><TileSkeleton height={280} /></div>
-          {[3,3,3,3].map((_, i) => <div key={i} className="span-3"><TileSkeleton height={110} /></div>)}
-          <div className="span-12"><TileSkeleton height={260} /></div>
         </div>
       </AppShell>
     );
@@ -117,97 +128,122 @@ export default function ProfilePage() {
 
   return (
     <AppShell>
-      {msg && (
+      {/* Toast */}
+      {toast && (
         <div style={{
-          padding: "10px 16px", marginBottom: 16,
-          background: "rgba(110,255,214,0.08)", border: "1px solid rgba(110,255,214,0.25)",
-          color: "var(--ok)", borderRadius: 12, fontSize: 13,
+          position: "fixed", bottom: 24, right: 24, zIndex: 200,
+          padding: "12px 20px",
+          background: toast.type === "ok" ? "rgba(110,255,214,0.10)" : "rgba(255,122,138,0.10)",
+          border: `1px solid ${toast.type === "ok" ? "rgba(110,255,214,0.3)" : "rgba(255,122,138,0.3)"}`,
+          color: toast.type === "ok" ? "var(--ok)" : "var(--bad)",
+          borderRadius: 14, fontSize: 13, fontWeight: 600,
+          backdropFilter: "blur(12px)",
+          boxShadow: "0 8px 32px rgba(0,0,0,0.4)",
+          display: "flex", alignItems: "center", gap: 8,
+          animation: "fadeInUp 0.2s ease",
         }}>
-          ✓ {msg}
+          <span>{toast.type === "ok" ? "✓" : "✗"}</span>
+          {toast.msg}
         </div>
       )}
 
-      {/* ── GitHub-style profile hero ── */}
+      {/* ── Profile Hero ── */}
       <div style={{
         background: "var(--bg-card)",
         border: "1px solid var(--line)",
         borderRadius: "var(--r-tile)",
-        marginBottom: 24,
+        marginBottom: 20,
         overflow: "hidden",
         boxShadow: "var(--shadow-tile)",
+        position: "relative",
       }}>
         {/* Cover banner */}
         <div style={{
-          height: 120,
-          background: `linear-gradient(135deg,
-            rgba(255,36,66,0.18) 0%,
-            rgba(192,17,48,0.12) 30%,
-            rgba(110,255,214,0.06) 70%,
-            rgba(10,12,16,0) 100%),
-            var(--bg-card-2)`,
-          borderBottom: "1px solid var(--line)",
+          height: 160,
+          background: `
+            radial-gradient(ellipse at 20% 50%, rgba(255,36,66,0.22) 0%, transparent 60%),
+            radial-gradient(ellipse at 80% 20%, rgba(110,255,214,0.08) 0%, transparent 50%),
+            radial-gradient(ellipse at 60% 80%, rgba(192,132,252,0.06) 0%, transparent 40%),
+            var(--bg-card-2)
+          `,
           position: "relative",
           overflow: "hidden",
         }}>
-          {/* Decorative grid pattern */}
-          <svg style={{ position: "absolute", inset: 0, width: "100%", height: "100%", opacity: 0.04 }}
+          {/* Dot pattern */}
+          <svg style={{ position:"absolute", inset:0, width:"100%", height:"100%", opacity:0.035 }}
             xmlns="http://www.w3.org/2000/svg">
             <defs>
-              <pattern id="grid" width="32" height="32" patternUnits="userSpaceOnUse">
-                <path d="M 32 0 L 0 0 0 32" fill="none" stroke="white" strokeWidth="0.5"/>
+              <pattern id="dots" width="20" height="20" patternUnits="userSpaceOnUse">
+                <circle cx="2" cy="2" r="1" fill="white"/>
               </pattern>
             </defs>
-            <rect width="100%" height="100%" fill="url(#grid)" />
+            <rect width="100%" height="100%" fill="url(#dots)" />
           </svg>
+          {/* Accent line at bottom */}
+          <div style={{
+            position: "absolute", bottom: 0, left: 0, right: 0, height: 2,
+            background: "linear-gradient(90deg, var(--accent) 0%, rgba(255,36,66,0.2) 40%, transparent 100%)",
+          }} />
         </div>
 
-        {/* Profile info row */}
-        <div style={{ padding: "0 32px 28px", display: "flex", gap: 28, flexWrap: "wrap" }}>
-          {/* Avatar — overlapping the banner */}
-          <div style={{ marginTop: -48, flexShrink: 0 }}>
-            <div style={{
-              borderRadius: 20,
-              border: "4px solid var(--bg-card)",
-              overflow: "hidden",
-              display: "inline-block",
-              boxShadow: "0 0 0 1px var(--line-2)",
-            }}>
-              <Avatar user={profile} size={96} rounded="xl" />
+        <div style={{ padding: "0 32px 32px" }}>
+          {/* Avatar + Action row */}
+          <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 16, marginTop: -52, flexWrap: "wrap" }}>
+            <div style={{ position: "relative", flexShrink: 0 }}>
+              <div style={{
+                borderRadius: 22,
+                border: "4px solid var(--bg-card)",
+                overflow: "hidden",
+                display: "inline-block",
+                boxShadow: "0 0 0 1px var(--line-2), 0 8px 24px rgba(0,0,0,0.4)",
+              }}>
+                <Avatar user={profile} size={104} rounded="xl" />
+              </div>
+              {/* Rank badge */}
+              <div style={{
+                position: "absolute", bottom: -4, right: -4,
+                background: "var(--accent)", color: "var(--accent-ink)",
+                borderRadius: 10, border: "3px solid var(--bg-card)",
+                width: 28, height: 28, display: "grid", placeItems: "center",
+                fontSize: 13, fontWeight: 700,
+              }}>
+                {rankIcon}
+              </div>
+            </div>
+
+            <div style={{ display: "flex", gap: 8, paddingBottom: 4 }}>
+              <Button variant="ghost" onClick={() => load()} size="sm" title="Yenilə">
+                ↻
+              </Button>
+              <Button variant="accent" onClick={() => setEdit(true)} size="sm">
+                Redaktə et
+              </Button>
             </div>
           </div>
 
-          {/* Info */}
-          <div style={{ flex: 1, minWidth: 240, paddingTop: 16 }}>
-            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
-              <div>
-                <h1 style={{ margin: 0, fontSize: 22, fontWeight: 700, letterSpacing: "-0.02em", lineHeight: 1.2 }}>
-                  {profile.full_name || profile.username}
-                </h1>
-                <div style={{
-                  fontFamily: "var(--font-mono)", fontSize: 13, color: "var(--ink-4)",
-                  letterSpacing: "0.02em", marginTop: 2,
-                }}>
-                  @{profile.username}
-                </div>
-              </div>
-              <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
-                <Button variant="ghost" onClick={() => load()} size="sm">↻</Button>
-                <Button variant="accent" onClick={() => setEdit(true)} size="sm">Profili redaktə et</Button>
-              </div>
+          {/* Name + meta */}
+          <div style={{ marginTop: 16 }}>
+            <div style={{ display: "flex", alignItems: "baseline", gap: 10, flexWrap: "wrap" }}>
+              <h1 style={{ margin: 0, fontSize: 24, fontWeight: 800, letterSpacing: "-0.03em", lineHeight: 1.2 }}>
+                {profile.full_name || profile.username || "İsimsiz"}
+              </h1>
+              <span style={{ fontFamily: "var(--font-mono)", fontSize: 13, color: "var(--ink-4)" }}>
+                @{profile.username}
+              </span>
             </div>
 
             {profile.bio && (
               <p style={{
-                fontSize: 14, color: "var(--ink-2)", lineHeight: 1.65,
-                marginTop: 12, marginBottom: 0, maxWidth: 560,
+                fontSize: 14, color: "var(--ink-3)", lineHeight: 1.7,
+                marginTop: 10, marginBottom: 0, maxWidth: 580,
               }}>
                 {profile.bio}
               </p>
             )}
 
-            {/* Meta chips */}
+            {/* Chips */}
             <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 14 }}>
-              <Chip tone="accent">{rankDisp}</Chip>
+              <Chip tone="accent">{rankIcon} {rankDisp}</Chip>
               {stats.leaderboard_rank > 0 && (
                 <Chip tone="amber">#{stats.leaderboard_rank} qlobal</Chip>
               )}
@@ -217,30 +253,57 @@ export default function ProfilePage() {
                   {[profile.city, profile.country].filter(Boolean).join(", ")}
                 </Chip>
               )}
+              {profile.email && (
+                <Chip>
+                  <span style={{ marginRight: 4 }}>✉</span>
+                  {profile.email}
+                </Chip>
+              )}
               {profile.streak_days > 0 && (
-                <Chip tone="amber">🔥 {profile.streak_days}d streak</Chip>
+                <Chip tone="amber">🔥 {profile.streak_days} gün streak</Chip>
               )}
-              {stats.active_days > 0 && (
-                <Chip>{stats.active_days} aktiv gün</Chip>
-              )}
+            </div>
+
+            {/* Inline quick stats */}
+            <div style={{
+              display: "flex", gap: 24, marginTop: 20, flexWrap: "wrap",
+              paddingTop: 20, borderTop: "1px solid var(--line)",
+            }}>
+              {[
+                { label: "Ümumi XP", value: xp.toLocaleString() },
+                { label: "Həll edildi", value: stats.total_questions_solved || 0 },
+                { label: "Dəqiqlik", value: `${Math.round(accuracy)}%` },
+                { label: "Aktiv gün", value: activeDaysCount },
+                { label: "Streak", value: `🔥 ${profile.streak_days || 0}` },
+              ].map(({ label, value }) => (
+                <div key={label}>
+                  <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, color: "var(--ink-4)", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 2 }}>
+                    {label}
+                  </div>
+                  <div style={{ fontSize: 18, fontWeight: 700, color: "var(--ink-1)", letterSpacing: "-0.01em" }}>
+                    {value}
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </div>
       </div>
 
       {/* ── Stats row ── */}
-      <div className="bento" style={{ marginBottom: 24 }}>
-        <Tile span={3} style={{ background: "linear-gradient(135deg, var(--bg-card) 0%, rgba(255,36,66,0.05) 100%)" }}>
+      <div className="bento" style={{ marginBottom: 20 }}>
+        <Tile span={3} style={{ background: "linear-gradient(135deg, var(--bg-card) 0%, rgba(255,36,66,0.06) 100%)" }}>
           <Stat label="Total XP" value={xp.toLocaleString()} size="lg" hint={`+${last30} son 30 gün`} />
         </Tile>
         <Tile span={3}>
           <Stat label="Həll edildi" value={stats.total_questions_solved || 0} size="lg"
-            hint={`${stats.correct_answers || 0} doğru`} />
+            hint={`${stats.total_attempts || 0} cəhd`} />
         </Tile>
         <Tile span={3}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
-            <Stat label="Dəqiqlik" value={Math.round(accuracy)} unit="%" size="lg" />
-            <ProgressRing value={accuracy} size={56} strokeWidth={6} tone="accent" />
+            <Stat label="Dəqiqlik" value={Math.round(accuracy)} unit="%" size="lg"
+              hint={`${stats.correct_answers || 0} doğru`} />
+            <ProgressRing value={accuracy} size={60} strokeWidth={6} tone="accent" />
           </div>
         </Tile>
         <Tile span={3}>
@@ -250,7 +313,7 @@ export default function ProfilePage() {
       </div>
 
       {/* ── Rank progress ── */}
-      <Tile style={{ marginBottom: 24, background: "linear-gradient(135deg, var(--bg-card) 0%, rgba(255,36,66,0.05) 100%)" }}>
+      <Tile style={{ marginBottom: 20, background: "linear-gradient(135deg, var(--bg-card) 0%, rgba(255,36,66,0.05) 100%)" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 28, flexWrap: "wrap" }}>
           <ProgressRing
             value={profile.rank_progress || 0}
@@ -280,37 +343,32 @@ export default function ProfilePage() {
             <Bar value={profile.rank_progress || 0} tone="accent" />
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, minWidth: 200 }}>
-            <div>
-              <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, color: "var(--ink-4)", marginBottom: 3 }}>Son 7 gün</div>
-              <div style={{ fontSize: 16, fontWeight: 700, color: "var(--ink-1)" }}>{last7.toLocaleString()} XP</div>
-            </div>
-            <div>
-              <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, color: "var(--ink-4)", marginBottom: 3 }}>Son 30 gün</div>
-              <div style={{ fontSize: 16, fontWeight: 700, color: "var(--ink-1)" }}>{last30.toLocaleString()} XP</div>
-            </div>
-            <div>
-              <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, color: "var(--ink-4)", marginBottom: 3 }}>Doğru</div>
-              <div style={{ fontSize: 16, fontWeight: 700, color: "var(--ok)" }}>{stats.correct_answers || 0}</div>
-            </div>
-            <div>
-              <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, color: "var(--ink-4)", marginBottom: 3 }}>Yanlış</div>
-              <div style={{ fontSize: 16, fontWeight: 700, color: "var(--bad)" }}>{stats.wrong_answers || 0}</div>
-            </div>
+            {[
+              { label: "Son 7 gün", value: `${last7.toLocaleString()} XP` },
+              { label: "Son 30 gün", value: `${last30.toLocaleString()} XP` },
+              { label: "Doğru", value: stats.correct_answers || 0, color: "var(--ok)" },
+              { label: "Yanlış", value: stats.wrong_answers || 0, color: "var(--bad)" },
+            ].map(({ label, value, color }) => (
+              <div key={label}>
+                <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, color: "var(--ink-4)", marginBottom: 3 }}>{label}</div>
+                <div style={{ fontSize: 16, fontWeight: 700, color: color || "var(--ink-1)" }}>{value}</div>
+              </div>
+            ))}
           </div>
         </div>
       </Tile>
 
       {/* ── Activity heatmap ── */}
-      <Tile style={{ marginBottom: 24 }}>
+      <Tile style={{ marginBottom: 20 }}>
         <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: 16, marginBottom: 16 }}>
           <div>
             <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, color: "var(--ink-4)", letterSpacing: "0.14em", textTransform: "uppercase", marginBottom: 4 }}>
               Activity
             </div>
             <div style={{ fontSize: 18, fontWeight: 700, color: "var(--ink-1)" }}>
-              {activeDaysCount} gün{" "}
+              {activeDaysCount} aktiv gün{" "}
               <span style={{ color: "var(--ink-3)", fontWeight: 400, fontSize: 14 }}>
-                {year ? `${year} fəaliyyəti` : "fəaliyyət"}
+                {year ? `(${year})` : ""}
               </span>
             </div>
             <div style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--ink-4)", marginTop: 2 }}>
@@ -321,30 +379,20 @@ export default function ProfilePage() {
           {years.length > 0 && (
             <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
               {years.map(y => (
-                <button
-                  key={y}
-                  type="button"
-                  onClick={() => { setYear(y); loadActivity(y); }}
+                <button key={y} type="button" onClick={() => { setYear(y); loadActivity(y); }}
                   style={{
-                    padding: "5px 14px",
-                    borderRadius: "var(--r-pill)",
+                    padding: "5px 14px", borderRadius: "var(--r-pill)",
                     border: `1px solid ${year === y ? "var(--accent-ring)" : "var(--line-2)"}`,
                     background: year === y ? "var(--accent-soft)" : "var(--bg-card-2)",
                     color: year === y ? "var(--accent)" : "var(--ink-3)",
-                    fontFamily: "var(--font-mono)",
-                    fontSize: 12,
-                    fontWeight: year === y ? 700 : 500,
-                    cursor: "pointer",
+                    fontFamily: "var(--font-mono)", fontSize: 12,
+                    fontWeight: year === y ? 700 : 500, cursor: "pointer",
                     transition: "all var(--dur-1)",
-                  }}
-                >
-                  {y}
-                </button>
+                  }}>{y}</button>
               ))}
             </div>
           )}
         </div>
-
         <Heatmap days={days} year={year} />
       </Tile>
 
@@ -363,7 +411,7 @@ export default function ProfilePage() {
                   borderBottom: i < Math.min(activity.length - 1, 11) ? "1px solid var(--line)" : "none",
                 }}>
                   <span style={{
-                    width: 30, height: 30, borderRadius: 8, flexShrink: 0,
+                    width: 32, height: 32, borderRadius: 9, flexShrink: 0,
                     background: it.is_correct ? "rgba(110,255,214,0.08)" : "rgba(255,122,138,0.08)",
                     border: `1px solid ${it.is_correct ? "rgba(110,255,214,0.25)" : "rgba(255,122,138,0.25)"}`,
                     color: it.is_correct ? "var(--ok)" : "var(--bad)",
@@ -425,31 +473,41 @@ export default function ProfilePage() {
         <EditProfileModal
           profile={profile}
           onClose={() => setEdit(false)}
-          onSaved={async (m) => {
-            setMsg(m); setEdit(false); await load();
-            setTimeout(() => setMsg(""), 4000);
+          onSaved={async (msg) => {
+            setEdit(false);
+            await load();
+            showToast(msg, "ok");
           }}
+          onError={(msg) => showToast(msg, "error")}
         />
       )}
     </AppShell>
   );
 }
 
-function EditProfileModal({ profile, onClose, onSaved }) {
+/* ─────────────────────────────────────────────── */
+/*  Edit Profile Modal — full, ideal              */
+/* ─────────────────────────────────────────────── */
+
+const HUE_PRESETS = [0, 30, 60, 120, 160, 200, 240, 280, 320];
+
+function EditProfileModal({ profile, onClose, onSaved, onError }) {
   const [draft, setDraft] = useState({
-    full_name: profile.full_name || "",
-    email: profile.email || "",
-    bio: profile.bio || "",
-    country: profile.country || "",
-    city: profile.city || "",
-    avatar_hue: Number(profile.avatar_hue) || 0,
-    avatar_file: null,
+    full_name:      profile.full_name || "",
+    email:          profile.email || "",
+    bio:            profile.bio || "",
+    country:        profile.country || "",
+    city:           profile.city || "",
+    avatar_hue:     Number(profile.avatar_hue) || 0,
+    avatar_file:    null,
     avatar_preview: profile.avatar_url || null,
-    remove_avatar: false,
+    remove_avatar:  false,
   });
   const [saving, setSaving] = useState(false);
-  const [err, setErr] = useState("");
-  const objUrl = useRef(null);
+  const [err, setErr]       = useState("");
+  const [tab, setTab]       = useState("info");
+  const objUrl              = useRef(null);
+  const fileRef             = useRef(null);
 
   useEffect(() => {
     const onKey = (e) => { if (e.key === "Escape") onClose(); };
@@ -460,7 +518,8 @@ function EditProfileModal({ profile, onClose, onSaved }) {
     };
   }, [onClose]);
 
-  const update = (k) => (e) => setDraft(d => ({ ...d, [k]: e.target.value }));
+  const set = (k) => (e) => setDraft(d => ({ ...d, [k]: e.target.value }));
+
   const onFile = (e) => {
     const f = e.target.files?.[0] || null;
     if (objUrl.current) { URL.revokeObjectURL(objUrl.current); objUrl.current = null; }
@@ -468,9 +527,11 @@ function EditProfileModal({ profile, onClose, onSaved }) {
     objUrl.current = preview;
     setDraft(d => ({ ...d, avatar_file: f, avatar_preview: preview || d.avatar_preview, remove_avatar: false }));
   };
+
   const removeAvatar = () => {
     if (objUrl.current) { URL.revokeObjectURL(objUrl.current); objUrl.current = null; }
     setDraft(d => ({ ...d, avatar_file: null, avatar_preview: null, remove_avatar: true }));
+    if (fileRef.current) fileRef.current.value = "";
   };
 
   const submit = async (e) => {
@@ -493,66 +554,314 @@ function EditProfileModal({ profile, onClose, onSaved }) {
         };
       }
       await endpoints.updateProfile(payload);
-      onSaved("Profil yeniləndi.");
+      onSaved("Profil uğurla yeniləndi");
     } catch (e) {
-      setErr(e?.response?.data?.detail || "Saxlamaq mümkün olmadı");
+      const msg = e?.response?.data?.detail || "Saxlamaq mümkün olmadı";
+      setErr(msg);
+      onError?.(msg);
     } finally {
       setSaving(false);
     }
   };
 
+  const previewUser = { ...profile, avatar_url: draft.avatar_preview, avatar_hue: draft.avatar_hue };
+
   return (
-    <div className="cmd-overlay" onClick={onClose} role="dialog" aria-modal="true" aria-label="Profili redaktə et" style={{ paddingTop: 64 }}>
-      <form className="cmd" onClick={(e) => e.stopPropagation()} onSubmit={submit}
-        style={{ maxWidth: 540, padding: 28, gap: 16 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 4 }}>
-          <Avatar user={{ ...profile, avatar_url: draft.avatar_preview, avatar_hue: draft.avatar_hue }} size={64} rounded="lg" ring />
+    <div
+      onClick={onClose}
+      role="dialog" aria-modal="true" aria-label="Profili redaktə et"
+      style={{
+        position: "fixed", inset: 0, zIndex: 100,
+        background: "rgba(6,8,12,0.82)",
+        backdropFilter: "blur(6px)",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        padding: "20px 16px",
+      }}
+    >
+      <form
+        onClick={(e) => e.stopPropagation()}
+        onSubmit={submit}
+        style={{
+          background: "var(--bg-card)",
+          border: "1px solid var(--line-2)",
+          borderRadius: "var(--r-tile)",
+          boxShadow: "var(--shadow-pop)",
+          width: "100%", maxWidth: 620,
+          display: "flex", flexDirection: "column",
+          maxHeight: "calc(100vh - 40px)",
+          overflow: "hidden",
+        }}
+      >
+        {/* Modal header */}
+        <div style={{
+          padding: "22px 28px 0",
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+          flexShrink: 0,
+        }}>
           <div>
-            <h2 style={{ marginBottom: 2 }}>Profili redaktə et</h2>
-            <div style={{ fontSize: 12, color: "var(--ink-3)" }}>Məlumatlarını yenilə.</div>
+            <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, letterSpacing: "-0.02em" }}>
+              Profili redaktə et
+            </h2>
+            <div style={{ fontSize: 12, color: "var(--ink-4)", marginTop: 2 }}>
+              @{profile.username}
+            </div>
           </div>
+          <button type="button" onClick={onClose} style={{
+            background: "var(--bg-card-2)", border: "1px solid var(--line-2)",
+            borderRadius: 10, width: 32, height: 32, cursor: "pointer",
+            color: "var(--ink-3)", fontSize: 16, display: "grid", placeItems: "center",
+            transition: "all var(--dur-1)",
+          }}>✕</button>
         </div>
 
+        {/* Tabs */}
+        <div style={{
+          display: "flex", gap: 2, padding: "16px 28px 0",
+          borderBottom: "1px solid var(--line)", flexShrink: 0,
+        }}>
+          {[
+            { key: "info", label: "Şəxsi məlumat" },
+            { key: "avatar", label: "Avatar & Görünüş" },
+          ].map(t => (
+            <button key={t.key} type="button" onClick={() => setTab(t.key)}
+              style={{
+                padding: "8px 16px", background: "none",
+                border: "none", cursor: "pointer",
+                fontFamily: "var(--font-mono)", fontSize: 12, fontWeight: 600,
+                color: tab === t.key ? "var(--ink-1)" : "var(--ink-4)",
+                borderBottom: tab === t.key ? "2px solid var(--accent)" : "2px solid transparent",
+                marginBottom: -1, transition: "all var(--dur-1)",
+              }}>{t.label}</button>
+          ))}
+        </div>
+
+        {/* Error */}
         {err && (
-          <div style={{ fontSize: 12, color: "var(--bad)", padding: "8px 12px", background: "rgba(255,122,138,0.08)", borderRadius: 8 }}>
+          <div style={{
+            margin: "12px 28px 0",
+            padding: "10px 14px",
+            background: "rgba(255,122,138,0.08)", border: "1px solid rgba(255,122,138,0.2)",
+            borderRadius: 10, fontSize: 13, color: "var(--bad)", flexShrink: 0,
+          }}>
             {err}
           </div>
         )}
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-          <Field label="Tam ad"><Input value={draft.full_name} onChange={update("full_name")} maxLength={150} /></Field>
-          <Field label="Email"><Input type="email" value={draft.email} onChange={update("email")} /></Field>
+        {/* Scrollable body */}
+        <div style={{ flex: 1, overflowY: "auto", padding: "20px 28px" }}>
+
+          {/* ── TAB: Info ── */}
+          {tab === "info" && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              {/* Avatar preview + quick upload */}
+              <div style={{
+                display: "flex", alignItems: "center", gap: 20,
+                padding: "16px 20px",
+                background: "var(--bg-card-2)", borderRadius: 14,
+                border: "1px solid var(--line)",
+              }}>
+                <div style={{
+                  borderRadius: 16, overflow: "hidden",
+                  border: "3px solid var(--line-2)", flexShrink: 0,
+                }}>
+                  <Avatar user={previewUser} size={72} rounded="xl" />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: "var(--ink-1)", marginBottom: 2 }}>
+                    {draft.full_name || profile.username || "İsimsiz"}
+                  </div>
+                  <div style={{ fontSize: 12, color: "var(--ink-4)", fontFamily: "var(--font-mono)" }}>
+                    @{profile.username}
+                  </div>
+                </div>
+                <button type="button" onClick={() => setTab("avatar")}
+                  style={{
+                    padding: "7px 14px", background: "var(--bg-elev)",
+                    border: "1px solid var(--line-2)", borderRadius: 9,
+                    color: "var(--ink-2)", fontSize: 12, cursor: "pointer",
+                    fontWeight: 500, transition: "all var(--dur-1)",
+                  }}>Dəyişdir</button>
+              </div>
+
+              {/* Full name + email */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                <Field label="Tam ad">
+                  <Input
+                    value={draft.full_name}
+                    onChange={set("full_name")}
+                    placeholder="Ad Soyad"
+                    maxLength={150}
+                  />
+                </Field>
+                <Field label="Email">
+                  <Input
+                    type="email"
+                    value={draft.email}
+                    onChange={set("email")}
+                    placeholder="email@example.com"
+                  />
+                </Field>
+              </div>
+
+              {/* Bio */}
+              <Field label="Bio" hint={`${(draft.bio || "").length} / 240`}>
+                <Textarea
+                  value={draft.bio}
+                  onChange={set("bio")}
+                  maxLength={240}
+                  rows={4}
+                  placeholder="Özün haqqında bir neçə söz..."
+                />
+              </Field>
+
+              {/* Country + city */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                <Field label="Ölkə">
+                  <Input
+                    value={draft.country}
+                    onChange={set("country")}
+                    placeholder="Azərbaycan"
+                  />
+                </Field>
+                <Field label="Şəhər">
+                  <Input
+                    value={draft.city}
+                    onChange={set("city")}
+                    placeholder="Bakı"
+                  />
+                </Field>
+              </div>
+
+              {/* Username (readonly) */}
+              <Field label="İstifadəçi adı" hint="İstifadəçi adı dəyişdirilə bilməz">
+                <Input value={profile.username} readOnly style={{ opacity: 0.5, cursor: "not-allowed" }} />
+              </Field>
+            </div>
+          )}
+
+          {/* ── TAB: Avatar ── */}
+          {tab === "avatar" && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+              {/* Big avatar preview */}
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
+                <div style={{
+                  position: "relative",
+                  borderRadius: 24, overflow: "hidden",
+                  border: "4px solid var(--line-2)",
+                  boxShadow: "0 12px 40px rgba(0,0,0,0.5)",
+                }}>
+                  <Avatar user={previewUser} size={120} rounded="xl" />
+                  <button
+                    type="button"
+                    onClick={() => fileRef.current?.click()}
+                    style={{
+                      position: "absolute", inset: 0,
+                      background: "rgba(0,0,0,0)", border: "none",
+                      cursor: "pointer", display: "flex", alignItems: "flex-end",
+                      justifyContent: "center", paddingBottom: 8,
+                      opacity: 0, transition: "all 0.2s",
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.background = "rgba(0,0,0,0.55)"; e.currentTarget.style.opacity = 1; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = "rgba(0,0,0,0)"; e.currentTarget.style.opacity = 0; }}
+                  >
+                    <span style={{ background: "rgba(0,0,0,0.7)", color:"white", fontSize:11, padding:"3px 8px", borderRadius:6 }}>
+                      Foto yüklə
+                    </span>
+                  </button>
+                </div>
+
+                {/* Upload + remove buttons */}
+                <div style={{ display: "flex", gap: 8 }}>
+                  <Button variant="ghost" size="sm" type="button" onClick={() => fileRef.current?.click()}>
+                    Şəkil yüklə
+                  </Button>
+                  {draft.avatar_preview && (
+                    <Button variant="ghost" size="sm" type="button" onClick={removeAvatar}>
+                      Avatarı sil
+                    </Button>
+                  )}
+                </div>
+
+                <input
+                  ref={fileRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={onFile}
+                  style={{ display: "none" }}
+                />
+
+                {draft.avatar_file && (
+                  <div style={{ fontSize: 12, color: "var(--ok)", fontFamily: "var(--font-mono)" }}>
+                    ✓ {draft.avatar_file.name}
+                  </div>
+                )}
+              </div>
+
+              {/* Hue presets + slider */}
+              <div>
+                <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, color: "var(--ink-4)", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 12 }}>
+                  Avatar rəng tonu
+                </div>
+                {/* Color swatches */}
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 14 }}>
+                  {HUE_PRESETS.map(h => (
+                    <button
+                      key={h}
+                      type="button"
+                      onClick={() => setDraft(d => ({ ...d, avatar_hue: h }))}
+                      title={`${h}°`}
+                      style={{
+                        width: 32, height: 32,
+                        borderRadius: 8,
+                        background: `hsl(${h}, 70%, 50%)`,
+                        border: Math.abs(draft.avatar_hue - h) < 15
+                          ? "3px solid var(--ink-1)"
+                          : "3px solid transparent",
+                        cursor: "pointer",
+                        transition: "transform 0.1s, border 0.1s",
+                        transform: Math.abs(draft.avatar_hue - h) < 15 ? "scale(1.1)" : "scale(1)",
+                      }}
+                    />
+                  ))}
+                </div>
+                {/* Fine slider */}
+                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                  <input
+                    type="range" min="0" max="360"
+                    value={draft.avatar_hue}
+                    onChange={set("avatar_hue")}
+                    style={{ flex: 1 }}
+                  />
+                  <div style={{
+                    fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--ink-3)",
+                    minWidth: 36, textAlign: "right",
+                  }}>
+                    {draft.avatar_hue}°
+                  </div>
+                  <div style={{
+                    width: 22, height: 22, borderRadius: 6,
+                    background: `hsl(${draft.avatar_hue}, 70%, 50%)`,
+                    border: "1px solid var(--line-2)", flexShrink: 0,
+                  }} />
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
-        <Field label="Bio" hint={`${(draft.bio || "").length} / 240`}>
-          <Textarea value={draft.bio} onChange={update("bio")} maxLength={240} rows={3}
-            placeholder="Özün haqqında..." />
-        </Field>
-
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-          <Field label="Ölkə"><Input value={draft.country} onChange={update("country")} /></Field>
-          <Field label="Şəhər"><Input value={draft.city} onChange={update("city")} /></Field>
-        </div>
-
-        <Field label="Avatar">
-          <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-            <input type="file" accept="image/*" onChange={onFile}
-              style={{ flex: 1, fontSize: 12, color: "var(--ink-2)" }} />
-            {draft.avatar_preview && (
-              <Button variant="ghost" size="sm" type="button" onClick={removeAvatar}>Sil</Button>
-            )}
-          </div>
-        </Field>
-
-        <Field label={`Avatar rəng tonu (${draft.avatar_hue}°)`}>
-          <input type="range" min="0" max="360" value={draft.avatar_hue} onChange={update("avatar_hue")}
-            style={{ width: "100%" }} />
-        </Field>
-
-        <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 8 }}>
-          <Button variant="ghost" type="button" onClick={onClose}>Ləğv et</Button>
+        {/* Footer */}
+        <div style={{
+          padding: "16px 28px",
+          borderTop: "1px solid var(--line)",
+          display: "flex", gap: 8, justifyContent: "flex-end",
+          flexShrink: 0,
+          background: "var(--bg-card)",
+        }}>
+          <Button variant="ghost" type="button" onClick={onClose} disabled={saving}>
+            Ləğv et
+          </Button>
           <Button variant="accent" type="submit" disabled={saving}>
-            {saving ? "Saxlanır..." : "Yadda saxla"}
+            {saving ? "Saxlanır..." : "Dəyişiklikləri saxla"}
           </Button>
         </div>
       </form>
