@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import "../styles/landing.css";
+import { ContainerScroll } from "../components/ContainerScroll";
 
 export default function LandingPage() {
   const [scrollY, setScrollY] = useState(0);
@@ -91,6 +92,111 @@ export default function LandingPage() {
 
   return (
     <div className="landing-page">
+
+      {/* Container Scroll Animation */}
+      <ContainerScroll
+        titleComponent={
+          <div className="cs-title">
+            <span className="cs-kicker">Xakker Self Study Platform</span>
+            <h1>
+              Kibertəhlükəsizlik{" "}
+              <span className="text-gradient">bacarığı qazan.</span>
+            </h1>
+            <p>
+              SOC, red team, cloud security və appsec üzrə praktik self-study axını.
+              Hər modul real ssenari, mentor rəyi və challenge əsaslı irəliləmə məntiqi ilə qurulub.
+            </p>
+            <div style={{ display: "flex", gap: "12px", justifyContent: "center", flexWrap: "wrap" }}>
+              <Link to="/auth/register" className="btn btn-primary btn-lg">Platformaya keç →</Link>
+              <a href="#courses" className="btn btn-outline btn-lg">Demonu gör</a>
+            </div>
+          </div>
+        }
+      >
+        {/* Dashboard Mockup */}
+        <div className="mock-browser-bar">
+          <span className="mock-dot" />
+          <span className="mock-dot" />
+          <span className="mock-dot" />
+          <span className="mock-url">xakker.org / defender</span>
+        </div>
+
+        <div className="mock-body">
+          {/* Sol sidebar */}
+          <div className="mock-sidebar">
+            <div className="mock-logo">X</div>
+            <div className="mock-nav-item active">
+              <span className="mock-nav-dot" /> Dashboard
+            </div>
+            <div className="mock-nav-item">
+              <span className="mock-nav-dot" /> Paths
+            </div>
+            <div className="mock-nav-item">
+              <span className="mock-nav-dot" /> Labs
+            </div>
+            <div className="mock-nav-item">
+              <span className="mock-nav-dot" /> Reports
+            </div>
+            <div className="mock-nav-item">
+              <span className="mock-nav-dot" /> Mentor
+            </div>
+          </div>
+
+          {/* Sağ məzmun */}
+          <div className="mock-main">
+            <div className="mock-mission-label">Current Mission</div>
+            <div className="mock-mission-title">
+              <h3>Incident Response · Tier 2</h3>
+              <span className="mock-live-badge">LIVE</span>
+            </div>
+
+            <div className="mock-cards">
+              {/* Threat Level */}
+              <div className="mock-card">
+                <div className="mock-card-label">Threat Level</div>
+                <div className="mock-gauge-wrap">
+                  <div className="mock-gauge">
+                    <span className="mock-gauge-val">76<span style={{ fontSize: "10px" }}>%</span></span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Defender Feed */}
+              <div className="mock-card">
+                <div className="mock-card-label">Defender Feed</div>
+                <div className="mock-feed">
+                  <div className="mock-feed-item"><span className="mock-feed-time">12:04</span> Anomaly from 10.0.4.18</div>
+                  <div className="mock-feed-item"><span className="mock-feed-time">12:07</span> Sandbox detonation queued</div>
+                  <div className="mock-feed-item"><span className="mock-feed-time">12:11</span> Mentor review requested</div>
+                  <div className="mock-feed-item"><span className="mock-feed-time">12:15</span> Report draft v2 saved</div>
+                </div>
+              </div>
+
+              {/* Next Lab */}
+              <div className="mock-card">
+                <div className="mock-card-label">Next Lab</div>
+                <div className="mock-next-title">Lateral movement</div>
+                <div className="mock-progress-bar">
+                  <div className="mock-progress-fill" />
+                </div>
+                <div className="mock-step-label">Step 4 of 7</div>
+              </div>
+
+              {/* Skills */}
+              <div className="mock-card">
+                <div className="mock-card-label">Skills Unlocked</div>
+                <div className="mock-skills">
+                  <span className="mock-skill-tag">SIEM</span>
+                  <span className="mock-skill-tag">EDR</span>
+                  <span className="mock-skill-tag">OSINT</span>
+                  <span className="mock-skill-tag">IR Playbooks</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </ContainerScroll>
+
       {/* Hero Section */}
       <section className="hero" id="hero" style={{ backgroundPositionY: `${scrollY * 0.5}px` }}>
         <div className="hero-content container">

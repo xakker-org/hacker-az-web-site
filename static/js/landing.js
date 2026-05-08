@@ -336,6 +336,39 @@ if (langToggleBtn) {
 const savedLang = localStorage.getItem('xakker-lang') || 'az';
 applyLang(savedLang);
 
+/* ============================================================
+   Container Scroll Animation — Aceternity style
+   ============================================================ */
+(function () {
+  const section = document.querySelector('.cs-section');
+  const card    = document.getElementById('cs-card');
+  if (!section || !card) return;
+
+  const MAX_ROTATE = 20;   // başlanğıc əyilmə dərəcəsi
+  const MAX_SCALE  = 1.05; // başlanğıc böyüklük
+
+  function update() {
+    const rect = section.getBoundingClientRect();
+    const vh   = window.innerHeight;
+
+    // progress: 0 = section yuxarı viewport-a gəldi, 1 = section aşağı çıxdı
+    const scrollable = rect.height - vh;
+    const progress   = scrollable > 0
+      ? Math.max(0, Math.min(1, -rect.top / scrollable))
+      : 1;
+
+    const rotateX = MAX_ROTATE * (1 - progress);
+    const scale   = MAX_SCALE - (MAX_SCALE - 1) * progress;
+
+    card.style.transform = `rotateX(${rotateX}deg) scale(${scale})`;
+  }
+
+  // İlk render
+  update();
+  window.addEventListener('scroll', update, { passive: true });
+  window.addEventListener('resize', update, { passive: true });
+})();
+
 /* Mobile nav toggle */
 const navToggle = document.querySelector(".nav-toggle");
 const mobileNav = document.getElementById("mobile-nav");

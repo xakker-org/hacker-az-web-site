@@ -620,10 +620,14 @@ h5 {
    HERO
    ========================================================== */
 .hero {
-  padding-top: clamp(110px, 12vw, 156px);
+  padding-top: clamp(30px, 4vw, 55px);
   padding-bottom: clamp(40px, 6vw, 80px);
   position: relative;
   overflow: hidden;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .hero-inner {
@@ -672,34 +676,33 @@ h5 {
   top: 0;
   left: 0;
   right: 0;
-  bottom: 0;
+  bottom: -60px;
   z-index: 1;
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: center;
   pointer-events: none;
-  /* Header altında şəffaf, sonra görünür, aşağıda yox olur */
   -webkit-mask-image: linear-gradient(to bottom,
     transparent 0px,
     transparent 70px,
     black 130px,
-    black 55%,
-    transparent 82%
+    black 80%,
+    transparent 100%
   );
   mask-image: linear-gradient(to bottom,
     transparent 0px,
     transparent 70px,
     black 130px,
-    black 55%,
-    transparent 82%
+    black 80%,
+    transparent 100%
   );
 }
 
 .hero-az-bg img {
   width: 100%;
-  max-width: 1100px;
+  max-width: 1200px;
   height: auto;
-  opacity: 0.20;
+  opacity: 0.22;
   filter:
     drop-shadow(0 0 60px rgba(220, 50, 50, 0.6))
     drop-shadow(0 0 120px rgba(180, 30, 30, 0.3))
@@ -712,6 +715,68 @@ h5 {
 @keyframes azBgPulse {
   0%, 100% { opacity: 0.20; }
   50%       { opacity: 0.28; }
+}
+
+/* ============================================================
+   CONTAINER SCROLL ANIMATION (Aceternity style)
+   ============================================================ */
+
+.cs-section {
+  height: 160vh;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 0 20px;
+  margin-top: -200px;
+  background: linear-gradient(180deg, var(--bg-0) 0%, var(--surface-0) 100%);
+}
+
+.cs-sticky {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  width: 100%;
+  max-width: 1120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* perspective burda tətbiq olunur */
+  perspective: 1200px;
+}
+
+.cs-card {
+  width: 100%;
+  transform-origin: 50% 0%;
+  /* başlanğıc vəziyyət: 20 dərəcə əyilmiş */
+  transform: rotateX(20deg) scale(1.05);
+  will-change: transform;
+  border-radius: var(--r-xl);
+  border: 4px solid #5a5a5a;
+  background: linear-gradient(180deg, var(--surface-2), rgba(12, 18, 32, 0.92));
+  box-shadow:
+    0 0 #0000004d,
+    0 9px 20px #0000004a,
+    0 37px 37px #00000042,
+    0 84px 50px #00000026,
+    0 149px 60px #0000000a,
+    0 233px 65px #00000003;
+  overflow: hidden;
+}
+
+@media (max-width: 768px) {
+  .cs-section {
+    height: auto;
+    padding: 40px 16px;
+  }
+  .cs-sticky {
+    position: relative;
+    height: auto;
+    perspective: none;
+  }
+  .cs-card {
+    transform: none;
+    border-width: 2px;
+  }
 }
 
 /* Hero mockup */

@@ -40,7 +40,7 @@ FROM node:20-alpine AS frontend
 WORKDIR /usr/src/app
 ARG NPM_REGISTRY=https://registry.npmjs.org/
 
-COPY frontend/react/package.json .
+COPY frontend/react/package.json frontend/react/package-lock.json ./
 RUN npm config set registry ${NPM_REGISTRY} && \
     npm config set fetch-retries 8 && \
     npm config set fetch-retry-mintimeout 20000 && \
@@ -48,7 +48,7 @@ RUN npm config set registry ${NPM_REGISTRY} && \
     npm config set fetch-timeout 300000 && \
     npm config set audit false && \
     npm config set fund false && \
-    for i in 1 2 3; do npm install --legacy-peer-deps && break || (echo "npm install failed, retry $i/3" && sleep 5); done
+    npm ci --legacy-peer-deps
 
 COPY frontend/react .
 
