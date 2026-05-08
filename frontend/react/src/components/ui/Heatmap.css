@@ -1,87 +1,169 @@
+/* ── Wrapper ── */
 .heat {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  position: relative;
   width: 100%;
 }
+
+/* ── Main grid: DOW col + cells col ── */
 .heat-grid {
   display: grid;
-  grid-template-columns: 28px 1fr;
-  gap: 6px;
+  grid-template-columns: 26px 1fr;
+  gap: 4px;
+  width: 100%;
 }
+
+/* Day-of-week labels */
 .heat-dow {
   display: grid;
-  grid-template-rows: repeat(7, 1fr);
+  grid-template-rows: repeat(7, var(--cell));
+  gap: var(--gap);
   font-family: var(--font-mono);
   font-size: 9px;
   color: var(--ink-4);
   letter-spacing: 0.04em;
+  padding-top: calc(var(--label-h) + var(--gap));
   align-items: center;
-  padding-top: 14px;
 }
-.heat-dow span { line-height: 12px; }
-.heat-cols { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.heat-dow span {
+  height: var(--cell);
+  display: flex;
+  align-items: center;
+}
+
+/* Right column: months + cells stacked */
+.heat-cols {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+  min-width: 0;
+}
+
+/* Month labels row — each span = one column width */
 .heat-months {
   display: grid;
   grid-auto-flow: column;
-  grid-auto-columns: minmax(12px, 1fr);
-  gap: 3px;
+  grid-auto-columns: calc(var(--cell) + var(--gap));
+  height: var(--label-h);
   font-family: var(--font-mono);
   font-size: 9px;
   color: var(--ink-4);
-  letter-spacing: 0.06em;
-  height: 12px;
+  letter-spacing: 0.05em;
+  align-items: center;
 }
+.heat-months span { white-space: nowrap; overflow: visible; }
+
+/* Cell grid — columns auto-flow, each column = --cell wide */
 .heat-cells {
   display: grid;
   grid-auto-flow: column;
-  grid-auto-columns: minmax(12px, 1fr);
-  gap: 3px;
+  grid-auto-columns: var(--cell);
+  gap: var(--gap);
 }
+
+/* Each week column */
 .heat-col {
   display: grid;
-  grid-template-rows: repeat(7, 1fr);
-  gap: 3px;
+  grid-template-rows: repeat(7, var(--cell));
+  gap: var(--gap);
 }
+
+/* Single cell */
 .heat-cell {
-  width: 100%;
-  aspect-ratio: 1;
-  border-radius: 3px;
+  width: var(--cell);
+  height: var(--cell);
+  border-radius: 2px;
   border: none;
   padding: 0;
   cursor: pointer;
-  transition: outline-color var(--dur-1);
+  transition: transform 60ms, outline-color 60ms;
   outline: 1px solid transparent;
+  display: block;
+  box-sizing: border-box;
 }
-.heat-cell:hover, .heat-cell:focus-visible {
-  outline-color: var(--accent-ring);
+.heat-cell:hover,
+.heat-cell:focus-visible {
+  outline: 1.5px solid rgba(255, 255, 255, 0.35);
+  transform: scale(1.4);
+  z-index: 2;
+  position: relative;
 }
-.heat-tone-0 { background: var(--bg-elev); }
-.heat-tone-1 { background: rgba(110,255,214,0.18); }
-.heat-tone-2 { background: rgba(110,255,214,0.38); }
-.heat-tone-3 { background: rgba(158,255,110,0.65); }
-.heat-tone-4 { background: var(--accent); }
 
+/* ── GitHub green tones (dark mode) ── */
+.heat-tone-x { background: transparent; cursor: default; pointer-events: none; }
+.heat-tone-f { background: rgba(255,255,255,0.04); cursor: default; pointer-events: none; border-radius: 2px; }
+.heat-tone-0 { background: rgba(255,255,255,0.07); }
+.heat-tone-1 { background: #0e4429; }
+.heat-tone-2 { background: #006d32; }
+.heat-tone-3 { background: #26a641; }
+.heat-tone-4 { background: #39d353; box-shadow: 0 0 4px rgba(57,211,83,0.5); }
+
+/* ── Footer ── */
 .heat-foot {
   display: flex;
   align-items: center;
   justify-content: space-between;
   font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--ink-3);
+  font-size: 10px;
+  color: var(--ink-4);
   letter-spacing: 0.02em;
 }
+
 .heat-legend {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 3px;
 }
 .heat-legend i {
   display: inline-block;
-  width: 10px; height: 10px;
+  width: 10px;
+  height: 10px;
   border-radius: 2px;
   cursor: default;
 }
-.heat-tip { font-size: 11px; }
 
-.heat-compact .heat-cell { aspect-ratio: 1; min-width: 8px; }
+/* ── Floating tooltip ── */
+.heat-tooltip {
+  position: fixed;
+  background: #1c2128;
+  border: 1px solid rgba(255,255,255,0.14);
+  border-radius: 6px;
+  padding: 7px 12px;
+  pointer-events: none;
+  z-index: 9999;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.65);
+  white-space: nowrap;
+}
+.heat-tooltip-val {
+  font-family: var(--font-mono);
+  font-size: 15px;
+  font-weight: 700;
+  color: #39d353;
+  line-height: 1.2;
+  margin-bottom: 3px;
+}
+.heat-tooltip-unit {
+  font-size: 10px;
+  font-weight: 500;
+  color: rgba(57,211,83,0.65);
+  letter-spacing: 0.04em;
+}
+.heat-tooltip-date {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: rgba(255,255,255,0.38);
+  letter-spacing: 0.03em;
+}
+.heat-tooltip-label {
+  font-size: 10px;
+  color: rgba(255,255,255,0.35);
+  margin-top: 2px;
+}
+.heat-tooltip-empty {
+  font-size: 11px;
+  font-weight: 500;
+  color: rgba(255,255,255,0.28);
+  margin-bottom: 3px;
+}

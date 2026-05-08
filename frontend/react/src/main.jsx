@@ -3,6 +3,7 @@ import ReactDOM from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 import App from "./App";
 import { CommandProvider } from "./contexts/CommandContext";
+import { LanguageProvider } from "./contexts/LanguageContext";
 
 import "./styles/tokens.css";
 import "./styles/base.css";
@@ -13,9 +14,11 @@ import "./styles/compat.css";
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <BrowserRouter>
-      <CommandProvider>
-        <App />
-      </CommandProvider>
+      <LanguageProvider>
+        <CommandProvider>
+          <App />
+        </CommandProvider>
+      </LanguageProvider>
     </BrowserRouter>
   </React.StrictMode>
 );

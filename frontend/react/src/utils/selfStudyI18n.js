@@ -1,4 +1,4 @@
-const LANGUAGE_STORAGE_KEY = "self_study_lang";
+const LANGUAGE_STORAGE_KEY = "xk_ui_lang";
 
 export const SUPPORTED_LANGUAGES = {
   az: "AZ",

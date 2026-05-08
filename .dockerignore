@@ -1,0 +1,45 @@
+# Git
+.git
+.gitignore
+
+# Node
+frontend/react/node_modules
+frontend/react/.next
+frontend/react/dist
+frontend/react/build
+frontend/react/.cache
+
+# Python
+__pycache__
+**/__pycache__
+*.py[cod]
+*.pyo
+venv
+.venv
+env
+*.egg-info
+.pytest_cache
+.mypy_cache
+
+# Media & uploads (mounted via volume)
+media/
+
+# IDE & OS
+.vscode
+.idea
+*.DS_Store
+*.swp
+*.swo
+
+# Docker
+docker-compose*.yml
+Dockerfile*
+
+# Logs
+*.log
+logs/
+
+# Env files (injected via env_file or environment)
+.env
+.env.*
+!.env.example
