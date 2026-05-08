@@ -3,6 +3,42 @@
    Landing-uyğun, animasiyalı, müasir
    ========================================== */
 
+/* Bridge variables: this file expects legacy auth tokens that may not exist globally. */
+:root {
+  --space-md: var(--s3, 12px);
+  --space-lg: var(--s4, 16px);
+  --space-xl: var(--s5, 24px);
+  --space-2xl: var(--s6, 32px);
+
+  --text-primary: var(--ink-1, #ffffff);
+  --text-secondary: var(--ink-2, #c8cdd6);
+  --text-tertiary: var(--ink-3, #7a8392);
+
+  --blue: #8ed8e8;
+  --blue-light: #bfeef6;
+  --font-sans: var(--font-text, "Inter", system-ui, sans-serif);
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  50% {
+    transform: translate(10px, -14px);
+  }
+}
+
+@keyframes float-reverse {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  50% {
+    transform: translate(-12px, 10px);
+  }
+}
+
 /* ── Page Shell ─────────────────────────── */
 .auth-page {
   min-height: 100vh;
