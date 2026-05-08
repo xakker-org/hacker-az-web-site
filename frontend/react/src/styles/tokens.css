@@ -1,0 +1,105 @@
+/* ================================================================
+   XAKKER — Bento-Analytics Design Tokens
+   Single source of truth. No magic numbers in components.
+   ================================================================ */
+
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap");
+
+:root {
+  /* ── Surfaces ── */
+  --bg:        #0a0c10;
+  --bg-card:   #11141a;
+  --bg-card-2: #161a22;
+  --bg-elev:   #1c212c;
+  --bg-overlay: rgba(6, 8, 12, 0.78);
+
+  /* ── Lines ── */
+  --line:    rgba(255, 255, 255, 0.06);
+  --line-2:  rgba(255, 255, 255, 0.10);
+  --line-3:  rgba(255, 255, 255, 0.14);
+
+  /* ── Ink ── */
+  --ink-1: #ffffff;
+  --ink-2: #c8cdd6;
+  --ink-3: #7a8392;
+  --ink-4: #4a5260;
+
+  /* ── Single signature accent ── */
+  --accent:      #9eff6e;
+  --accent-soft: rgba(158, 255, 110, 0.12);
+  --accent-ring: rgba(158, 255, 110, 0.28);
+  --accent-ink:  #0a0c10;
+
+  /* ── Chart palette ── */
+  --c-1: #6effd6;     /* mint */
+  --c-2: #9eff6e;     /* lime */
+  --c-3: #ffb86b;     /* amber */
+  --c-4: #ff7a8a;     /* coral */
+  --c-5: #c084fc;     /* violet */
+  --c-6: #6cb3ff;     /* sky */
+
+  /* ── Difficulty (semantic) ── */
+  --d-easy:   #6effd6;
+  --d-med:    #ffb86b;
+  --d-hard:   #ff7a8a;
+  --d-expert: #c084fc;
+
+  /* ── Status ── */
+  --ok:    #6effd6;
+  --warn:  #ffb86b;
+  --bad:   #ff7a8a;
+
+  /* ── Typography ── */
+  --font-display: "Inter", system-ui, sans-serif;
+  --font-text:    "Inter", system-ui, sans-serif;
+  --font-mono:    "JetBrains Mono", ui-monospace, "Cascadia Mono", monospace;
+
+  /* ── Radii ── */
+  --r-tile:  20px;
+  --r-card:  14px;
+  --r-inner: 10px;
+  --r-pill:  999px;
+
+  /* ── Elevation ── */
+  --shadow-tile:
+    0 1px 0 0 rgba(255, 255, 255, 0.04) inset,
+    0 1px 2px rgba(0, 0, 0, 0.55),
+    0 8px 24px rgba(0, 0, 0, 0.30);
+  --shadow-tile-hover:
+    0 1px 0 0 rgba(255, 255, 255, 0.06) inset,
+    0 1px 2px rgba(0, 0, 0, 0.55),
+    0 16px 40px rgba(0, 0, 0, 0.45);
+  --shadow-pop:
+    0 1px 0 0 rgba(255, 255, 255, 0.07) inset,
+    0 24px 60px rgba(0, 0, 0, 0.55),
+    0 0 0 1px rgba(255, 255, 255, 0.04);
+
+  /* ── Spacing (4px grid) ── */
+  --s1: 4px;
+  --s2: 8px;
+  --s3: 12px;
+  --s4: 16px;
+  --s5: 24px;
+  --s6: 32px;
+  --s7: 48px;
+  --s8: 64px;
+
+  /* ── Layout ── */
+  --sidebar-w: 232px;
+  --topbar-h:  56px;
+  --content-max: 1320px;
+
+  /* ── Motion ── */
+  --ease:  cubic-bezier(0.22, 1, 0.36, 1);
+  --fast:  cubic-bezier(0.4, 0, 0.2, 1);
+  --dur-1: 120ms;
+  --dur-2: 200ms;
+  --dur-3: 320ms;
+
+  /* ── Z-index ── */
+  --z-base:    0;
+  --z-sticky:  10;
+  --z-overlay: 50;
+  --z-modal:   60;
+  --z-popover: 70;
+}

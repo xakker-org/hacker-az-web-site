@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import AppShell from "../components/AppShell";
 import { endpoints } from "../services/endpoints";
-import "../styles/missions.css";
 
 const DIFF_LABEL = { easy: "Easy", medium: "Medium", hard: "Hard", expert: "Expert" };
 const DIFF_CLASS = { easy: "ms-badge-easy", medium: "ms-badge-medium", hard: "ms-badge-hard", expert: "ms-badge-expert" };

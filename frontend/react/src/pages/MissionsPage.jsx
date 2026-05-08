@@ -1,175 +1,157 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import AppShell from "../components/AppShell";
+import Tile, { TileHead } from "../components/ui/Tile";
+import Stat from "../components/ui/Stat";
+import Bar from "../components/ui/Bar";
+import Segmented from "../components/ui/Segmented";
+import { Input } from "../components/ui/Field";
+import { Chip, DiffBadge } from "../components/ui/Chip";
+import EmptyState from "../components/ui/EmptyState";
+import { TileSkeleton } from "../components/ui/Skeleton";
 import { endpoints } from "../services/endpoints";
-import "../styles/missions.css";
-
-const DIFF_LABEL = { easy: "Easy", medium: "Medium", hard: "Hard", expert: "Expert" };
 
 const FILTERS = [
-  { key: "all",         label: "All" },
-  { key: "in-progress", label: "In Progress" },
-  { key: "completed",   label: "Completed" },
-  { key: "not-started", label: "Not Started" },
+  { value: "all",         label: "Hamısı"       },
+  { value: "in-progress", label: "Davam edir"   },
+  { value: "completed",   label: "Tamamlandı"   },
+  { value: "not-started", label: "Başlanmayıb"  },
 ];
 
-function diffBadgeClass(d) {
-  return `ms-badge ms-badge-${d}`;
-}
-
-function missionStatus(progress) {
-  if (!progress) return "not-started";
-  if (progress.is_completed) return "completed";
+function statusOf(p) {
+  if (!p) return "not-started";
+  if (p.is_completed) return "completed";
   return "in-progress";
-}
-
-function MissionCard({ mission }) {
-  const prog = mission.user_progress;
-  const status = missionStatus(prog);
-
-  const totalPasses = prog?.total_passes ?? mission.pass_count;
-  const donePasses  = prog?.completed_passes ?? 0;
-  const pct = totalPasses > 0 ? Math.round((donePasses / totalPasses) * 100) : 0;
-
-  const iconBg = mission.cover_color + "22";
-
-  return (
-    <Link
-      to={`/missions/${mission.slug}`}
-      className={`ms-card${status === "completed" ? " completed" : ""}`}
-      style={{ "--accent-color": mission.cover_color, "--icon-bg": iconBg }}
-    >
-      <div className="ms-card-accent" style={{ background: mission.cover_color }} />
-      <div className="ms-card-body">
-        <div className="ms-card-header">
-          <div className="ms-card-icon" style={{ background: iconBg }}>
-            {mission.icon}
-          </div>
-          <div className="ms-card-title-group">
-            <div className="ms-card-title">{mission.title}</div>
-            <div className="ms-card-desc">
-              {mission.short_description || mission.description}
-            </div>
-          </div>
-        </div>
-
-        <div className="ms-card-meta">
-          <span className={diffBadgeClass(mission.difficulty)}>
-            {DIFF_LABEL[mission.difficulty] || mission.difficulty}
-          </span>
-          <span className="ms-badge ms-badge-info">
-            {mission.pass_count} passes
-          </span>
-          {mission.estimated_hours > 0 && (
-            <span className="ms-badge ms-badge-info">
-              ~{mission.estimated_hours}h
-            </span>
-          )}
-          {mission.has_exam && (
-            <span className="ms-badge ms-badge-exam">Final Exam</span>
-          )}
-        </div>
-
-        {prog && (
-          <div className="ms-card-progress">
-            <div className="ms-progress-label">
-              <span>{donePasses}/{totalPasses} passes</span>
-              <span>{pct}%</span>
-            </div>
-            <div className="ms-progress-track">
-              <div
-                className={`ms-progress-fill${status === "in-progress" ? " blue" : ""}`}
-                style={{ width: `${pct}%` }}
-              />
-            </div>
-          </div>
-        )}
-
-        <div className="ms-card-footer">
-          <span className="ms-xp-badge">+{mission.xp_reward} XP</span>
-          <span className={`ms-status-badge ${status}`}>
-            {status === "completed"   ? "✓ Completed"   :
-             status === "in-progress" ? "→ In Progress"  : "Not Started"}
-          </span>
-        </div>
-      </div>
-    </Link>
-  );
 }
 
 export default function MissionsPage() {
   const [missions, setMissions] = useState([]);
   const [filter, setFilter]     = useState("all");
-  const [loading, setLoading]   = useState(true);
   const [search, setSearch]     = useState("");
+  const [loading, setLoading]   = useState(true);
 
   useEffect(() => {
+    let mounted = true;
     endpoints.missions()
-      .then(({ data }) => setMissions(data))
-      .finally(() => setLoading(false));
+      .then(({ data }) => mounted && setMissions(Array.isArray(data) ? data : []))
+      .finally(() => { if (mounted) setLoading(false); });
+    return () => { mounted = false; };
   }, []);
 
-  const filtered = missions.filter((m) => {
-    const st = missionStatus(m.user_progress);
-    const matchFilter =
-      filter === "all"          ||
-      (filter === "completed"   && st === "completed") ||
-      (filter === "in-progress" && st === "in-progress") ||
-      (filter === "not-started" && st === "not-started");
+  const counts = useMemo(() => {
+    const by = { all: missions.length, "in-progress": 0, completed: 0, "not-started": 0 };
+    missions.forEach(m => { by[statusOf(m.user_progress)]++; });
+    return by;
+  }, [missions]);
 
-    const matchSearch =
-      !search ||
-      m.title.toLowerCase().includes(search.toLowerCase()) ||
-      (m.description || "").toLowerCase().includes(search.toLowerCase());
+  const filtered = useMemo(() => {
+    return missions.filter(m => {
+      const st = statusOf(m.user_progress);
+      const okStatus = filter === "all" || filter === st;
+      const q = search.trim().toLowerCase();
+      const okSearch = !q || `${m.title} ${m.description || ""}`.toLowerCase().includes(q);
+      return okStatus && okSearch;
+    });
+  }, [missions, filter, search]);
 
-    return matchFilter && matchSearch;
-  });
+  const totalXp = missions.reduce((s, m) => s + (m.xp_reward || 0), 0);
+  const completedXp = missions.filter(m => m.user_progress?.is_completed).reduce((s, m) => s + (m.xp_reward || 0), 0);
 
   return (
-    <AppShell
-      title="Missions"
-      searchPlaceholder="Search missions…"
-      onSearch={setSearch}
-    >
-      <div className="ms-page">
-        <div className="ms-page-header">
-          <div className="ms-page-title">Missions</div>
-          <div className="ms-page-subtitle">
-            Complete passes, conquer the final exam, earn XP.
-          </div>
+    <AppShell>
+      <div className="page-head">
+        <div>
+          <div className="page-eyebrow">Missions</div>
+          <h1 className="page-title">Praktiki tapşırıqlar</h1>
+          <div className="page-sub">Pass-ları keç, final examı qazan, XP topla.</div>
         </div>
+      </div>
 
-        <div className="ms-filters">
-          {FILTERS.map((f) => (
-            <button
-              key={f.key}
-              className={`ms-filter-btn${filter === f.key ? " active" : ""}`}
-              onClick={() => setFilter(f.key)}
-            >
-              {f.label}
-            </button>
+      <div className="bento" style={{ marginBottom: 16 }}>
+        <Tile span={3}><Stat label="Cəmi" value={counts.all} size="md" /></Tile>
+        <Tile span={3}><Stat label="Davam edir" value={counts["in-progress"]} size="md" sparkTone="sky" /></Tile>
+        <Tile span={3}><Stat label="Tamamlandı" value={counts.completed} size="md" hint={`${completedXp.toLocaleString()} / ${totalXp.toLocaleString()} XP`} /></Tile>
+        <Tile span={3}>
+          <Stat label="Tamamlanma" value={Math.round(missions.length > 0 ? (counts.completed / missions.length) * 100 : 0)} unit="%" size="md" />
+          <Bar value={counts.completed} max={missions.length || 1} tone="accent" />
+        </Tile>
+      </div>
+
+      <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 16, flexWrap: "wrap" }}>
+        <Segmented
+          value={filter}
+          onChange={setFilter}
+          options={FILTERS.map(f => ({ ...f, count: counts[f.value] }))}
+        />
+        <Input
+          placeholder="Mission axtar..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          style={{ maxWidth: 260, flex: 1, minWidth: 180 }}
+        />
+      </div>
+
+      {loading ? (
+        <div className="bento">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="span-4"><TileSkeleton height={200} /></div>
           ))}
         </div>
-
-        {loading ? (
-          <div className="ms-spinner" />
-        ) : filtered.length === 0 ? (
-          <div className="ms-empty">
-            <div className="ms-empty-icon">🎯</div>
-            {search
-              ? "No missions match your search."
-              : filter === "all"
-              ? "No missions published yet."
-              : `No ${filter.replace("-", " ")} missions.`}
-          </div>
-        ) : (
-          <div className="ms-grid">
-            {filtered.map((m) => (
-              <MissionCard key={m.id} mission={m} />
-            ))}
-          </div>
-        )}
-      </div>
+      ) : filtered.length === 0 ? (
+        <Tile>
+          <EmptyState icon="◎" title="Mission tapılmadı" description="Filtri sıfırla və ya başqa axtarış sözü cəhd et." />
+        </Tile>
+      ) : (
+        <div className="bento">
+          {filtered.map((m, i) => {
+            const p = m.user_progress;
+            const st = statusOf(p);
+            const total = p?.total_passes ?? m.pass_count;
+            const done = p?.completed_passes ?? 0;
+            const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+            return (
+              <Tile key={m.id} span={4} as={Link} to={`/missions/${m.slug}`} interactive style={{ animationDelay: `${i * 30}ms` }}>
+                <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
+                  <span style={{
+                    width: 44, height: 44, borderRadius: 12,
+                    background: m.cover_color ? `${m.cover_color}22` : "var(--bg-card-2)",
+                    border: "1px solid var(--line-2)",
+                    display: "grid", placeItems: "center", fontSize: 22, flexShrink: 0,
+                  }}>{m.icon || "◎"}</span>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div className="tile-title">{m.title}</div>
+                    <div className="tile-sub" style={{ display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+                      {m.short_description || m.description}
+                    </div>
+                  </div>
+                </div>
+                <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                  <DiffBadge level={m.difficulty} />
+                  <Chip size="sm">{m.pass_count} pass</Chip>
+                  {m.estimated_hours > 0 && <Chip size="sm">~{m.estimated_hours}h</Chip>}
+                  {m.has_exam && <Chip size="sm" tone="violet">Final exam</Chip>}
+                </div>
+                {p && (
+                  <Bar
+                    value={pct}
+                    tone={st === "completed" ? "mint" : "accent"}
+                    rightCaption={`${done}/${total} · ${pct}%`}
+                  />
+                )}
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "auto", paddingTop: 4 }}>
+                  <span className="mono tnum" style={{ color: "var(--accent)", fontWeight: 700, fontSize: 13 }}>+{m.xp_reward} XP</span>
+                  <Chip
+                    size="sm"
+                    tone={st === "completed" ? "mint" : st === "in-progress" ? "sky" : "neutral"}
+                  >
+                    {st === "completed" ? "✓ Tamam" : st === "in-progress" ? "→ Davam" : "Başla"}
+                  </Chip>
+                </div>
+              </Tile>
+            );
+          })}
+        </div>
+      )}
     </AppShell>
   );
 }

@@ -1,49 +1,47 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import AppShell from "../components/AppShell";
+import Tile, { TileHead } from "../components/ui/Tile";
+import Stat from "../components/ui/Stat";
+import Bar from "../components/ui/Bar";
+import ProgressRing from "../components/ui/ProgressRing";
+import Tabs from "../components/ui/Tabs";
+import Segmented from "../components/ui/Segmented";
+import { Input, Select } from "../components/ui/Field";
+import { Chip, DiffBadge } from "../components/ui/Chip";
+import EmptyState from "../components/ui/EmptyState";
+import { TileSkeleton } from "../components/ui/Skeleton";
 import { endpoints } from "../services/endpoints";
 
-const DIFF = {
-  beginner:     { cls: "easy",   label: "Başlanğıc", dot: "var(--easy)" },
-  intermediate: { cls: "medium", label: "Orta",      dot: "var(--medium)" },
-  advanced:     { cls: "hard",   label: "İrəliləmiş",dot: "var(--hard)" },
-};
-
 const CAT_ICONS = {
-  web:       "🌐", network: "🔌", linux:    "🐧",
-  crypto:    "🔐", forensics:"🔍", osint:   "👁",
-  reverse:   "⚙️",  pwn:    "💥", misc:    "🧩",
-  default:   "🛡️",
+  web: "🌐", network: "🔌", linux: "🐧", crypto: "🔐",
+  forensics: "🔍", osint: "👁", reverse: "⚙️", pwn: "💥", misc: "🧩",
 };
 
-function SkeletonCard() {
-  return (
-    <div className="mission-card" style={{ pointerEvents: "none" }}>
-      <div className="xk-skel" style={{ height: 44, width: 44, borderRadius: "var(--r3)", marginBottom: 4 }} />
-      <div className="xk-skel" style={{ height: 18, width: "75%", borderRadius: 4 }} />
-      <div className="xk-skel" style={{ height: 14, width: "55%", borderRadius: 4 }} />
-      <div className="xk-skel" style={{ height: 6,  width: "100%", borderRadius: 99, marginTop: 8 }} />
-    </div>
-  );
-}
+const LEVELS = [
+  { value: "",             label: "Hamısı" },
+  { value: "beginner",     label: "Başlanğıc" },
+  { value: "intermediate", label: "Orta" },
+  { value: "advanced",     label: "İrəliləmiş" },
+];
 
 export default function RoomsPage() {
-  const [rooms,      setRooms]      = useState([]);
-  const [tags,       setTags]       = useState([]);
-  const [categories, setCategories] = useState([]);
-  const [loading,    setLoading]    = useState(true);
-  const [error,      setError]      = useState("");
+  const [rooms, setRooms]       = useState([]);
+  const [tags, setTags]         = useState([]);
+  const [cats, setCats]         = useState([]);
+  const [loading, setLoading]   = useState(true);
+  const [error, setError]       = useState("");
 
-  const [search,    setSearch]    = useState("");
+  const [search, setSearch]     = useState("");
   const [debSearch, setDebSearch] = useState("");
-  const [level,     setLevel]     = useState("");
-  const [tag,       setTag]       = useState("");
-  const [activeTab, setActiveTab] = useState("");   // category slug
+  const [level, setLevel]       = useState("");
+  const [tag, setTag]           = useState("");
+  const [activeCat, setActiveCat] = useState("");
 
   const debRef = useRef(null);
   useEffect(() => {
     clearTimeout(debRef.current);
-    debRef.current = setTimeout(() => setDebSearch(search), 300);
+    debRef.current = setTimeout(() => setDebSearch(search), 280);
     return () => clearTimeout(debRef.current);
   }, [search]);
 
@@ -55,210 +53,126 @@ export default function RoomsPage() {
       endpoints.roomTags(),
       endpoints.categories(),
     ])
-      .then(([rRes, tRes, cRes]) => {
+      .then(([r, t, c]) => {
         if (!mounted) return;
-        setRooms(rRes.data || []);
-        setTags(tRes.data  || []);
-        setCategories(cRes.data || []);
+        setRooms(r.data || []);
+        setTags(t.data || []);
+        setCats(c.data || []);
       })
-      .catch(() => { if (mounted) setError("Missionlar yüklənmədi."); })
+      .catch(() => { if (mounted) setError("Otaqlar yüklənmədi"); })
       .finally(() => { if (mounted) setLoading(false); });
     return () => { mounted = false; };
   }, [debSearch, level, tag]);
 
   const filtered = useMemo(() => {
-    if (!activeTab) return rooms;
+    if (!activeCat) return rooms;
     return rooms.filter(r => {
-      const slug = (r.course?.category?.slug || r.course?.category || "").toLowerCase();
-      const name = (r.course?.category?.name  || "").toLowerCase();
-      return slug === activeTab || name.includes(activeTab);
+      const slug = (r.course?.category?.slug || "").toLowerCase();
+      const name = (r.course?.category?.name || "").toLowerCase();
+      return slug === activeCat || name.includes(activeCat);
     });
-  }, [rooms, activeTab]);
+  }, [rooms, activeCat]);
 
-  const reset = useCallback(() => {
-    setSearch(""); setLevel(""); setTag(""); setActiveTab("");
-  }, []);
-
-  const total     = rooms.length;
+  const total = rooms.length;
   const completed = rooms.filter(r => (r.progress_percent || 0) >= 100).length;
-  const inProg    = rooms.filter(r => (r.progress_percent || 0) > 0 && r.progress_percent < 100).length;
-  const totalXP   = rooms.reduce((s, r) => s + (r.points || 0), 0);
+  const inProg = rooms.filter(r => {
+    const p = r.progress_percent || 0;
+    return p > 0 && p < 100;
+  }).length;
+  const totalXP = rooms.reduce((s, r) => s + (r.points || 0), 0);
+
+  const catTabs = [{ value: "", label: "Hamısı", icon: "◫" }, ...cats.map(c => ({
+    value: c.slug, label: c.name, icon: CAT_ICONS[c.slug?.toLowerCase()] || "▣",
+  }))];
 
   return (
-    <AppShell
-      title="Missions"
-      searchPlaceholder="Mission adı, kurs, tag axtar..."
-      onSearch={setSearch}
-      extraTopbar={<span className="xk-chip">{filtered.length} mission</span>}
-    >
-      {/* Header */}
-      <div className="missions-header">
+    <AppShell>
+      <div className="page-head">
         <div>
-          <div className="xk-eyebrow">⚡ Platforma</div>
-          <h1>Missions</h1>
-          <p style={{ marginTop: 4, color: "var(--t3)", fontSize: 14 }}>
-            Real dünya ssenarilərinə əsaslanan praktiki tapşırıqlar
-          </p>
+          <div className="page-eyebrow">Labs · Rooms</div>
+          <h1 className="page-title">Real ssenarilər</h1>
+          <div className="page-sub">Praktik kiber-təhlükəsizlik tapşırıqları, real dünya bənzətmələri.</div>
         </div>
       </div>
 
-      {/* Stats bar */}
-      <div className="missions-stats">
-        <div className="xk-panel missions-stat">
-          <span className="missions-stat-val" style={{ color: "var(--green)" }}>{total}</span>
-          <span className="missions-stat-key">Ümumi</span>
-        </div>
-        <div className="xk-panel missions-stat">
-          <span className="missions-stat-val" style={{ color: "var(--easy)" }}>{completed}</span>
-          <span className="missions-stat-key">Tamamlandı</span>
-        </div>
-        <div className="xk-panel missions-stat">
-          <span className="missions-stat-val" style={{ color: "var(--blue)" }}>{inProg}</span>
-          <span className="missions-stat-key">Davam edir</span>
-        </div>
-        <div className="xk-panel missions-stat">
-          <span className="missions-stat-val" style={{ color: "var(--amber)" }}>
-            {totalXP.toLocaleString()}
-          </span>
-          <span className="missions-stat-key">Toplam XP</span>
-        </div>
+      <div className="bento" style={{ marginBottom: 16 }}>
+        <Tile span={3}><Stat label="Cəmi otaq" value={total} size="md" /></Tile>
+        <Tile span={3}><Stat label="Tamamlandı" value={completed} size="md" sparkTone="mint" /></Tile>
+        <Tile span={3}><Stat label="Davam edir" value={inProg} size="md" sparkTone="sky" /></Tile>
+        <Tile span={3}><Stat label="Toplam XP" value={totalXP.toLocaleString()} size="md" /></Tile>
       </div>
 
-      {/* Category tabs */}
-      {categories.length > 0 && (
-        <div className="xk-tabs" role="tablist" style={{ marginBottom: 16 }}>
-          <button
-            role="tab" type="button"
-            className={`xk-tab${activeTab === "" ? " active" : ""}`}
-            onClick={() => setActiveTab("")}
-          >
-            🔰 Hamısı
-          </button>
-          {categories.map(cat => (
-            <button
-              key={cat.slug}
-              role="tab" type="button"
-              className={`xk-tab${activeTab === cat.slug ? " active" : ""}`}
-              onClick={() => setActiveTab(cat.slug)}
-            >
-              {CAT_ICONS[cat.slug?.toLowerCase()] || CAT_ICONS.default} {cat.name}
-            </button>
-          ))}
+      {catTabs.length > 1 && (
+        <div style={{ marginBottom: 16 }}>
+          <Tabs value={activeCat} onChange={setActiveCat} options={catTabs} ariaLabel="Kateqoriyalar" />
         </div>
       )}
 
-      {/* Filters row */}
-      <div className="missions-filters">
-        <select
-          className="xk-select"
-          value={level}
-          onChange={e => { setLevel(e.target.value); }}
-        >
-          <option value="">Bütün səviyyələr</option>
-          <option value="beginner">Başlanğıc</option>
-          <option value="intermediate">Orta</option>
-          <option value="advanced">İrəliləmiş</option>
-        </select>
-
+      <div style={{ display: "flex", gap: 10, alignItems: "center", marginBottom: 16, flexWrap: "wrap" }}>
+        <Segmented value={level} onChange={setLevel} options={LEVELS} />
         {tags.length > 0 && (
-          <select
-            className="xk-select"
-            value={tag}
-            onChange={e => setTag(e.target.value)}
-          >
+          <Select value={tag} onChange={(e) => setTag(e.target.value)} style={{ width: "auto", minWidth: 180 }}>
             <option value="">Bütün teqlər</option>
-            {tags.map(t => (
-              <option key={t.id} value={t.slug}>{t.name}</option>
-            ))}
-          </select>
+            {tags.map(t => <option key={t.id} value={t.slug}>{t.name}</option>)}
+          </Select>
         )}
-
-        {(level || tag || activeTab || search) && (
-          <button type="button" className="xk-btn xk-btn-ghost xk-btn-sm" onClick={reset}>
-            ✕ Sıfırla
-          </button>
-        )}
-
-        <span className="xk-chip" style={{ marginLeft: "auto" }}>
-          {filtered.length} nəticə
+        <Input
+          placeholder="Otaq adı..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          style={{ maxWidth: 240, flex: 1, minWidth: 180 }}
+        />
+        <span style={{ marginLeft: "auto" }}>
+          <Chip size="sm">{filtered.length} nəticə</Chip>
         </span>
       </div>
 
-      {error && <div className="xk-alert xk-alert-err">{error}</div>}
+      {error && (
+        <Tile><div style={{ color: "var(--c-4)" }}>{error}</div></Tile>
+      )}
 
-      {/* Grid */}
       {loading ? (
-        <div className="missions-grid">
-          {Array.from({ length: 8 }).map((_, i) => <SkeletonCard key={i} />)}
+        <div className="bento">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="span-4"><TileSkeleton height={200} /></div>
+          ))}
         </div>
       ) : filtered.length === 0 ? (
-        <div className="xk-panel xk-empty">
-          <div className="xk-empty-ico">🔍</div>
-          <h3>Mission tapılmadı</h3>
-          <p>Filtrləri sıfırlayıb yenidən cəhd edin.</p>
-          <button type="button" className="xk-btn xk-btn-secondary xk-btn-sm" onClick={reset}>
-            Filtrləri sıfırla
-          </button>
-        </div>
+        <Tile>
+          <EmptyState icon="▣" title="Otaq tapılmadı" description="Filtrləri sıfırla və yenidən cəhd et." />
+        </Tile>
       ) : (
-        <div className="missions-grid">
-          {filtered.map((room, i) => {
-            const diff = DIFF[room.level] || DIFF.beginner;
-            const pct  = room.progress_percent || 0;
+        <div className="bento">
+          {filtered.map((r) => {
+            const pct = r.progress_percent || 0;
+            const isDone = pct >= 100;
             return (
-              <Link
-                key={room.id}
-                to={`/rooms/${room.slug}`}
-                className="mission-card xk-anim-up"
-                style={{ animationDelay: `${i * 40}ms` }}
-              >
-                <div className={`mission-card-bar ${diff.cls}`} />
-                {pct >= 100 && (
-                  <div className="mission-completed-overlay">✓</div>
-                )}
-                <div className="mission-card-top">
-                  <div className="mission-card-icon">{room.icon || "🧪"}</div>
-                  <div className="mission-card-badges">
-                    <span className={`xk-diff xk-diff-${diff.cls}`}>{diff.label}</span>
-                    {room.is_premium && <span className="xk-tag">⭐ Pro</span>}
+              <Tile key={r.id} span={4} as={Link} to={`/rooms/${r.slug}`} interactive>
+                <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
+                  <span style={{
+                    width: 44, height: 44, borderRadius: 12,
+                    background: "var(--bg-card-2)", border: "1px solid var(--line-2)",
+                    display: "grid", placeItems: "center", fontSize: 22, flexShrink: 0,
+                  }}>{r.icon || CAT_ICONS[r.course?.category?.slug?.toLowerCase()] || "▣"}</span>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div className="tile-title">{r.title}</div>
+                    <div className="tile-sub" style={{ display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+                      {r.summary}
+                    </div>
                   </div>
+                  {isDone && <ProgressRing value={100} size={36} strokeWidth={4} tone="mint" />}
                 </div>
-
-                <h3>{room.title}</h3>
-                <p>{room.summary}</p>
-
-                {/* Tags */}
-                {room.tags && room.tags.length > 0 && (
-                  <div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>
-                    {room.tags.slice(0, 3).map(t => (
-                      <span key={t.id} className="xk-tag">{t.name}</span>
-                    ))}
-                  </div>
-                )}
-
-                <div className="xk-prog" style={{ marginTop: "auto" }}>
-                  <div className="xk-prog-track">
-                    <div
-                      className={`xk-prog-fill${pct >= 100 ? "" : " blue"}`}
-                      style={{ width: `${pct}%` }}
-                    />
-                  </div>
-                  <div className="xk-prog-meta">
-                    <span>{pct}% tamamlandı</span>
-                    <span>{room.task_count || 0} task</span>
-                  </div>
+                <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                  <DiffBadge level={r.level} />
+                  {r.is_premium && <Chip size="sm" tone="amber">⭐ Pro</Chip>}
+                  {r.tags?.slice(0, 2).map(t => <Chip key={t.id} size="sm">{t.name}</Chip>)}
                 </div>
-
-                <div className="mission-card-footer">
-                  <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                    <span>⏱ {room.estimated_minutes || 0} dəq</span>
-                    {room.course?.title && (
-                      <span className="xk-tag">{room.course.title}</span>
-                    )}
-                  </div>
-                  <span className="mission-xp">★ {room.points || 0}</span>
+                <Bar value={pct} tone={isDone ? "mint" : "accent"} rightCaption={`${r.task_count || 0} task · ${pct}%`} />
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "auto", fontSize: 11, color: "var(--ink-3)" }}>
+                  <span className="mono">⏱ {r.estimated_minutes || 0}m</span>
+                  <span className="mono tnum" style={{ color: "var(--accent)", fontWeight: 700 }}>★ {r.points || 0}</span>
                 </div>
-              </Link>
+              </Tile>
             );
           })}
         </div>

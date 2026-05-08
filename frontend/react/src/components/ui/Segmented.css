@@ -1,0 +1,47 @@
+.seg {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px;
+  background: var(--bg-card-2);
+  border: 1px solid var(--line-2);
+  border-radius: 10px;
+}
+.seg-block { display: flex; width: 100%; }
+.seg-item {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  background: transparent;
+  border: none;
+  color: var(--ink-3);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background var(--dur-1), color var(--dur-1);
+  white-space: nowrap;
+}
+.seg-item:hover { color: var(--ink-1); }
+.seg-item.is-active {
+  background: var(--bg-elev);
+  color: var(--ink-1);
+  font-weight: 600;
+}
+.seg-ico { display: inline-flex; }
+.seg-count {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--ink-3);
+  padding: 1px 5px;
+  border-radius: 999px;
+  background: var(--bg-card);
+  border: 1px solid var(--line-2);
+}
+.seg-item.is-active .seg-count { color: var(--accent); border-color: var(--accent-ring); background: var(--accent-soft); }
+
+.seg-sm .seg-item { padding: 4px 10px; font-size: 11px; }
+.seg-lg .seg-item { padding: 8px 14px; font-size: 13px; }

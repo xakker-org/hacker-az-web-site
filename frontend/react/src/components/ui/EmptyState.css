@@ -1,0 +1,32 @@
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 48px 24px;
+  gap: 10px;
+}
+.empty-ico {
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  background: var(--bg-card-2);
+  border: 1px solid var(--line-2);
+  display: grid;
+  place-items: center;
+  font-size: 28px;
+  color: var(--ink-3);
+  margin-bottom: 6px;
+}
+.empty-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ink-1);
+}
+.empty-desc {
+  font-size: 13px;
+  color: var(--ink-3);
+  max-width: 360px;
+  line-height: 1.55;
+}
+.empty-action { margin-top: 8px; }

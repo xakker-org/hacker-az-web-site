@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import AppShell from "../components/AppShell";
 import { endpoints } from "../services/endpoints";
-import "../styles/missions.css";
 
 /* ── Timer component ──────────────────────────────────────────── */
 function Timer({ totalSeconds, onExpire }) {

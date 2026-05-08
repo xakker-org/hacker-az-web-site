@@ -1,0 +1,61 @@
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+.stat-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.stat-row {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.stat-value {
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: var(--ink-1);
+  letter-spacing: -0.025em;
+  line-height: 1;
+}
+.stat-sm .stat-value { font-size: 18px; }
+.stat-md .stat-value { font-size: 28px; }
+.stat-lg .stat-value { font-size: 40px; }
+.stat-unit {
+  font-size: 0.55em;
+  font-weight: 600;
+  color: var(--ink-3);
+  margin-left: 4px;
+  letter-spacing: 0;
+}
+.stat-delta {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ink-3);
+  padding: 2px 7px;
+  border-radius: var(--r-pill);
+  border: 1px solid var(--line-2);
+  background: var(--bg-card-2);
+}
+.stat-delta.is-up   { color: var(--c-1); border-color: rgba(110,255,214,0.3); background: rgba(110,255,214,0.08); }
+.stat-delta.is-down { color: var(--c-4); border-color: rgba(255,122,138,0.3); background: rgba(255,122,138,0.08); }
+.stat-spark {
+  margin-top: 2px;
+  width: 100%;
+}
+.stat-hint {
+  font-size: 11px;
+  color: var(--ink-4);
+  font-family: var(--font-mono);
+}
