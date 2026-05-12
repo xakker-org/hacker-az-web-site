@@ -64,7 +64,7 @@ export default function ProfilePage() {
       ]);
       setProfile({ ...EMPTY_PROFILE, ...(p?.data || {}) });
       setStats({ ...EMPTY_STATS, ...(s?.data || {}) });
-      setDays(g?.data?.days || []);
+      setDays((g?.data?.days || []).map(d => ({ ...d, value: d.points_earned || 0 })));
       const backendYears = g?.data?.years || [];
       setYears(backendYears.length > 0 ? backendYears : [THIS_YEAR]);
       setYear(g?.data?.selected_year || THIS_YEAR);
@@ -79,7 +79,7 @@ export default function ProfilePage() {
   const loadActivity = async (y) => {
     try {
       const g = await endpoints.activityGraph(y);
-      setDays(g?.data?.days || []);
+      setDays((g?.data?.days || []).map(d => ({ ...d, value: d.points_earned || 0 })));
       const backendYears = g?.data?.years || [];
       if (backendYears.length > 0) setYears(backendYears);
       setYear(g?.data?.selected_year || y);
@@ -360,40 +360,12 @@ export default function ProfilePage() {
 
       {/* ── Activity heatmap ── */}
       <Tile style={{ marginBottom: 20 }}>
-        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: 16, marginBottom: 16 }}>
-          <div>
-            <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, color: "var(--ink-4)", letterSpacing: "0.14em", textTransform: "uppercase", marginBottom: 4 }}>
-              Activity
-            </div>
-            <div style={{ fontSize: 18, fontWeight: 700, color: "var(--ink-1)" }}>
-              {activeDaysCount} aktiv gün{" "}
-              <span style={{ color: "var(--ink-3)", fontWeight: 400, fontSize: 14 }}>
-                {year ? `(${year})` : ""}
-              </span>
-            </div>
-            <div style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--ink-4)", marginTop: 2 }}>
-              {overall.toLocaleString()} XP · Son 7 gün: {last7} XP
-            </div>
-          </div>
-
-          {years.length > 0 && (
-            <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
-              {years.map(y => (
-                <button key={y} type="button" onClick={() => { setYear(y); loadActivity(y); }}
-                  style={{
-                    padding: "5px 14px", borderRadius: "var(--r-pill)",
-                    border: `1px solid ${year === y ? "var(--accent-ring)" : "var(--line-2)"}`,
-                    background: year === y ? "var(--accent-soft)" : "var(--bg-card-2)",
-                    color: year === y ? "var(--accent)" : "var(--ink-3)",
-                    fontFamily: "var(--font-mono)", fontSize: 12,
-                    fontWeight: year === y ? 700 : 500, cursor: "pointer",
-                    transition: "all var(--dur-1)",
-                  }}>{y}</button>
-              ))}
-            </div>
-          )}
-        </div>
-        <Heatmap days={days} year={year} />
+        <Heatmap
+          days={days}
+          year={year}
+          years={years}
+          onYearChange={(y) => { setYear(y); loadActivity(y); }}
+        />
       </Tile>
 
       {/* ── Recent activity + performance ── */}
