@@ -336,38 +336,6 @@ if (langToggleBtn) {
 const savedLang = localStorage.getItem('xakker-lang') || 'az';
 applyLang(savedLang);
 
-/* ============================================================
-   Container Scroll Animation — Aceternity style
-   ============================================================ */
-(function () {
-  const section = document.querySelector('.cs-section');
-  const card    = document.getElementById('cs-card');
-  if (!section || !card) return;
-
-  const MAX_ROTATE = 20;   // başlanğıc əyilmə dərəcəsi
-  const MAX_SCALE  = 1.05; // başlanğıc böyüklük
-
-  function update() {
-    const rect = section.getBoundingClientRect();
-    const vh   = window.innerHeight;
-
-    // progress: 0 = section yuxarı viewport-a gəldi, 1 = section aşağı çıxdı
-    const scrollable = rect.height - vh;
-    const progress   = scrollable > 0
-      ? Math.max(0, Math.min(1, -rect.top / scrollable))
-      : 1;
-
-    const rotateX = MAX_ROTATE * (1 - progress);
-    const scale   = MAX_SCALE - (MAX_SCALE - 1) * progress;
-
-    card.style.transform = `rotateX(${rotateX}deg) scale(${scale})`;
-  }
-
-  // İlk render
-  update();
-  window.addEventListener('scroll', update, { passive: true });
-  window.addEventListener('resize', update, { passive: true });
-})();
 
 /* Mobile nav toggle */
 const navToggle = document.querySelector(".nav-toggle");
@@ -398,3 +366,491 @@ if (navToggle && mobileNav) {
     if (e.key === "Escape") closeMenu();
   });
 }
+
+/* ============================================================
+   GSAP + ScrollTrigger + Three.js Globe
+   ============================================================ */
+(function () {
+  if (typeof gsap === 'undefined') return;
+
+  gsap.registerPlugin(ScrollTrigger);
+
+  /* ── Panel-0 cs-card tilt → Panels 1-3 horizontal scroll ──── */
+  (function () {
+    var section = document.getElementById('hscroll-section');
+    var sticky  = document.getElementById('hscroll-sticky');
+    var track   = document.getElementById('hscroll-track');
+    var csCard  = document.getElementById('cs-card');
+    if (!section || !sticky || !track || !csCard) return;
+
+    gsap.set(csCard, { rotateX: 20, scale: 1.05, transformOrigin: '50% 0%' });
+
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      gsap.set(csCard, { rotateX: 0, scale: 1 });
+      return;
+    }
+
+    /* Proportional durations: tilt gets 60 vh, horizontal gets 3×vw of scroll */
+    var tiltPx  = window.innerHeight * 0.6;
+    var horizPx = track.scrollWidth - window.innerWidth;
+
+    var tl = gsap.timeline({
+      scrollTrigger: {
+        trigger: section,
+        start: 'top top',
+        end: function () {
+          return '+=' + (window.innerHeight * 0.6 + track.scrollWidth - window.innerWidth);
+        },
+        pin: sticky,
+        scrub: true,
+        anticipatePin: 1,
+        invalidateOnRefresh: true,
+      }
+    });
+
+    /* Phase 1 — grows and flattens into final centered position */
+    tl.to(csCard, { rotateX: 0, scale: 1, ease: 'none', duration: tiltPx });
+
+    /* Phase 2 — page slides RIGHT through panels 1, 2, 3 */
+    tl.to(track, {
+      x: function () { return -(track.scrollWidth - window.innerWidth); },
+      ease: 'none',
+      duration: horizPx,
+    });
+  }());
+
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ── Hero entrance ────────────────────────────────────────── */
+  if (!reduced) {
+    const heroItems = document.querySelectorAll('.hero-item');
+    const globeWrap = document.querySelector('.hero-globe-wrap');
+
+    const heroTl = gsap.timeline({ defaults: { ease: 'power3.out' } });
+
+    if (heroItems.length) {
+      heroTl.to(heroItems, {
+        opacity: 1,
+        y: 0,
+        duration: 0.75,
+        stagger: 0.13,
+      });
+    }
+
+    if (globeWrap) {
+      heroTl.to(globeWrap, {
+        opacity: 1,
+        scale: 1,
+        duration: 1.1,
+        ease: 'power2.out',
+      }, 0.1);
+    }
+  } else {
+    document.querySelectorAll('.hero-item').forEach(el => {
+      el.style.opacity = 1;
+      el.style.transform = 'none';
+    });
+    const gw = document.querySelector('.hero-globe-wrap');
+    if (gw) { gw.style.opacity = 1; gw.style.transform = 'none'; }
+  }
+
+  /* ── Feature cards stagger ────────────────────────────────── */
+  const featureCards = document.querySelectorAll('.feature-card');
+  if (featureCards.length && !reduced) {
+    gsap.fromTo(featureCards,
+      { opacity: 0, y: 55, scale: 0.97 },
+      {
+        opacity: 1, y: 0, scale: 1,
+        duration: 0.65, stagger: 0.1, ease: 'power2.out',
+        scrollTrigger: {
+          trigger: '.feature-grid',
+          start: 'top 78%',
+          once: true,
+        },
+      }
+    );
+  }
+
+  /* ── Process steps stagger ────────────────────────────────── */
+  const processSteps = document.querySelectorAll('.process-step');
+  if (processSteps.length && !reduced) {
+    gsap.fromTo(processSteps,
+      { opacity: 0, y: 50 },
+      {
+        opacity: 1, y: 0,
+        duration: 0.7, stagger: 0.13, ease: 'back.out(1.4)',
+        scrollTrigger: {
+          trigger: '.process-grid',
+          start: 'top 80%',
+          once: true,
+        },
+      }
+    );
+  }
+
+  /* ── Benefit cards alternating ────────────────────────────── */
+  const benefitCards = document.querySelectorAll('.benefit-card');
+  if (benefitCards.length && !reduced) {
+    benefitCards.forEach((card, i) => {
+      gsap.fromTo(card,
+        { opacity: 0, x: i % 2 === 0 ? -50 : 50 },
+        {
+          opacity: 1, x: 0,
+          duration: 0.7, ease: 'power2.out',
+          scrollTrigger: {
+            trigger: card,
+            start: 'top 82%',
+            once: true,
+          },
+        }
+      );
+    });
+  }
+
+  /* ── Testimonial cards: left / bottom / right ─────────────── */
+  const testCards = document.querySelectorAll('.testimonial-card');
+  if (testCards.length === 3 && !reduced) {
+    const origins = [
+      { x: -70, y: 0 },
+      { x: 0,   y: 60 },
+      { x: 70,  y: 0 },
+    ];
+    testCards.forEach((card, i) => {
+      gsap.fromTo(card,
+        { opacity: 0, x: origins[i].x, y: origins[i].y },
+        {
+          opacity: 1, x: 0, y: 0,
+          duration: 0.8, ease: 'power2.out',
+          delay: i * 0.1,
+          scrollTrigger: {
+            trigger: '.testimonial-grid',
+            start: 'top 78%',
+            once: true,
+          },
+        }
+      );
+    });
+  }
+
+  /* ── FAQ items stagger ────────────────────────────────────── */
+  const faqItems2 = document.querySelectorAll('.faq-item');
+  if (faqItems2.length && !reduced) {
+    gsap.fromTo(faqItems2,
+      { opacity: 0, y: 24 },
+      {
+        opacity: 1, y: 0,
+        duration: 0.55, stagger: 0.08, ease: 'power2.out',
+        scrollTrigger: {
+          trigger: '.faq-list',
+          start: 'top 80%',
+          once: true,
+        },
+      }
+    );
+  }
+
+  /* ── hscroll cards reveal then GSAP-driven horizontal ──────── */
+  const htrack = document.getElementById('hscroll-track');
+  const hCards = htrack ? htrack.querySelectorAll('.hscroll-card') : [];
+
+  if (htrack && hCards.length && !reduced) {
+    /* Reveal cards on scroll entry */
+    gsap.to(hCards, {
+      opacity: 1,
+      y: 0,
+      duration: 0.6,
+      stagger: 0.09,
+      ease: 'power2.out',
+      scrollTrigger: {
+        trigger: htrack.parentElement,
+        start: 'top 75%',
+        once: true,
+      },
+    });
+
+    /* Horizontal scrub */
+    const maxShift = () => htrack.scrollWidth - htrack.parentElement.offsetWidth - 80;
+
+    ScrollTrigger.create({
+      trigger: htrack.closest('.hscroll-section'),
+      start: 'top 50%',
+      end: () => '+=' + (maxShift() + 200),
+      scrub: 1.4,
+      pin: false,
+      onUpdate: (self) => {
+        const shift = self.progress * maxShift();
+        gsap.set(htrack, { x: -shift });
+      },
+    });
+  } else if (hCards.length) {
+    hCards.forEach(c => { c.style.opacity = 1; c.style.transform = 'none'; });
+  }
+
+  /* ── Stats counter ────────────────────────────────────────── */
+  const statValues = document.querySelectorAll('.stat-value');
+  if (statValues.length && !reduced) {
+    ScrollTrigger.create({
+      trigger: '.trust-stats',
+      start: 'top 82%',
+      once: true,
+      onEnter: () => {
+        statValues.forEach(el => {
+          const text = el.textContent.trim();
+          const num  = parseFloat(text.replace(/[^0-9.]/g, ''));
+          const suffix = text.replace(/[0-9.]/g, '').trim();
+          if (!isNaN(num)) {
+            gsap.fromTo({ val: 0 }, { val: num },
+              {
+                duration: 1.6,
+                ease: 'power2.out',
+                onUpdate: function () {
+                  const v = Math.round(this.targets()[0].val * 10) / 10;
+                  el.textContent = (Number.isInteger(num) ? Math.round(v) : v) + suffix;
+                },
+              }
+            );
+          }
+        });
+      },
+    });
+  }
+
+  /* ============================================================
+     THREE.JS — Red Cyber Globe
+     ============================================================ */
+  const canvas = document.getElementById('globe-canvas');
+  if (!canvas || typeof THREE === 'undefined') return;
+
+  const W = canvas.offsetWidth  || 460;
+  const H = canvas.offsetHeight || 460;
+
+  const renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
+  renderer.setSize(W, H);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.8));
+  renderer.setClearColor(0x000000, 0);
+
+  const scene  = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(42, W / H, 0.1, 100);
+  camera.position.set(0, 0, 2.9);
+
+  /* Lights */
+  scene.add(new THREE.AmbientLight(0xffffff, 0.3));
+  const pl = new THREE.PointLight(0xff2442, 2.0, 8);
+  pl.position.set(2, 1.5, 2);
+  scene.add(pl);
+  const pl2 = new THREE.PointLight(0xff0022, 0.8, 8);
+  pl2.position.set(-2, -1, -1.5);
+  scene.add(pl2);
+
+  /* Wireframe globe */
+  const sphereGeo = new THREE.SphereGeometry(1, 38, 24);
+  const sphereMat = new THREE.MeshBasicMaterial({ color: 0xff2442, wireframe: true, transparent: true, opacity: 0.07 });
+  const wireMesh  = new THREE.Mesh(sphereGeo, sphereMat);
+  scene.add(wireMesh);
+
+  /* Outer soft glow sphere */
+  const glowGeo = new THREE.SphereGeometry(1.16, 32, 32);
+  const glowMat = new THREE.MeshBasicMaterial({ color: 0xff2442, transparent: true, opacity: 0.04, side: THREE.BackSide });
+  scene.add(new THREE.Mesh(glowGeo, glowMat));
+
+  /* Node positions (lat/lon → xyz) */
+  function latlon2xyz(lat, lon, r) {
+    var phi   = (90 - lat) * (Math.PI / 180);
+    var theta = (lon + 180) * (Math.PI / 180);
+    return new THREE.Vector3(
+      -r * Math.sin(phi) * Math.cos(theta),
+       r * Math.cos(phi),
+       r * Math.sin(phi) * Math.sin(theta)
+    );
+  }
+
+  var LATLONS = [
+    [51.5,-0.1],[40.7,-74],[35.7,139.7],[48.9,2.3],[55.8,37.6],
+    [39.9,116.4],[-33.9,151.2],[19.1,72.9],[1.3,103.8],[25.2,55.3],
+    [37.6,-122.4],[43.7,-79.4],[52.5,13.4],[41.0,29.0],[23.1,113.3],
+    [34.0,-118.2],[-23.5,-46.6],[59.9,10.7],[45.5,-73.6],[31.2,121.5],
+    [40.4,-3.7],[60.2,24.9],[-1.3,36.8],[33.7,-84.4],[47.4,19.1],
+    [50.4,30.5],[30.0,31.2],[4.9,114.9]
+  ];
+
+  var nodes = LATLONS.map(function(ll) { return latlon2xyz(ll[0], ll[1], 1.015); });
+
+  /* Node meshes */
+  var nodeMeshes = [];
+  var nodeGeo    = new THREE.SphereGeometry(0.016, 6, 6);
+
+  nodes.forEach(function(pos, i) {
+    var mat  = new THREE.MeshBasicMaterial({ color: 0xff2442, transparent: true, opacity: 0.9 });
+    var mesh = new THREE.Mesh(nodeGeo, mat);
+    mesh.position.copy(pos);
+    mesh._phase = i * 0.618;
+    nodeMeshes.push(mesh);
+    scene.add(mesh);
+  });
+
+  /* Connection lines between nearby nodes */
+  var linePoints = [];
+  for (var a = 0; a < nodes.length; a++) {
+    for (var b = a + 1; b < nodes.length; b++) {
+      if (nodes[a].distanceTo(nodes[b]) < 1.35) {
+        linePoints.push(nodes[a].clone(), nodes[b].clone());
+      }
+    }
+  }
+  if (linePoints.length) {
+    var linesGeo = new THREE.BufferGeometry().setFromPoints(linePoints);
+    var linesMat = new THREE.LineBasicMaterial({ color: 0xff2442, transparent: true, opacity: 0.3 });
+    scene.add(new THREE.LineSegments(linesGeo, linesMat));
+  }
+
+  /* Ping rings — 4 nodes */
+  var pingData = [0, 5, 12, 20].map(function(idx) {
+    var ringGeo = new THREE.RingGeometry(0.018, 0.032, 20);
+    var ringMat = new THREE.MeshBasicMaterial({
+      color: 0xff2442, transparent: true, opacity: 0.7, side: THREE.DoubleSide
+    });
+    var ring = new THREE.Mesh(ringGeo, ringMat);
+    ring.position.copy(nodes[idx]);
+    /* Orient ring to face outward */
+    var normal = nodes[idx].clone().normalize();
+    ring.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), normal);
+    ring._phase = idx * 1.3;
+    scene.add(ring);
+    return ring;
+  });
+
+  /* Particles */
+  var pCount = 280;
+  var pPositions = new Float32Array(pCount * 3);
+  for (var p = 0; p < pCount; p++) {
+    var r     = 1.3 + Math.random() * 0.55;
+    var theta2 = Math.random() * Math.PI * 2;
+    var phi2   = Math.acos(2 * Math.random() - 1);
+    pPositions[p * 3]     = r * Math.sin(phi2) * Math.cos(theta2);
+    pPositions[p * 3 + 1] = r * Math.sin(phi2) * Math.sin(theta2);
+    pPositions[p * 3 + 2] = r * Math.cos(phi2);
+  }
+  var pGeo = new THREE.BufferGeometry();
+  pGeo.setAttribute('position', new THREE.BufferAttribute(pPositions, 3));
+  var pMat  = new THREE.PointsMaterial({ size: 0.007, color: 0xff6677, transparent: true, opacity: 0.5 });
+  var pMesh = new THREE.Points(pGeo, pMat);
+  scene.add(pMesh);
+
+  /* Rotate group */
+  var globeGroup = new THREE.Group();
+  scene.remove(wireMesh);
+  scene.remove(pMesh);
+  nodeMeshes.forEach(function(m) { scene.remove(m); });
+  pingData.forEach(function(r) { scene.remove(r); });
+  if (linePoints.length) scene.remove(scene.children[scene.children.length - 1]);
+
+  /* Rebuild inside group */
+  globeGroup.add(wireMesh);
+  nodeMeshes.forEach(function(m) { globeGroup.add(m); });
+  if (linePoints.length) {
+    var linesGeo2 = new THREE.BufferGeometry().setFromPoints(linePoints);
+    var linesMat2 = new THREE.LineBasicMaterial({ color: 0xff2442, transparent: true, opacity: 0.3 });
+    globeGroup.add(new THREE.LineSegments(linesGeo2, linesMat2));
+  }
+  pingData.forEach(function(r) { globeGroup.add(r); });
+  globeGroup.add(pMesh);
+  scene.add(globeGroup);
+
+  /* Add glow back (not inside group so it doesn't rotate) */
+  scene.add(new THREE.Mesh(
+    new THREE.SphereGeometry(1.16, 32, 32),
+    new THREE.MeshBasicMaterial({ color: 0xff2442, transparent: true, opacity: 0.04, side: THREE.BackSide })
+  ));
+
+  /* Animation loop */
+  var clock = { start: Date.now() };
+  function getTime() { return (Date.now() - clock.start) / 1000; }
+
+  var animFrameId;
+  function animate() {
+    animFrameId = requestAnimationFrame(animate);
+    var t = getTime();
+
+    /* Rotate globe */
+    globeGroup.rotation.y = t * 0.10;
+    pMesh.rotation.y = t * 0.04;
+    pMesh.rotation.x = t * 0.02;
+
+    /* Pulse nodes */
+    nodeMeshes.forEach(function(m) {
+      m.material.opacity = 0.4 + 0.6 * (0.5 + 0.5 * Math.sin(t * 1.8 + m._phase));
+    });
+
+    /* Animate ping rings */
+    pingData.forEach(function(ring) {
+      var cycle = ((t * 0.7 + ring._phase) % 2.5) / 2.5;
+      var scale = 1 + cycle * 3.5;
+      ring.scale.setScalar(scale);
+      ring.material.opacity = (1 - cycle) * 0.65;
+    });
+
+    /* Pulse point light */
+    pl.intensity = 1.8 + 0.4 * Math.sin(t * 1.2);
+
+    renderer.render(scene, camera);
+  }
+
+  animate();
+
+  /* Resize handler */
+  function onResize() {
+    var nW = canvas.offsetWidth;
+    var nH = canvas.offsetHeight;
+    if (!nW || !nH) return;
+    camera.aspect = nW / nH;
+    camera.updateProjectionMatrix();
+    renderer.setSize(nW, nH);
+  }
+  window.addEventListener('resize', onResize, { passive: true });
+
+  /* Pause when off-screen */
+  var globeObserver = new IntersectionObserver(function(entries) {
+    entries.forEach(function(e) {
+      if (e.isIntersecting) {
+        if (!animFrameId) animate();
+      } else {
+        cancelAnimationFrame(animFrameId);
+        animFrameId = null;
+      }
+    });
+  }, { threshold: 0 });
+  globeObserver.observe(canvas);
+
+})();
+
+/* ============================================================
+
+/* ============================================================
+   GLOBE SECTION — content reveal
+   ============================================================ */
+(function () {
+  if (typeof gsap === 'undefined') return;
+  var gsContent = document.querySelector('.globe-section-content');
+  var gsVisual  = document.querySelector('.globe-section-visual');
+  if (!gsContent || !gsVisual) return;
+
+  var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (reduced) return;
+
+  gsap.fromTo(gsVisual,
+    { opacity: 0, scale: 0.88 },
+    {
+      opacity: 1, scale: 1, duration: 1.1, ease: 'power2.out',
+      scrollTrigger: { trigger: '.globe-section', start: 'top 75%', once: true }
+    }
+  );
+
+  var children = gsContent.children;
+  gsap.fromTo(children,
+    { opacity: 0, x: 60 },
+    {
+      opacity: 1, x: 0, duration: 0.7, stagger: 0.1, ease: 'power2.out',
+      scrollTrigger: { trigger: '.globe-section', start: 'top 72%', once: true }
+    }
+  );
+})();

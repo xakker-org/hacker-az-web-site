@@ -721,34 +721,10 @@ h5 {
    CONTAINER SCROLL ANIMATION (Aceternity style)
    ============================================================ */
 
-.cs-section {
-  height: 160vh;
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  padding: 0 20px;
-  margin-top: -200px;
-  background: linear-gradient(180deg, var(--bg-0) 0%, var(--surface-0) 100%);
-}
-
-.cs-sticky {
-  position: sticky;
-  top: 0;
-  height: 100vh;
-  width: 100%;
-  max-width: 1120px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  /* perspective burda tətbiq olunur */
-  perspective: 1200px;
-}
-
+/* cs-card styles — used by panel-0 inside hscroll-section */
 .cs-card {
   width: 100%;
   transform-origin: 50% 0%;
-  /* başlanğıc vəziyyət: 20 dərəcə əyilmiş */
-  transform: rotateX(20deg) scale(1.05);
   will-change: transform;
   border-radius: var(--r-xl);
   border: 1px solid rgba(255, 255, 255, 0.08);
@@ -763,20 +739,74 @@ h5 {
   overflow: hidden;
 }
 
+/* ============================================================
+   HORIZONTAL SCROLL — Panel-0: cs-card tilt, Panel 1-3: sağa
+   ============================================================ */
+.hscroll-section {
+  margin-top: -340px;
+}
+
+.hscroll-sticky {
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.hscroll-track {
+  display: flex;
+  flex-wrap: nowrap;
+  height: 100%;
+  will-change: transform;
+}
+
+.hscroll-panel {
+  width: 100vw;
+  height: 100%;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px 140px;
+  background: linear-gradient(180deg, var(--bg-0) 0%, var(--surface-0) 100%);
+}
+
+/* Panel-0 — centering only, no perspective here */
+.hs-panel-cs {
+  /* perspective must be on the direct parent of the rotating element */
+}
+
+/* Wrapper inside panel-0 — perspective here so cs-card is a direct child */
+.hs-cs-wrap {
+  width: 100%;
+  max-width: 1120px;
+  perspective: 1200px;
+}
+
+/* Panels 1-3 card — exact cs-card clone */
+.hs-card {
+  width: 100%;
+  max-width: 1120px;
+  border-radius: var(--r-xl);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: #0a0c10;
+  box-shadow:
+    0 0 #0000004d,
+    0 9px 20px #0000004a,
+    0 37px 37px #00000042,
+    0 84px 50px #00000026,
+    0 149px 60px #0000000a,
+    0 233px 65px #00000003;
+  overflow: hidden;
+}
+
 @media (max-width: 768px) {
-  .cs-section {
-    height: auto;
-    padding: 40px 16px;
-  }
-  .cs-sticky {
-    position: relative;
-    height: auto;
-    perspective: none;
-  }
-  .cs-card {
-    transform: none;
-    border-width: 2px;
-  }
+  .hscroll-section { margin-top: 0; }
+  .hscroll-panel   { padding: 0 16px; }
+  .hscroll-sticky  { height: auto; overflow: visible; }
+  .hscroll-track   { flex-direction: column; }
+  .hscroll-panel   { width: 100%; height: auto; padding: 40px 16px; }
+  .hs-panel-cs     { perspective: none; }
+  .cs-card         { transform: none !important; }
 }
 
 /* Hero mockup */
@@ -2090,4 +2120,455 @@ h5 {
   .mockup-header h3 {
     font-size: 16px;
   }
+}
+
+/* ============================================================
+   HERO — 2-sütunlu layout + Globe
+   ============================================================ */
+.hero-inner {
+  flex-direction: row !important;
+  text-align: left !important;
+  align-items: center !important;
+  max-width: var(--max) !important;
+  gap: 52px !important;
+  padding-left: var(--gutter) !important;
+  padding-right: var(--gutter) !important;
+}
+
+.hero-copy {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  align-items: flex-start;
+  position: relative;
+  z-index: 2;
+  min-width: 0;
+}
+
+.hero-copy .display    { max-width: 14ch; }
+.hero-copy .lede       { text-align: left; max-width: 48ch; }
+.hero-copy .cta-row    { justify-content: flex-start; }
+
+/* Globe wrapper */
+.hero-globe-wrap {
+  flex: 0 0 460px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+}
+
+#globe-canvas {
+  width: 460px;
+  height: 460px;
+  display: block;
+  border-radius: 50%;
+}
+
+.globe-ring {
+  position: absolute;
+  inset: -6%;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 86, 114, 0.10);
+  pointer-events: none;
+  animation: globeRingRotate 30s linear infinite;
+}
+
+.globe-ring-2 {
+  inset: -14%;
+  border-color: rgba(255, 86, 114, 0.05);
+  animation-duration: 50s;
+  animation-direction: reverse;
+}
+
+@keyframes globeRingRotate {
+  to { transform: rotate(360deg); }
+}
+
+.globe-badge {
+  position: absolute;
+  background: rgba(255, 86, 114, 0.10);
+  border: 1px solid rgba(255, 86, 114, 0.28);
+  border-radius: 10px;
+  padding: 7px 12px;
+  font-size: 10px;
+  font-family: "SFMono-Regular", Menlo, Consolas, monospace;
+  color: #ff8099;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  white-space: nowrap;
+  letter-spacing: 0.05em;
+  z-index: 3;
+  animation: globeBadgeIn 0.5s var(--ease) both;
+}
+
+.globe-badge-dot {
+  width: 5px;
+  height: 5px;
+  background: #ff5672;
+  border-radius: 50%;
+  flex-shrink: 0;
+  box-shadow: 0 0 6px rgba(255, 86, 114, 0.9);
+  animation: globeBadgePulse 1.8s ease-in-out infinite;
+}
+
+@keyframes globeBadgePulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.25; }
+}
+
+@keyframes globeBadgeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.globe-badge-1 { top: 14%; left: -6%; animation-delay: 1.2s; }
+.globe-badge-2 { bottom: 22%; right: -6%; animation-delay: 1.5s; }
+.globe-badge-3 { top: 54%; left: -8%; animation-delay: 1.8s; }
+
+/* ============================================================
+   GSAP init states — hero
+   ============================================================ */
+.hero-item {
+  opacity: 0;
+  transform: translateY(28px);
+}
+
+.hero-globe-wrap {
+  opacity: 0;
+  transform: scale(0.88);
+}
+
+/* ============================================================
+   Horizontal scroll strip section
+   ============================================================ */
+.hscroll-section {
+  padding-block: var(--section-y);
+  position: relative;
+  overflow: hidden;
+}
+
+.hscroll-header {
+  max-width: var(--max);
+  margin: 0 auto var(--section-y) auto;
+  padding-inline: var(--gutter);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.hscroll-track-outer {
+  overflow: hidden;
+}
+
+.hscroll-track {
+  display: flex;
+  gap: 20px;
+  padding: 4px var(--gutter) 24px;
+  will-change: transform;
+  width: max-content;
+}
+
+.hscroll-card {
+  flex-shrink: 0;
+  width: 320px;
+  background: linear-gradient(160deg, var(--surface-1), var(--surface-2));
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-lg);
+  padding: 28px;
+  transition: border-color 0.35s var(--ease), transform 0.35s var(--ease);
+  opacity: 0;
+  transform: translateY(40px);
+}
+
+.hscroll-card:hover {
+  border-color: var(--accent-ring);
+  transform: translateY(-4px) !important;
+}
+
+.hscroll-card-tag {
+  display: inline-flex;
+  padding: 4px 10px;
+  background: var(--accent-soft);
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--accent-2);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-bottom: 16px;
+}
+
+.hscroll-card h3 {
+  font-size: 15px;
+  font-weight: 600;
+  margin: 0 0 8px;
+  color: var(--ink-0);
+}
+
+.hscroll-card p {
+  font-size: 13px;
+  color: var(--ink-3);
+  line-height: 1.6;
+  margin: 0 0 16px;
+}
+
+.hscroll-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 8px;
+}
+
+.diff-badge {
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.diff-easy   { background: rgba(111,217,168,0.12); color: #6fd9a8; }
+.diff-med    { background: rgba(255,208,107,0.12); color: #ffd06b; }
+.diff-hard   { background: rgba(255,107,138,0.12); color: #ff6b8a; }
+.diff-expert { background: rgba(192,132,252,0.12); color: #c084fc; }
+
+.hscroll-xp {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--ink-3);
+  font-family: "SFMono-Regular", Menlo, monospace;
+}
+
+/* ============================================================
+   Responsive — hero globe
+   ============================================================ */
+@media (max-width: 960px) {
+  .hero-inner {
+    flex-direction: column !important;
+    text-align: center !important;
+    align-items: center !important;
+    gap: 36px !important;
+  }
+  .hero-copy {
+    align-items: center;
+    order: 2;
+  }
+  .hero-copy .lede  { text-align: center; }
+  .hero-copy .cta-row { justify-content: center; }
+  .hero-globe-wrap {
+    flex: none;
+    width: 100%;
+    max-width: 340px;
+    order: 1;
+  }
+  #globe-canvas {
+    width: 340px;
+    height: 340px;
+  }
+  .globe-badge { display: none; }
+}
+
+@media (max-width: 720px) {
+  .hero-globe-wrap {
+    max-width: 280px;
+  }
+  #globe-canvas {
+    width: 280px;
+    height: 280px;
+  }
+}
+
+/* ============================================================
+   Hero — orijinal layouta qayıt (öncəki !important override)
+   ============================================================ */
+.hero-inner {
+  flex-direction: column !important;
+  text-align: center !important;
+  align-items: center !important;
+  max-width: 860px !important;
+  gap: 28px !important;
+  padding-left: clamp(0px, 10vw, 140px) !important;
+  padding-right: clamp(0px, 4vw, 60px) !important;
+}
+
+/* ============================================================
+   HORIZONTAL SCROLL  (cs-card tilt → page slides RIGHT)
+   ============================================================ */
+
+.hscroll-section {
+  /* GSAP adds a spacer; no height needed here */
+}
+
+/* GSAP pins this div */
+.hscroll-sticky {
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* All panels side-by-side; GSAP translates leftward */
+.hscroll-track {
+  display: flex;
+  flex-wrap: nowrap;
+  height: 100%;
+  will-change: transform;
+}
+
+
+/* Card inside each panel — exact clone of .cs-card */
+.hs-card {
+  width: 100%;
+  max-width: 1120px;
+  border-radius: var(--r-xl);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: #0a0c10;
+  box-shadow:
+    0 0 #0000004d,
+    0 9px 20px #0000004a,
+    0 37px 37px #00000042,
+    0 84px 50px #00000026,
+    0 149px 60px #0000000a,
+    0 233px 65px #00000003;
+  overflow: hidden;
+}
+
+@media (max-width: 768px) {
+  .hscroll-panel { padding: 0 16px; }
+}
+
+/* ============================================================
+   GLOBE SECTION
+   ============================================================ */
+.globe-section {
+  padding-block: var(--section-y);
+  position: relative;
+  overflow: hidden;
+}
+
+.globe-section::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(700px 500px at 10% 50%, rgba(255,86,114,0.08), transparent 60%),
+    radial-gradient(500px 400px at 90% 50%, rgba(91,139,255,0.05), transparent 60%);
+  pointer-events: none;
+}
+
+.globe-section-inner {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 64px;
+  align-items: center;
+}
+
+.globe-section-visual {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#globe-canvas {
+  width: 480px;
+  height: 480px;
+  display: block;
+  border-radius: 50%;
+}
+
+.globe-section-content {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.globe-section-content .section-title {
+  margin-top: 8px;
+}
+
+.gs-stats {
+  display: flex;
+  gap: 28px;
+  padding: 24px;
+  background: linear-gradient(160deg, var(--surface-1), var(--surface-2));
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-lg);
+  margin-block: 4px;
+}
+
+.gs-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.gs-stat-num {
+  font-family: "Sora", sans-serif;
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--ink-0);
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+
+.gs-stat-label {
+  font-size: 12px;
+  color: var(--ink-3);
+}
+
+.gs-terminal {
+  background: #080d19;
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-md);
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-family: "SFMono-Regular", Menlo, Consolas, monospace;
+  font-size: 12.5px;
+  line-height: 1.7;
+}
+
+.gs-terminal-line {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Reuse existing terminal colors */
+.gs-terminal .t-muted { color: var(--ink-4); }
+.gs-terminal .t-ok    { color: #6fd9a8; font-weight: 700; }
+.gs-terminal .t-warn  { color: #ffd06b; font-weight: 700; }
+
+/* Globe badges (reuse existing .globe-badge + .globe-ring styles from above) */
+
+/* Responsive */
+@media (max-width: 1040px) {
+  .globe-section-inner {
+    grid-template-columns: 1fr;
+    gap: 40px;
+    text-align: center;
+  }
+  .globe-section-visual {
+    max-width: 380px;
+    margin: 0 auto;
+  }
+  #globe-canvas { width: 380px; height: 380px; }
+  .gs-stats { justify-content: center; }
+  .globe-section-content { align-items: center; }
+  .globe-section-content .section-sub { text-align: center; }
+}
+
+@media (max-width: 720px) {
+  .globe-section-visual { max-width: 300px; }
+  #globe-canvas { width: 300px; height: 300px; }
+
 }
