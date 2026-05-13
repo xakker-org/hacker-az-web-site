@@ -2,7 +2,6 @@ import { useEffect } from "react";
 import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import AuthPage from "./pages/AuthPage";
 import DashboardPage from "./pages/DashboardPage";
-import LandingPage from "./pages/LandingPage";
 import MissionDetailPage from "./pages/MissionDetailPage";
 import MissionExamPage from "./pages/MissionExamPage";
 import MissionsPage from "./pages/MissionsPage";
@@ -31,9 +30,6 @@ export default function App() {
   return (
     <>
       <Routes>
-        {/* Landing */}
-        <Route path="/" element={<LandingPage />} />
-
         {/* Auth */}
         <Route path="/auth" element={<Navigate to="/auth/login" replace />} />
         <Route path="/auth/:mode" element={<AuthPage />} />
