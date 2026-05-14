@@ -152,38 +152,7 @@
         </div>
       </section>
 
-      <!-- 2. TRUST -->
-      <section class="trust reveal" aria-label="Trusted by">
-        <div class="container">
-          <p class="trust-title" data-i18n="trust-title">Azərbaycan texno ekosistemi ilə birlikdə qurulur</p>
-          <div class="trust-logos">
-            <span class="trust-logo">SABAH Hub</span>
-            <span class="trust-logo">Innoland</span>
-            <span class="trust-logo">Azercell Lab</span>
-            <span class="trust-logo">Kapital CERT</span>
-            <span class="trust-logo">PASHA Tech</span>
-            <span class="trust-logo">SOCAR Digital</span>
-          </div>
-          <div class="trust-stats">
-            <div>
-              <p class="stat-value">10k+</p>
-              <p class="stat-label" data-i18n="stat1">Aktiv öyrənən</p>
-            </div>
-            <div>
-              <p class="stat-value">95%</p>
-              <p class="stat-label" data-i18n="stat2">Mission tamamlama</p>
-            </div>
-            <div>
-              <p class="stat-value">4.9<small>/5</small></p>
-              <p class="stat-label" data-i18n="stat3">Mentor reytinqi</p>
-            </div>
-            <div>
-              <p class="stat-value">30+</p>
-              <p class="stat-label" data-i18n="stat4">Canlı challenge</p>
-            </div>
-          </div>
-        </div>
-      </section>
+
 
       <!-- 3. FEATURES -->
       <section class="features reveal" id="features">
@@ -318,72 +287,58 @@ PORT     STATE SERVICE  VERSION
         </div>
       </section>
 
-      <!-- GLOBE SECTION -->
-      <section class="globe-section reveal">
-        <div class="container globe-section-inner">
+      <!-- GLOBE SECTION — full-width cinematic -->
+      <section class="globe-section reveal" id="globe-section">
 
-          <div class="globe-section-visual">
-            <div class="globe-ring" aria-hidden="true"></div>
-            <div class="globe-ring globe-ring-2" aria-hidden="true"></div>
-            <canvas id="globe-canvas"></canvas>
-            <div class="globe-badge globe-badge-1">
-              <span class="globe-badge-dot"></span>THREAT DETECTED
-            </div>
-            <div class="globe-badge globe-badge-2">
-              <span class="globe-badge-dot"></span>NODE ACTIVE · AZ
-            </div>
-            <div class="globe-badge globe-badge-3">
-              <span class="globe-badge-dot"></span>247 CONNECTIONS
-            </div>
-          </div>
+        <!-- Background ambient glow layers -->
+        <div class="gs-bg-glow gs-bg-glow-a" aria-hidden="true"></div>
+        <div class="gs-bg-glow gs-bg-glow-b" aria-hidden="true"></div>
+        <div class="gs-scanline" aria-hidden="true"></div>
 
-          <div class="globe-section-content">
-            <span class="eyebrow">Real-time Intelligence</span>
-            <h2 class="section-title">Qlobal Kibertəhdid<br>Şəbəkəsi</h2>
-            <p class="section-sub">
-              Dünya üzrə real-time təhdid monitorinqi, zəiflik kəşfiyyatı və
-              aktiv hücum nöqtələri. Xakker platformu bu məlumatları öyrənmə
-              mühitinizə inteqrasiya edir.
-            </p>
-            <div class="gs-stats">
-              <div class="gs-stat">
-                <div class="gs-stat-num">247</div>
-                <div class="gs-stat-label">Aktiv node</div>
-              </div>
-              <div class="gs-stat">
-                <div class="gs-stat-num">24/7</div>
-                <div class="gs-stat-label">Monitoring</div>
-              </div>
-              <div class="gs-stat">
-                <div class="gs-stat-num">98ms</div>
-                <div class="gs-stat-label">Avg latency</div>
-              </div>
-            </div>
-            <div class="gs-terminal">
-              <div class="gs-terminal-line">
-                <span class="t-muted">$</span>
-                <span style="color:#e9eef9">threat-intel --live --region global</span>
-              </div>
-              <div class="gs-terminal-line">
-                <span class="t-ok">[+]</span>
-                <span style="color:#8690a8">Scanning 247 active nodes...</span>
-              </div>
-              <div class="gs-terminal-line">
-                <span class="t-warn">[!]</span>
-                <span style="color:#8690a8">3 critical CVEs detected today</span>
-              </div>
-              <div class="gs-terminal-line">
-                <span class="t-ok">[+]</span>
-                <span style="color:#6fd9a8">Feed synced — AZ region secured</span>
-              </div>
-            </div>
-            <a class="btn btn-primary" href="http://self-study.xakker.org:8000" target="_blank" rel="noreferrer">
-              Platformaya keç
-              <span class="btn-arrow" aria-hidden="true">&rarr;</span>
-            </a>
-          </div>
-
+        <!-- Header copy -->
+        <div class="gs-header">
+          <span class="eyebrow">Real-time Intelligence</span>
+          <h2 class="section-title gs-title">Qlobal Kibertəhdid<br><span class="accent">Şəbəkəsi</span></h2>
+          <p class="section-sub gs-sub">
+            Dünya üzrə real-time təhdid monitorinqi, zəiflik kəşfiyyatı və
+            aktiv hücum nöqtələri. Xakker platformu bu məlumatları öyrənmə mühitinizə inteqrasiya edir.
+          </p>
         </div>
+
+        <!-- Globe demo visual -->
+        <div class="gs-globe-wrap" aria-hidden="true">
+          <canvas id="globe-canvas"></canvas>
+        </div>
+
+        <!-- Bottom stats + CTA -->
+        <div class="gs-footer">
+          <div class="gs-stats-row">
+            <div class="gs-stat-item">
+              <span class="gs-stat-num">247</span>
+              <span class="gs-stat-label">Aktiv node</span>
+            </div>
+            <div class="gs-stat-divider"></div>
+            <div class="gs-stat-item">
+              <span class="gs-stat-num">24/7</span>
+              <span class="gs-stat-label">Monitoring</span>
+            </div>
+            <div class="gs-stat-divider"></div>
+            <div class="gs-stat-item">
+              <span class="gs-stat-num">98ms</span>
+              <span class="gs-stat-label">Avg latency</span>
+            </div>
+            <div class="gs-stat-divider"></div>
+            <div class="gs-stat-item">
+              <span class="gs-stat-num">3</span>
+              <span class="gs-stat-label">Critical CVEs</span>
+            </div>
+          </div>
+          <a class="btn btn-primary" href="http://self-study.xakker.org:8000" target="_blank" rel="noreferrer">
+            Platformaya keç
+            <span class="btn-arrow" aria-hidden="true">&rarr;</span>
+          </a>
+        </div>
+
       </section>
 
       <!-- 5. BENEFITS -->
