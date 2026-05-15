@@ -399,10 +399,10 @@ if (navToggle && mobileNav) {
         trigger: section,
         start: 'top top',
         end: function () {
-          return '+=' + (window.innerHeight * 0.6 + track.scrollWidth - window.innerWidth);
+          return '+=' + ((window.innerHeight * 0.6 + track.scrollWidth - window.innerWidth) * 1.8);
         },
         pin: sticky,
-        scrub: true,
+        scrub: 1.6,
         anticipatePin: 1,
         invalidateOnRefresh: true,
       }
