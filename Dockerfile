@@ -33,7 +33,8 @@ COPY --from=frontend-builder /app/dist /app/static/js/spa
 
 EXPOSE 8000
 
-CMD ["sh", "-c", "python manage.py makemigrations && python manage.py migrate && python manage.py runserver 0.0.0.0:8000"]
+# Development default — override in docker-compose.prod.yml
+CMD ["sh", "-c", "python manage.py migrate --noinput && python manage.py runserver 0.0.0.0:8000"]
 
 FROM node:20-alpine AS frontend
 

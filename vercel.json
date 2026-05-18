@@ -1,0 +1,17 @@
+{
+  "version": 2,
+  "buildCommand": "bash build_vercel.sh",
+  "builds": [
+    {
+      "src": "api/index.py",
+      "use": "@vercel/python",
+      "config": {
+        "maxLambdaSize": "100mb",
+        "runtime": "python3.12"
+      }
+    }
+  ],
+  "routes": [
+    { "src": "/(.*)", "dest": "api/index.py" }
+  ]
+}

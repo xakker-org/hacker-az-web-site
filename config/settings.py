@@ -45,6 +45,7 @@ MIDDLEWARE = [
     "django_hosts.middleware.HostsRequestMiddleware",
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -74,17 +75,18 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "config.wsgi.application"
 
-DATABASES = {
-    "default": {}
-}
+_db_host = config("POSTGRES_HOST", default="127.0.0.1")
 
-DATABASES["default"] = {
-    "ENGINE": "django.db.backends.postgresql",
-    "NAME": config("POSTGRES_DB", default="xakker_db"),
-    "USER": config("POSTGRES_USER", default="xakker_user"),
-    "PASSWORD": config("POSTGRES_PASSWORD", default="xakker_password"),
-    "HOST": config("POSTGRES_HOST", default="127.0.0.1"),
-    "PORT": config("POSTGRES_PORT", default="5432"),
+DATABASES = {
+    "default": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": config("POSTGRES_DB", default="xakker_db"),
+        "USER": config("POSTGRES_USER", default="xakker_user"),
+        "PASSWORD": config("POSTGRES_PASSWORD", default="xakker_password"),
+        "HOST": _db_host,
+        "PORT": config("POSTGRES_PORT", default="5432"),
+        **({"OPTIONS": {"sslmode": "require"}} if _db_host not in ("127.0.0.1", "localhost", "db") else {}),
+    }
 }
 
 AUTH_PASSWORD_VALIDATORS = [
@@ -157,6 +159,9 @@ if not DEBUG:
     CSRF_COOKIE_SECURE = True
     SECURE_BROWSER_XSS_FILTER = True
     SECURE_CONTENT_TYPE_NOSNIFF = True
+    SECURE_HSTS_SECONDS = 31536000
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 
 # Jazzmin Admin Panel Configuration

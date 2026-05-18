@@ -29,13 +29,6 @@ services:
     environment:
       POSTGRES_HOST: db
       POSTGRES_PORT: 5432
-      POSTGRES_DB: xakker_db
-      POSTGRES_USER: xakker_user
-      POSTGRES_PASSWORD: xakker_password
-      ALLOWED_HOSTS: localhost,127.0.0.1,xakker.org,self-study.xakker.org
-      CORS_ALLOWED_ORIGINS: http://localhost:5173,http://localhost:3000,http://localhost:8000,http://127.0.0.1:8000,http://xakker.org:8000,http://self-study.xakker.org:8000
-      CSRF_TRUSTED_ORIGINS: http://localhost:5173,http://localhost:3000,http://localhost:8000,http://127.0.0.1:8000,http://xakker.org:8000,http://self-study.xakker.org:8000
-      DEBUG: "True"
     ports:
       - "8000:8000"
     volumes:
