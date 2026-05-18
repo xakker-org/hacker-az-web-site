@@ -20,6 +20,7 @@ ALLOWED_HOSTS = list(
                 "127.0.0.1,localhost,localhost.xakker.org,xakker.org,www.xakker.org,self-study.xakker.org",
             ),
             ".ngrok-free.dev",
+            ".vercel.app",
         ]
     )
 )
