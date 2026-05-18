@@ -122,12 +122,18 @@ CORS_ALLOWED_ORIGINS = [
     ),
 ]
 
+CORS_ALLOWED_ORIGIN_REGEXES = [
+    r"^https://.*\.vercel\.app$",
+]
 
 CSRF_TRUSTED_ORIGINS = [
     *get_list_env(
         "CSRF_TRUSTED_ORIGINS",
         "https://xakker.org,https://self-study.xakker.org,http://xakker.org:8000,http://self-study.xakker.org:8000,http://localhost:5173,http://localhost:8000,http://127.0.0.1:8000",
     ),
+    "https://hacker-az-web-site.vercel.app",
+    "https://hacker-az-web-site-git-main-mansimovvs-projects.vercel.app",
+    "https://hacker-az-web-site-andnv3vhs-mansimovvs-projects.vercel.app",
 ]
 
 REST_FRAMEWORK = {
