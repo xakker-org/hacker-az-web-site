@@ -105,8 +105,8 @@ USE_TZ = True
 ROOT_URLCONF = "config.urls_platform"
 
 STATIC_URL = "/static/"
-STATIC_ROOT = BASE_DIR / "staticfiles"
-STATICFILES_DIRS = [BASE_DIR / "static"]
+STATIC_ROOT = BASE_DIR / "static"
+STATICFILES_DIRS = []
 
 # Media files (user uploads)
 MEDIA_URL = "/media/"
