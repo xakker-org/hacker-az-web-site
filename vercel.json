@@ -5,7 +5,18 @@
     {
       "src": "api/index.py",
       "use": "@vercel/python",
-      "config": { "maxLambdaSize": "100mb" }
+      "config": {
+        "maxLambdaSize": "100mb",
+        "includeFiles": [
+          "config/**",
+          "accounts/**",
+          "courses/**",
+          "frontend/html/**",
+          "static/**",
+          "staticfiles/**",
+          "manage.py"
+        ]
+      }
     }
   ],
   "routes": [
