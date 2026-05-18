@@ -30,6 +30,9 @@ export default function App() {
   return (
     <>
       <Routes>
+        {/* Root */}
+        <Route path="/" element={<Navigate to="/dashboard" replace />} />
+
         {/* Auth */}
         <Route path="/auth" element={<Navigate to="/auth/login" replace />} />
         <Route path="/auth/:mode" element={<AuthPage />} />

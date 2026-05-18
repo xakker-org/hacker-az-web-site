@@ -9,8 +9,17 @@ from rest_framework import generics
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.throttling import AnonRateThrottle
 from rest_framework.views import APIView
 from rest_framework_simplejwt.views import TokenObtainPairView
+
+
+class LoginThrottle(AnonRateThrottle):
+    scope = "login"
+
+
+class RegisterThrottle(AnonRateThrottle):
+    scope = "register"
 
 from .models import Activity, UserProfile
 from .serializers import (
@@ -24,10 +33,12 @@ from .serializers import (
 
 class ClientTokenObtainPairView(TokenObtainPairView):
     serializer_class = ClientTokenObtainPairSerializer
+    throttle_classes = [LoginThrottle]
 
 
 class RegisterView(generics.CreateAPIView):
     serializer_class = RegisterSerializer
+    throttle_classes = [RegisterThrottle]
 
 
 class MeView(generics.GenericAPIView):
@@ -89,6 +100,7 @@ class PublicProfileView(APIView):
             return Response({"detail": "Profile not found."}, status=404)
         profile, _ = UserProfile.objects.get_or_create(user=user)
         data = UserProfileSerializer(profile, context={"request": request}).data
+        data.pop("email", None)
         activity = Activity.objects.filter(user=user)[:20]
         data["activity"] = ActivitySerializer(activity, many=True).data
         return Response(data)

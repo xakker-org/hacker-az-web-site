@@ -18,7 +18,41 @@
     />
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <style>
+        #xk-boot {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-direction: column;
+          gap: 14px;
+          min-height: 100vh;
+          background: #0a0a0f;
+        }
+        #xk-boot .xk-spin {
+          width: 34px;
+          height: 34px;
+          border: 3px solid rgba(255, 36, 66, 0.18);
+          border-top-color: #ff2442;
+          border-radius: 50%;
+          animation: xk-rotate 0.75s linear infinite;
+        }
+        #xk-boot .xk-lbl {
+          font-family: monospace;
+          font-size: 11px;
+          color: rgba(255, 255, 255, 0.25);
+          letter-spacing: 0.18em;
+          text-transform: uppercase;
+        }
+        @keyframes xk-rotate {
+          to { transform: rotate(360deg); }
+        }
+      </style>
+      <div id="xk-boot">
+        <div class="xk-spin"></div>
+        <div class="xk-lbl">xakker loading...</div>
+      </div>
+    </div>
     <link rel="stylesheet" href="/static/js/spa/app.css?v=20260423" />
     <script type="module" src="/static/js/spa/app.js?v=20260423"></script>
   </body>
