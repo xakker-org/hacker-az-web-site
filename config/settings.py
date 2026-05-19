@@ -76,19 +76,37 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "config.wsgi.application"
 
-_db_host = config("POSTGRES_HOST", default="127.0.0.1")
+_database_url = config("DATABASE_URL", default="")
 
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": config("POSTGRES_DB", default="xakker_db"),
-        "USER": config("POSTGRES_USER", default="xakker_user"),
-        "PASSWORD": config("POSTGRES_PASSWORD", default="xakker_password"),
-        "HOST": _db_host,
-        "PORT": config("POSTGRES_PORT", default="5432"),
-        **({"OPTIONS": {"sslmode": "require"}} if _db_host not in ("127.0.0.1", "localhost", "db") else {}),
+if _database_url:
+    from urllib.parse import urlparse as _urlparse
+    _u = _urlparse(_database_url)
+    _db_host = _u.hostname or "127.0.0.1"
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": _u.path.lstrip("/"),
+            "USER": _u.username,
+            "PASSWORD": _u.password,
+            "HOST": _db_host,
+            "PORT": str(_u.port or 5432),
+            "OPTIONS": {"sslmode": "require"},
+        }
     }
-}
+    DISABLE_SERVER_SIDE_CURSORS = True
+else:
+    _db_host = config("POSTGRES_HOST", default="127.0.0.1")
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": config("POSTGRES_DB", default="xakker_db"),
+            "USER": config("POSTGRES_USER", default="xakker_user"),
+            "PASSWORD": config("POSTGRES_PASSWORD", default="xakker_password"),
+            "HOST": _db_host,
+            "PORT": config("POSTGRES_PORT", default="5432"),
+            **({"OPTIONS": {"sslmode": "require"}} if _db_host not in ("127.0.0.1", "localhost", "db") else {}),
+        }
+    }
 
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
