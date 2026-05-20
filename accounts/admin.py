@@ -15,6 +15,11 @@ class StaffUserAdmin(BaseUserAdmin):
     def get_queryset(self, request):
         return super().get_queryset(request).filter(is_staff=True)
 
+    def save_model(self, request, obj, form, change):
+        if not change:
+            obj.is_staff = True
+        super().save_model(request, obj, form, change)
+
 
 @admin.register(UserProfile)
 class UserProfileAdmin(admin.ModelAdmin):
@@ -28,6 +33,13 @@ class UserProfileAdmin(admin.ModelAdmin):
         ("Gamification", {"fields": ("xp", "rank", "streak_days", "best_streak")}),
         ("Statistika", {"fields": ("tasks_completed", "rooms_completed", "last_activity")}),
     )
+
+    def delete_model(self, request, obj):
+        obj.user.delete()
+
+    def delete_queryset(self, request, queryset):
+        user_ids = list(queryset.values_list("user_id", flat=True))
+        User.objects.filter(id__in=user_ids).delete()
 
     @admin.display(description="XP", ordering="xp")
     def xp_display(self, obj):
