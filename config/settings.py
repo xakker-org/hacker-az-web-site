@@ -123,8 +123,16 @@ USE_TZ = True
 ROOT_URLCONF = "config.urls_platform"
 
 STATIC_URL = "/static/"
-STATIC_ROOT = BASE_DIR / "static"
-STATICFILES_DIRS = []
+STATIC_ROOT = BASE_DIR / "staticfiles"
+STATICFILES_DIRS = [BASE_DIR / "static"]
+STORAGES = {
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+}
 
 # Media files (user uploads)
 MEDIA_URL = "/media/"
@@ -153,6 +161,7 @@ CSRF_TRUSTED_ORIGINS = [
     "https://hacker-az-web-site.vercel.app",
     "https://hacker-az-web-site-git-main-mansimovvs-projects.vercel.app",
     "https://hacker-az-web-site-andnv3vhs-mansimovvs-projects.vercel.app",
+    "https://xakker-org.vercel.app",
 ]
 
 REST_FRAMEWORK = {
