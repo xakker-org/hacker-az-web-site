@@ -1,7 +1,19 @@
 from django.contrib import admin
+from django.contrib.auth import get_user_model
+from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.utils.html import format_html
 
 from .models import Activity, UserProfile
+
+User = get_user_model()
+
+admin.site.unregister(User)
+
+
+@admin.register(User)
+class StaffUserAdmin(BaseUserAdmin):
+    def get_queryset(self, request):
+        return super().get_queryset(request).filter(is_staff=True)
 
 
 @admin.register(UserProfile)
