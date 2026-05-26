@@ -16,6 +16,181 @@ const CATEGORY_ACCENT = {
   reverse: "#ffb86b", pwn: "#ff7a8a",
 };
 
+function LessonRow({ lesson, idx, slug, accent }) {
+  const [hovered, setHovered] = useState(false);
+  const done = lesson.user_completed;
+
+  return (
+    <Link
+      to={`/courses/${slug}/lessons/${lesson.id}`}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        display: "grid",
+        gridTemplateColumns: "36px 1fr auto",
+        alignItems: "center",
+        gap: "14px",
+        padding: "14px 16px",
+        borderRadius: "12px",
+        background: done
+          ? "rgba(110,255,214,0.05)"
+          : hovered
+          ? "var(--bg-elev)"
+          : "var(--bg-card-2)",
+        border: `1px solid ${
+          done
+            ? "rgba(110,255,214,0.20)"
+            : hovered
+            ? "var(--line-3)"
+            : "var(--line-2)"
+        }`,
+        textDecoration: "none",
+        color: "inherit",
+        transition: "background 140ms ease, border-color 140ms ease",
+        cursor: "pointer",
+      }}
+    >
+      {/* Index / check badge */}
+      <div style={{
+        width: 36,
+        height: 36,
+        borderRadius: "10px",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        flexShrink: 0,
+        fontFamily: "var(--font-mono)",
+        fontSize: done ? "16px" : "12px",
+        fontWeight: 700,
+        background: done
+          ? "rgba(110,255,214,0.12)"
+          : hovered
+          ? `${accent}18`
+          : "var(--bg-elev)",
+        color: done ? "var(--ok)" : hovered ? accent : "var(--ink-4)",
+        border: `1px solid ${
+          done
+            ? "rgba(110,255,214,0.28)"
+            : hovered
+            ? `${accent}40`
+            : "var(--line-2)"
+        }`,
+        transition: "all 140ms ease",
+      }}>
+        {done ? "✓" : idx + 1}
+      </div>
+
+      {/* Title + meta */}
+      <div style={{ minWidth: 0 }}>
+        <div style={{
+          fontSize: "13px",
+          fontWeight: 600,
+          color: done ? "var(--ink-3)" : "var(--ink-1)",
+          overflow: "hidden",
+          textOverflow: "ellipsis",
+          whiteSpace: "nowrap",
+          marginBottom: "5px",
+          transition: "color 140ms ease",
+        }}>
+          {lesson.title}
+        </div>
+        <div style={{
+          display: "flex",
+          gap: "6px",
+          flexWrap: "wrap",
+          alignItems: "center",
+        }}>
+          {lesson.has_video && (
+            <span style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "4px",
+              padding: "2px 8px",
+              borderRadius: "999px",
+              fontSize: "10px",
+              fontWeight: 600,
+              background: "rgba(108,179,255,0.10)",
+              color: "var(--c-6)",
+              border: "1px solid rgba(108,179,255,0.22)",
+            }}>
+              ▶ Video
+            </span>
+          )}
+          {lesson.has_text && (
+            <span style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "4px",
+              padding: "2px 8px",
+              borderRadius: "999px",
+              fontSize: "10px",
+              fontWeight: 600,
+              background: "rgba(192,132,252,0.10)",
+              color: "var(--c-5)",
+              border: "1px solid rgba(192,132,252,0.22)",
+            }}>
+              ≡ Mətn
+            </span>
+          )}
+          {(lesson.question_count || 0) > 0 && (
+            <span style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "4px",
+              padding: "2px 8px",
+              borderRadius: "999px",
+              fontSize: "10px",
+              fontWeight: 600,
+              background: "rgba(255,184,107,0.10)",
+              color: "var(--c-3)",
+              border: "1px solid rgba(255,184,107,0.22)",
+            }}>
+              ? {lesson.question_count} quiz
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* Status */}
+      <div style={{ flexShrink: 0 }}>
+        {done ? (
+          <span style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "5px",
+            padding: "4px 10px",
+            borderRadius: "999px",
+            fontSize: "11px",
+            fontWeight: 600,
+            background: "rgba(110,255,214,0.10)",
+            color: "var(--ok)",
+            border: "1px solid rgba(110,255,214,0.25)",
+          }}>
+            ✓ Tamamlandı
+          </span>
+        ) : (
+          <span style={{
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "center",
+            width: "28px",
+            height: "28px",
+            borderRadius: "8px",
+            fontSize: "14px",
+            fontWeight: 700,
+            color: hovered ? accent : "var(--ink-4)",
+            background: hovered ? `${accent}14` : "transparent",
+            border: `1px solid ${hovered ? `${accent}35` : "transparent"}`,
+            transition: "all 140ms ease",
+          }}>
+            →
+          </span>
+        )}
+      </div>
+    </Link>
+  );
+}
+
 export default function CoursePage() {
   const { slug } = useParams();
   const [course, setCourse]   = useState(null);
@@ -62,47 +237,66 @@ export default function CoursePage() {
     <AppShell>
       {/* Hero tile */}
       <Tile style={{
-        marginBottom: 0, overflow: "hidden",
-        background: `linear-gradient(135deg, ${accent}12 0%, var(--bg-card) 60%)`,
-        border: `1px solid ${accent}22`,
+        marginBottom: 0,
+        overflow: "hidden",
+        background: `linear-gradient(135deg, ${accent}10 0%, var(--bg-card) 55%)`,
+        border: `1px solid ${accent}25`,
       }}>
-        {/* Top accent line */}
         <div style={{
-          position: "absolute", top: 0, left: 0, right: 0, height: 3,
-          background: accent, opacity: 0.7,
+          position: "absolute", top: 0, left: 0, right: 0, height: "3px",
+          background: `linear-gradient(90deg, ${accent}, ${accent}60)`,
+          opacity: 0.8,
         }} />
 
-        <Button variant="ghost" size="sm" as={Link} to="/courses" style={{ alignSelf: "flex-start" }}>
+        <Button variant="ghost" size="sm" as={Link} to="/courses"
+          style={{ alignSelf: "flex-start" }}>
           ← Kurslara qayıt
         </Button>
 
-        <div style={{ display: "flex", alignItems: "flex-start", gap: 18 }}>
-          <span style={{
-            width: 64, height: 64, borderRadius: 16, flexShrink: 0,
-            background: `${accent}18`, border: `1px solid ${accent}30`,
-            display: "grid", placeItems: "center", fontSize: 30,
+        <div style={{ display: "flex", alignItems: "flex-start", gap: "18px" }}>
+          <div style={{
+            width: "64px",
+            height: "64px",
+            borderRadius: "16px",
+            flexShrink: 0,
+            background: `${accent}18`,
+            border: `1px solid ${accent}30`,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: "30px",
           }}>
             {course.icon || "▤"}
-          </span>
+          </div>
           <div style={{ flex: 1, minWidth: 0 }}>
             {course.category && (
               <div style={{
-                fontFamily: "var(--font-mono)", fontSize: 10, fontWeight: 700,
-                letterSpacing: "0.16em", textTransform: "uppercase",
-                color: accent, marginBottom: 6,
+                fontFamily: "var(--font-mono)",
+                fontSize: "10px",
+                fontWeight: 700,
+                letterSpacing: "0.16em",
+                textTransform: "uppercase",
+                color: accent,
+                marginBottom: "6px",
               }}>
                 {course.category}
               </div>
             )}
-            <h1 style={{ margin: "0 0 6px", fontSize: 26, fontWeight: 700, color: "var(--ink-1)" }}>
+            <h1 style={{ margin: "0 0 6px", fontSize: "26px", fontWeight: 700, color: "var(--ink-1)" }}>
               {course.title}
             </h1>
             {course.description && (
-              <p style={{ fontSize: 13, color: "var(--ink-3)", lineHeight: 1.65, margin: "0 0 12px", maxWidth: 600 }}>
+              <p style={{
+                fontSize: "13px",
+                color: "var(--ink-3)",
+                lineHeight: 1.65,
+                margin: "0 0 12px",
+                maxWidth: "600px",
+              }}>
                 {course.description}
               </p>
             )}
-            <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+            <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
               <Chip size="sm" tone="sky">{lessons.length} dərs</Chip>
               {course.room_count > 0 && <Chip size="sm">{course.room_count} otaq</Chip>}
               {completedCount > 0 && (
@@ -128,85 +322,37 @@ export default function CoursePage() {
 
       {/* Lessons list */}
       <Tile>
-        <TileHead eyebrow="Lessons" title="Dərslər"
+        <TileHead
+          eyebrow="Proqram"
+          title="Dərslər"
           action={
-            <span style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--ink-3)" }}>
+            <span style={{
+              fontFamily: "var(--font-mono)",
+              fontSize: "11px",
+              color: "var(--ink-3)",
+            }}>
               {completedCount}/{lessons.length}
             </span>
           }
         />
 
         {lessons.length === 0 ? (
-          <EmptyState icon="◌" title="Hələ dərs yoxdur" description="Bu kursda hələ dərs əlavə edilməyib." />
+          <EmptyState
+            icon="◌"
+            title="Hələ dərs yoxdur"
+            description="Bu kursda hələ dərs əlavə edilməyib."
+          />
         ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            {lessons.map((lesson, idx) => {
-              const done = lesson.user_completed;
-              return (
-                <Link
-                  key={lesson.id}
-                  to={`/courses/${slug}/lessons/${lesson.id}`}
-                  style={{
-                    display: "flex", alignItems: "center", gap: 12,
-                    padding: "12px 14px", borderRadius: 12,
-                    background: done ? "rgba(110,255,214,0.05)" : "var(--bg-card-2)",
-                    border: `1px solid ${done ? "rgba(110,255,214,0.22)" : "var(--line)"}`,
-                    textDecoration: "none", color: "inherit",
-                    transition: "border-color var(--dur-1), background var(--dur-1)",
-                  }}
-                  onMouseEnter={e => {
-                    if (!done) {
-                      e.currentTarget.style.borderColor = "var(--line-3)";
-                      e.currentTarget.style.background  = "var(--bg-elev)";
-                    }
-                  }}
-                  onMouseLeave={e => {
-                    e.currentTarget.style.borderColor = done ? "rgba(110,255,214,0.22)" : "var(--line)";
-                    e.currentTarget.style.background  = done ? "rgba(110,255,214,0.05)" : "var(--bg-card-2)";
-                  }}
-                >
-                  {/* Number / check */}
-                  <span style={{
-                    width: 30, height: 30, borderRadius: 8, flexShrink: 0,
-                    display: "grid", placeItems: "center",
-                    fontFamily: "var(--font-mono)", fontSize: 11, fontWeight: 700,
-                    background: done ? "rgba(110,255,214,0.12)" : "var(--bg-elev)",
-                    color: done ? "var(--ok)" : "var(--ink-4)",
-                    border: `1px solid ${done ? "rgba(110,255,214,0.28)" : "var(--line)"}`,
-                  }}>
-                    {done ? "✓" : idx + 1}
-                  </span>
-
-                  {/* Info */}
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{
-                      fontSize: 13, fontWeight: 600,
-                      color: done ? "var(--ink-3)" : "var(--ink-1)",
-                      overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-                    }}>
-                      {lesson.title}
-                    </div>
-                    <div style={{ display: "flex", gap: 6, marginTop: 4, flexWrap: "wrap" }}>
-                      {lesson.has_video && <Chip size="sm">▶ Video</Chip>}
-                      {lesson.has_text  && <Chip size="sm">📄 Mətn</Chip>}
-                      {(lesson.question_count || 0) > 0 && (
-                        <Chip size="sm" tone="sky">{lesson.question_count} quiz</Chip>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Status */}
-                  {done ? (
-                    <Chip size="sm" tone="mint">Tamamlandı ✓</Chip>
-                  ) : (
-                    <span style={{
-                      fontFamily: "var(--font-mono)", fontSize: 13,
-                      color: accent, fontWeight: 700,
-                    }}>→</span>
-                  )}
-                </Link>
-              );
-            })}
+          <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+            {lessons.map((lesson, idx) => (
+              <LessonRow
+                key={lesson.id}
+                lesson={lesson}
+                idx={idx}
+                slug={slug}
+                accent={accent}
+              />
+            ))}
           </div>
         )}
       </Tile>

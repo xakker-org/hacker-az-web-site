@@ -530,7 +530,7 @@ export default function LessonPage() {
           </div>
           <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
             {lesson.has_video    && <Chip size="sm">▶ Video</Chip>}
-            {lesson.has_text     && <Chip size="sm">📄 Mətn</Chip>}
+            {lesson.has_text     && <Chip size="sm">≡ Mətn</Chip>}
             {questions.length > 0 && <Chip size="sm" tone="sky">{questions.length} quiz</Chip>}
             {timelineQs.length  > 0 && (
               <Chip size="sm" tone="amber">⏱ {timelineQs.length} video quiz</Chip>
