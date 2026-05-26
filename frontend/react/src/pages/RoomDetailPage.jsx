@@ -280,6 +280,8 @@ export default function RoomDetailPage() {
                   ? resp.selected_choice !== null
                   : resp.answer.trim().length > 0;
 
+
+                  
                 return (
                   <Tile
                     key={q.id}
