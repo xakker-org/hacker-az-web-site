@@ -1,35 +1,35 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import AppShell from "../components/AppShell";
+import Tile, { TileHead } from "../components/ui/Tile";
+import Button from "../components/ui/Button";
+import { Chip } from "../components/ui/Chip";
+import { TileSkeleton } from "../components/ui/Skeleton";
+import EmptyState from "../components/ui/EmptyState";
 import { endpoints } from "../services/endpoints";
 
 const OPTION_LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
-// --- YouTube URL helpers ---
+/* ── Helpers ──────────────────────────────────────────────────── */
 function extractYouTubeId(url) {
   if (!url) return null;
-  const patterns = [
-    /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/,
-  ];
-  for (const re of patterns) {
-    const m = url.match(re);
-    if (m) return m[1];
-  }
-  return null;
+  const m = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/);
+  return m ? m[1] : null;
 }
-
 function isYouTube(url) {
   return Boolean(url && (url.includes("youtube.com") || url.includes("youtu.be")));
 }
 
-// --- Quiz Modal ---
-function QuizModal({ question, onSubmit }) {
-  const [selected, setSelected] = useState(null);
-  const [result, setResult] = useState(null);
+/* ── Quiz modal (video-triggered) ─────────────────────────────── */
+function QuizModal({ question, onSubmit, onContinue }) {
+  const [selected, setSelected]   = useState(null);
+  const [result, setResult]       = useState(null);
   const [submitting, setSubmitting] = useState(false);
 
-  // If locked (already answered), show read-only view immediately
-  const attempt = question.user_attempt;
+  const attempt    = question.user_attempt;
+  const answered   = Boolean(result) || Boolean(attempt);
+  const isCorrect  = result ? result.is_correct : attempt?.is_correct;
+  const correctIds = result?.correct_choice_ids || attempt?.correct_choice_ids || [];
 
   const handleSubmit = async () => {
     if (!selected || submitting) return;
@@ -42,59 +42,101 @@ function QuizModal({ question, onSubmit }) {
     }
   };
 
-  const correctIds = result?.correct_choice_ids || attempt?.correct_choice_ids || [];
-  const answered = Boolean(result) || Boolean(attempt);
-  const isCorrect = result ? result.is_correct : attempt?.is_correct;
-
   return (
-    <div className="quiz-modal-overlay">
-      <div className="quiz-modal">
-        <div className="quiz-modal-header">
-          <span className="quiz-modal-badge">Quiz</span>
-          <span className="quiz-modal-pts">{question.points} xal</span>
+    /* Overlay */
+    <div style={{
+      position: "fixed", inset: 0, zIndex: 60,
+      background: "rgba(6,8,12,0.82)", backdropFilter: "blur(8px)",
+      display: "flex", flexDirection: "column",
+      alignItems: "center", justifyContent: "center",
+      padding: "20px 16px", gap: 16,
+    }}>
+      {/* Card */}
+      <div style={{
+        background: "var(--bg-card)", border: "1px solid var(--line-2)",
+        borderRadius: "var(--r-tile)", boxShadow: "var(--shadow-pop)",
+        width: "100%", maxWidth: 560,
+        display: "flex", flexDirection: "column", gap: 16,
+        padding: 28,
+        maxHeight: "calc(100vh - 100px)", overflowY: "auto",
+      }}>
+        {/* Header */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <Chip size="sm" tone="accent">Quiz</Chip>
+          <span style={{
+            fontFamily: "var(--font-mono)", fontSize: 12,
+            color: "var(--accent)", fontWeight: 700,
+          }}>
+            {question.points} xal
+          </span>
         </div>
 
-        <p className="quiz-modal-question">{question.text}</p>
+        {/* Question */}
+        <p style={{ fontSize: 15, fontWeight: 600, color: "var(--ink-1)", lineHeight: 1.6, margin: 0 }}>
+          {question.text}
+        </p>
 
-        <div className="quiz-modal-choices">
+        {/* Choices */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           {(question.choices || []).map((choice, idx) => {
-            const letter = OPTION_LETTERS[idx] || `${idx + 1}`;
-            const isSelected = answered
+            const letter        = OPTION_LETTERS[idx] || `${idx + 1}`;
+            const isSelected    = answered
               ? (result?.selected_choice_id ?? attempt?.selected_choice_id) === choice.id
               : selected === choice.id;
-            const isCorrectChoice = correctIds.includes(choice.id);
+            const isCorrectCh   = correctIds.includes(choice.id);
 
-            let cls = "qm-choice";
+            let bg = "var(--bg-card-2)", border = "var(--line)", color = "var(--ink-2)";
             if (answered) {
-              if (isCorrectChoice) cls += " qm-correct";
-              else if (isSelected) cls += " qm-wrong";
-              else cls += " qm-dimmed";
-            } else if (isSelected) {
-              cls += " qm-selected";
-            }
+              if (isCorrectCh)              { bg = "rgba(110,255,214,0.10)"; border = "rgba(110,255,214,0.30)"; color = "var(--ok)"; }
+              else if (isSelected)          { bg = "rgba(255,122,138,0.10)"; border = "rgba(255,122,138,0.30)"; color = "var(--bad)"; }
+              else                          { bg = "var(--bg-card-2)"; border = "var(--line)"; color = "var(--ink-4)"; }
+            } else if (isSelected)          { bg = "var(--accent-soft)"; border = "var(--accent-ring)"; color = "var(--ink-1)"; }
 
             return (
               <button
                 key={choice.id}
                 type="button"
-                className={cls}
-                onClick={() => !answered && setSelected(choice.id)}
                 disabled={answered}
+                onClick={() => !answered && setSelected(choice.id)}
+                style={{
+                  display: "flex", alignItems: "center", gap: 12,
+                  padding: "11px 14px", borderRadius: 10,
+                  background: bg, border: `1px solid ${border}`, color,
+                  cursor: answered ? "default" : "pointer",
+                  fontSize: 13, textAlign: "left",
+                  transition: "all var(--dur-1)",
+                  fontFamily: "inherit",
+                }}
               >
-                <span className="qm-letter">{letter}</span>
-                <span className="qm-text">{choice.text}</span>
-                {answered && isCorrectChoice && <span className="qm-tag correct">✓ Düzgün</span>}
-                {answered && isSelected && !isCorrectChoice && <span className="qm-tag wrong">Seçdiniz</span>}
+                <span style={{
+                  width: 26, height: 26, borderRadius: 8, flexShrink: 0,
+                  fontFamily: "var(--font-mono)", fontSize: 11, fontWeight: 700,
+                  display: "grid", placeItems: "center",
+                  background: isSelected ? (answered && !isCorrectCh ? "rgba(255,122,138,0.12)" : "rgba(255,36,66,0.12)") : "var(--bg-elev)",
+                  border: `1px solid ${border}`,
+                  color: isSelected ? color : "var(--ink-4)",
+                }}>
+                  {letter}
+                </span>
+                <span style={{ flex: 1 }}>{choice.text}</span>
+                {answered && isCorrectCh   && <Chip size="sm" tone="mint">✓ Düzgün</Chip>}
+                {answered && isSelected && !isCorrectCh && <Chip size="sm" tone="accent">Seçdiniz</Chip>}
               </button>
             );
           })}
         </div>
 
-        {answered ? (
-          <div className={`quiz-modal-result ${isCorrect ? "correct" : "wrong"}`}>
-            <div className="quiz-result-row">
-              <span>{isCorrect ? "✓ Düzgün cavab!" : "✗ Yanlış cavab"}</span>
-              <span>
+        {/* Result */}
+        {answered && (
+          <div style={{
+            padding: "12px 14px", borderRadius: 10,
+            background: isCorrect ? "rgba(110,255,214,0.08)" : "rgba(255,36,66,0.08)",
+            border: `1px solid ${isCorrect ? "rgba(110,255,214,0.28)" : "rgba(255,36,66,0.25)"}`,
+            fontSize: 13, color: isCorrect ? "var(--ok)" : "var(--accent)",
+          }}>
+            <div style={{ fontWeight: 600, marginBottom: 4 }}>
+              {isCorrect ? "✓ Düzgün cavab!" : "✗ Yanlış cavab"}
+              <span style={{ float: "right", fontFamily: "var(--font-mono)" }}>
                 {result?.points_awarded > 0
                   ? `+${result.points_awarded} xal`
                   : attempt?.points_awarded > 0
@@ -103,38 +145,42 @@ function QuizModal({ question, onSubmit }) {
               </span>
             </div>
             {(result?.explanation || attempt?.explanation) && (
-              <p className="quiz-explanation">{result?.explanation || attempt?.explanation}</p>
+              <p style={{ margin: "8px 0 0", color: "var(--ink-3)", lineHeight: 1.6 }}>
+                {result?.explanation || attempt?.explanation}
+              </p>
             )}
             {attempt && !result && (
-              <p className="quiz-already-note">Bu suala artıq cavab vermişdiniz.</p>
+              <p style={{ margin: "8px 0 0", color: "var(--ink-4)", fontSize: 12 }}>
+                Bu suala artıq cavab vermişdiniz.
+              </p>
             )}
           </div>
-        ) : (
-          <button
-            type="button"
-            className="btn btn-primary btn-block"
-            onClick={handleSubmit}
-            disabled={!selected || submitting}
-          >
-            {submitting ? "Göndərilir..." : "Cavabı göndər"}
-          </button>
         )}
+
+        {/* Action */}
+        {!answered ? (
+          <Button variant="accent" onClick={handleSubmit} disabled={!selected || submitting}
+            style={{ width: "100%", justifyContent: "center" }}>
+            {submitting ? "Göndərilir..." : "Cavabı göndər"}
+          </Button>
+        ) : null}
       </div>
+
+      {/* Continue button */}
+      <Button variant="accent" onClick={onContinue}>
+        Videoya davam et →
+      </Button>
     </div>
   );
 }
 
-// --- HTML5 Video Player ---
+/* ── HTML5 video player ────────────────────────────────────────── */
 function Html5Player({ videoUrl, timelineQuestions, onQuestionTrigger, blockedUntil, onReady }) {
   const videoRef = useRef(null);
   const shownRef = useRef(new Set());
 
   useEffect(() => {
-    const existing = shownRef.current;
-    // Pre-mark already-answered questions so they don't interrupt again
-    timelineQuestions.forEach((q) => {
-      if (q.user_attempt) existing.add(q.id);
-    });
+    timelineQuestions.forEach(q => { if (q.user_attempt) shownRef.current.add(q.id); });
   }, [timelineQuestions]);
 
   const handleTimeUpdate = useCallback(() => {
@@ -142,24 +188,19 @@ function Html5Player({ videoUrl, timelineQuestions, onQuestionTrigger, blockedUn
     if (!video) return;
     const t = video.currentTime;
     for (const q of timelineQuestions) {
-      if (q.at_seconds !== null && q.at_seconds !== undefined && !shownRef.current.has(q.id)) {
-        if (t >= q.at_seconds) {
-          video.pause();
-          shownRef.current.add(q.id);
-          onQuestionTrigger(q);
-          return;
-        }
+      if (q.at_seconds != null && !shownRef.current.has(q.id) && t >= q.at_seconds) {
+        video.pause();
+        shownRef.current.add(q.id);
+        onQuestionTrigger(q);
+        return;
       }
     }
   }, [timelineQuestions, onQuestionTrigger]);
 
   useEffect(() => {
     const video = videoRef.current;
-    if (!video) return;
-    if (blockedUntil === null) {
-      // Unblocked — resume
-      video.play().catch(() => {});
-    }
+    if (!video || blockedUntil !== null) return;
+    video.play().catch(() => {});
   }, [blockedUntil]);
 
   return (
@@ -167,50 +208,47 @@ function Html5Player({ videoUrl, timelineQuestions, onQuestionTrigger, blockedUn
       ref={videoRef}
       src={videoUrl}
       controls
-      className="lesson-video"
       onTimeUpdate={handleTimeUpdate}
       onCanPlay={() => onReady && onReady(videoRef.current)}
+      style={{
+        width: "100%", borderRadius: 12,
+        background: "#000", display: "block",
+        maxHeight: 480,
+      }}
     />
   );
 }
 
-// --- YouTube Player ---
+/* ── YouTube player ────────────────────────────────────────────── */
 function YouTubePlayer({ videoId, timelineQuestions, onQuestionTrigger, blockedUntil }) {
   const containerRef = useRef(null);
-  const playerRef = useRef(null);
-  const shownRef = useRef(new Set());
-  const pollRef = useRef(null);
+  const playerRef    = useRef(null);
+  const shownRef     = useRef(new Set());
+  const pollRef      = useRef(null);
 
   useEffect(() => {
-    // Pre-mark answered questions
-    timelineQuestions.forEach((q) => {
-      if (q.user_attempt) shownRef.current.add(q.id);
-    });
+    timelineQuestions.forEach(q => { if (q.user_attempt) shownRef.current.add(q.id); });
   }, [timelineQuestions]);
 
   useEffect(() => {
     if (!videoId || !containerRef.current) return;
-
     const initPlayer = () => {
       if (playerRef.current) return;
       playerRef.current = new window.YT.Player(containerRef.current, {
         videoId,
         playerVars: { enablejsapi: 1, rel: 0 },
         events: {
-          onStateChange: (event) => {
-            // YT.PlayerState.PLAYING = 1
+          onStateChange: event => {
             if (event.data === 1) {
               pollRef.current = setInterval(() => {
                 const t = playerRef.current?.getCurrentTime?.() ?? 0;
                 for (const q of timelineQuestions) {
-                  if (q.at_seconds !== null && q.at_seconds !== undefined && !shownRef.current.has(q.id)) {
-                    if (t >= q.at_seconds) {
-                      playerRef.current?.pauseVideo?.();
-                      shownRef.current.add(q.id);
-                      onQuestionTrigger(q);
-                      clearInterval(pollRef.current);
-                      return;
-                    }
+                  if (q.at_seconds != null && !shownRef.current.has(q.id) && t >= q.at_seconds) {
+                    playerRef.current?.pauseVideo?.();
+                    shownRef.current.add(q.id);
+                    onQuestionTrigger(q);
+                    clearInterval(pollRef.current);
+                    return;
                   }
                 }
               }, 500);
@@ -221,53 +259,46 @@ function YouTubePlayer({ videoId, timelineQuestions, onQuestionTrigger, blockedU
         },
       });
     };
-
-    if (window.YT && window.YT.Player) {
+    if (window.YT?.Player) {
       initPlayer();
     } else {
       window.onYouTubeIframeAPIReady = initPlayer;
       if (!document.getElementById("yt-api-script")) {
         const script = document.createElement("script");
-        script.id = "yt-api-script";
+        script.id  = "yt-api-script";
         script.src = "https://www.youtube.com/iframe_api";
         document.head.appendChild(script);
       }
     }
-
-    return () => {
-      clearInterval(pollRef.current);
-    };
+    return () => clearInterval(pollRef.current);
   }, [videoId, timelineQuestions, onQuestionTrigger]);
 
   useEffect(() => {
-    if (blockedUntil === null) {
-      playerRef.current?.playVideo?.();
-    }
+    if (blockedUntil === null) playerRef.current?.playVideo?.();
   }, [blockedUntil]);
 
   return (
-    <div className="lesson-video-wrap">
-      <div ref={containerRef} className="lesson-video yt-player" />
+    <div style={{ position: "relative", paddingTop: "56.25%", borderRadius: 12, overflow: "hidden", background: "#000" }}>
+      <div ref={containerRef} style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }} />
     </div>
   );
 }
 
-// --- Inline question block (non-video / shown below) ---
+/* ── Inline question block ─────────────────────────────────────── */
 function InlineQuestionBlock({ question, courseSlug, lessonId, onAnswered }) {
-  const [selected, setSelected] = useState(null);
-  const [result, setResult] = useState(null);
+  const [selected, setSelected]     = useState(null);
+  const [result, setResult]         = useState(null);
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError]           = useState("");
 
-  const attempt = question.user_attempt;
-  const answered = Boolean(result) || Boolean(attempt);
+  const attempt    = question.user_attempt;
+  const answered   = Boolean(result) || Boolean(attempt);
+  const isCorrect  = result ? result.is_correct : attempt?.is_correct;
   const correctIds = result?.correct_choice_ids || attempt?.correct_choice_ids || [];
-  const isCorrect = result ? result.is_correct : attempt?.is_correct;
 
   const handleSubmit = async () => {
     if (!selected || submitting) return;
-    setSubmitting(true);
-    setError("");
+    setSubmitting(true); setError("");
     try {
       const { data } = await endpoints.submitLessonQuestion(courseSlug, lessonId, question.id, {
         selected_choice_id: selected,
@@ -282,103 +313,131 @@ function InlineQuestionBlock({ question, courseSlug, lessonId, onAnswered }) {
   };
 
   return (
-    <div className={`inline-question ${answered ? (isCorrect ? "iq-correct" : "iq-wrong") : ""}`}>
-      <div className="iq-header">
-        <span className="iq-label">Quiz</span>
-        <span className="iq-pts">{question.points} xal</span>
-        {answered && (
-          <span className={`iq-status ${isCorrect ? "correct" : "wrong"}`}>
-            {isCorrect ? "✓ Düzgün" : "✗ Yanlış"}
-          </span>
-        )}
+    <Tile style={{
+      border: answered
+        ? `1px solid ${isCorrect ? "rgba(110,255,214,0.28)" : "rgba(255,36,66,0.28)"}`
+        : undefined,
+      background: answered
+        ? (isCorrect ? "rgba(110,255,214,0.04)" : "rgba(255,36,66,0.04)")
+        : undefined,
+    }}>
+      {/* Header */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <Chip size="sm" tone={answered ? (isCorrect ? "mint" : "accent") : "sky"}>
+          {answered ? (isCorrect ? "✓ Düzgün" : "✗ Yanlış") : "Quiz"}
+        </Chip>
+        <span style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--accent)", fontWeight: 700 }}>
+          {question.points} xal
+        </span>
       </div>
 
-      <p className="iq-question">{question.text}</p>
+      {/* Question */}
+      <p style={{ fontSize: 14, fontWeight: 600, color: "var(--ink-1)", lineHeight: 1.6, margin: 0 }}>
+        {question.text}
+      </p>
 
-      <div className="iq-choices">
+      {/* Choices */}
+      <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
         {(question.choices || []).map((choice, idx) => {
-          const letter = OPTION_LETTERS[idx];
-          const isSelected = answered
+          const letter      = OPTION_LETTERS[idx];
+          const isSelected  = answered
             ? (result?.selected_choice_id ?? attempt?.selected_choice_id) === choice.id
             : selected === choice.id;
-          const isCorrectChoice = correctIds.includes(choice.id);
+          const isCorrectCh = correctIds.includes(choice.id);
 
-          let cls = "iq-choice";
+          let bg = "var(--bg-card-2)", border = "var(--line)", color = "var(--ink-2)";
           if (answered) {
-            if (isCorrectChoice) cls += " iq-c-correct";
-            else if (isSelected) cls += " iq-c-wrong";
-            else cls += " iq-c-dimmed";
-          } else if (isSelected) {
-            cls += " iq-c-selected";
-          }
+            if (isCorrectCh)     { bg = "rgba(110,255,214,0.10)"; border = "rgba(110,255,214,0.30)"; color = "var(--ok)"; }
+            else if (isSelected) { bg = "rgba(255,122,138,0.10)"; border = "rgba(255,122,138,0.30)"; color = "var(--bad)"; }
+            else                 { bg = "var(--bg-card-2)"; border = "var(--line)"; color = "var(--ink-4)"; }
+          } else if (isSelected) { bg = "var(--accent-soft)"; border = "var(--accent-ring)"; color = "var(--ink-1)"; }
 
           return (
             <button
               key={choice.id}
               type="button"
-              className={cls}
-              onClick={() => !answered && setSelected(choice.id)}
               disabled={answered}
+              onClick={() => !answered && setSelected(choice.id)}
+              style={{
+                display: "flex", alignItems: "center", gap: 12,
+                padding: "11px 14px", borderRadius: 10,
+                background: bg, border: `1px solid ${border}`, color,
+                cursor: answered ? "default" : "pointer",
+                fontSize: 13, textAlign: "left", fontFamily: "inherit",
+                transition: "all var(--dur-1)",
+              }}
             >
-              <span className="iq-letter">{letter}</span>
-              <span>{choice.text}</span>
-              {answered && isCorrectChoice && <span className="iq-tag correct">✓</span>}
+              <span style={{
+                width: 26, height: 26, borderRadius: 8, flexShrink: 0,
+                fontFamily: "var(--font-mono)", fontSize: 11, fontWeight: 700,
+                display: "grid", placeItems: "center",
+                background: "var(--bg-elev)", border: `1px solid ${border}`, color: "var(--ink-4)",
+              }}>
+                {letter}
+              </span>
+              <span style={{ flex: 1 }}>{choice.text}</span>
+              {answered && isCorrectCh && <Chip size="sm" tone="mint">✓</Chip>}
             </button>
           );
         })}
       </div>
 
-      {error && <div className="alert alert-error" style={{ marginTop: 8 }}>{error}</div>}
+      {error && (
+        <div style={{
+          padding: "10px 14px", borderRadius: 10,
+          background: "rgba(255,122,138,0.08)", border: "1px solid rgba(255,122,138,0.28)",
+          fontSize: 12, color: "var(--bad)",
+        }}>
+          {error}
+        </div>
+      )}
 
       {answered ? (
-        <div className={`iq-result ${isCorrect ? "correct" : "wrong"}`}>
+        <div>
           {(result?.explanation || attempt?.explanation) && (
-            <p>{result?.explanation || attempt?.explanation}</p>
+            <p style={{ fontSize: 13, color: "var(--ink-3)", lineHeight: 1.65, margin: 0 }}>
+              💡 {result?.explanation || attempt?.explanation}
+            </p>
           )}
-          {attempt && !result && <p className="iq-already">Bu suala artıq cavab vermişdiniz.</p>}
+          {attempt && !result && (
+            <p style={{ fontSize: 12, color: "var(--ink-4)", margin: 0 }}>
+              Bu suala artıq cavab vermişdiniz.
+            </p>
+          )}
         </div>
       ) : (
-        <button
-          type="button"
-          className="btn btn-primary btn-sm"
-          style={{ marginTop: 12 }}
-          onClick={handleSubmit}
-          disabled={!selected || submitting}
-        >
-          {submitting ? "Göndərilir..." : "Cavabı göndər"}
-        </button>
+        <div style={{ paddingTop: 4 }}>
+          <Button variant="accent" size="sm" onClick={handleSubmit} disabled={!selected || submitting}>
+            {submitting ? "Göndərilir..." : "Cavabı göndər"}
+          </Button>
+        </div>
       )}
-    </div>
+    </Tile>
   );
 }
 
-// --- Main LessonPage ---
+/* ── Main LessonPage ───────────────────────────────────────────── */
 export default function LessonPage() {
   const { slug, lessonId } = useParams();
-  const [lesson, setLesson] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [completed, setCompleted] = useState(false);
+  const [lesson, setLesson]         = useState(null);
+  const [loading, setLoading]       = useState(true);
+  const [error, setError]           = useState("");
+  const [completed, setCompleted]   = useState(false);
   const [completing, setCompleting] = useState(false);
 
-  // Quiz modal state for video-triggered questions
   const [activeQuestion, setActiveQuestion] = useState(null);
-  const [blockedUntil, setBlockedUntil] = useState(null);
+  const [blockedUntil, setBlockedUntil]     = useState(null);
 
   useEffect(() => {
     setLoading(true);
     endpoints.lessonDetail(slug, lessonId)
-      .then(({ data }) => {
-        setLesson(data);
-        setCompleted(data.user_completed || false);
-      })
+      .then(({ data }) => { setLesson(data); setCompleted(data.user_completed || false); })
       .catch(() => setError("Dərs yüklənə bilmədi."))
       .finally(() => setLoading(false));
   }, [slug, lessonId]);
 
-  const handleQuestionTrigger = useCallback((question) => {
-    setActiveQuestion(question);
-    setBlockedUntil(question.id);
+  const handleQuestionTrigger = useCallback(q => {
+    setActiveQuestion(q); setBlockedUntil(q.id);
   }, []);
 
   const handleModalSubmit = useCallback(async (questionId, selectedChoiceId) => {
@@ -394,11 +453,10 @@ export default function LessonPage() {
   }, [slug, lessonId]);
 
   const handleModalContinue = useCallback(() => {
-    setActiveQuestion(null);
-    setBlockedUntil(null);
+    setActiveQuestion(null); setBlockedUntil(null);
   }, []);
 
-  const handleInlineAnswered = useCallback((data) => {
+  const handleInlineAnswered = useCallback(data => {
     if (data.lesson_completed) setCompleted(true);
   }, []);
 
@@ -412,35 +470,77 @@ export default function LessonPage() {
     }
   };
 
-  if (loading) return <AppShell title="Dərs"><div className="loading-block">Dərs yüklənir...</div></AppShell>;
-  if (error || !lesson) return <AppShell title="Dərs"><div className="alert alert-error">{error || "Dərs tapılmadı."}</div></AppShell>;
+  if (loading) {
+    return (
+      <AppShell>
+        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          <TileSkeleton height={80} />
+          <TileSkeleton height={320} />
+          <TileSkeleton height={180} />
+        </div>
+      </AppShell>
+    );
+  }
 
-  const questions = lesson.lesson_questions || [];
-  const timelineQs = questions.filter((q) => q.at_seconds !== null && q.at_seconds !== undefined);
-  const inlineQs = questions.filter((q) => q.at_seconds === null || q.at_seconds === undefined);
-  const ytId = isYouTube(lesson.video_url) ? extractYouTubeId(lesson.video_url) : null;
+  if (error || !lesson) {
+    return (
+      <AppShell>
+        <Tile>
+          <EmptyState icon="◌" title="Dərs tapılmadı" description={error || ""}
+            action={<Button as={Link} to={`/courses/${slug}`} variant="accent">← Kursa qayıt</Button>} />
+        </Tile>
+      </AppShell>
+    );
+  }
+
+  const questions    = lesson.lesson_questions || [];
+  const timelineQs   = questions.filter(q => q.at_seconds != null && q.at_seconds !== undefined);
+  const inlineQs     = questions.filter(q => q.at_seconds == null || q.at_seconds === undefined);
+  const ytId         = isYouTube(lesson.video_url) ? extractYouTubeId(lesson.video_url) : null;
   const hasNoQuestions = questions.length === 0;
 
   return (
-    <AppShell title={lesson.title}>
-      <div className="lesson-layout">
-        {/* Breadcrumb */}
-        <div className="lesson-breadcrumb">
-          <Link to="/courses">Kurslar</Link>
-          <span>›</span>
-          <Link to={`/courses/${slug}`}>Kurs</Link>
-          <span>›</span>
-          <span>{lesson.title}</span>
-        </div>
+    <AppShell>
+      {/* Breadcrumb */}
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 20, flexWrap: "wrap" }}>
+        <Link to="/courses"
+          style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--ink-4)", textDecoration: "none" }}>
+          Kurslar
+        </Link>
+        <span style={{ color: "var(--line-3)" }}>›</span>
+        <Link to={`/courses/${slug}`}
+          style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--ink-3)", textDecoration: "none" }}>
+          Kurs
+        </Link>
+        <span style={{ color: "var(--line-3)" }}>›</span>
+        <span style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--ink-1)", fontWeight: 600 }}>
+          {lesson.title}
+        </span>
+      </div>
 
-        <div className="lesson-title-row">
-          <h1 className="lesson-title">{lesson.title}</h1>
-          {completed && <span className="lesson-completed-badge">✓ Tamamlandı</span>}
-        </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+
+        {/* Lesson header */}
+        <Tile>
+          <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+            <h1 style={{ margin: 0, fontSize: 22, fontWeight: 700, color: "var(--ink-1)", lineHeight: 1.25 }}>
+              {lesson.title}
+            </h1>
+            {completed && <Chip size="sm" tone="mint">✓ Tamamlandı</Chip>}
+          </div>
+          <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+            {lesson.has_video    && <Chip size="sm">▶ Video</Chip>}
+            {lesson.has_text     && <Chip size="sm">📄 Mətn</Chip>}
+            {questions.length > 0 && <Chip size="sm" tone="sky">{questions.length} quiz</Chip>}
+            {timelineQs.length  > 0 && (
+              <Chip size="sm" tone="amber">⏱ {timelineQs.length} video quiz</Chip>
+            )}
+          </div>
+        </Tile>
 
         {/* Video section */}
         {lesson.video_url && (
-          <div className="lesson-video-section">
+          <Tile pad="sm">
             {ytId ? (
               <YouTubePlayer
                 videoId={ytId}
@@ -457,26 +557,39 @@ export default function LessonPage() {
               />
             )}
             {timelineQs.length > 0 && (
-              <div className="video-quiz-hint">
-                Bu videoda {timelineQs.length} quiz sualı var. Video müəyyən anlarda avtomatik dayanacaq.
+              <div style={{
+                padding: "10px 14px", borderRadius: 10,
+                background: "rgba(255,184,107,0.08)", border: "1px solid rgba(255,184,107,0.25)",
+                fontSize: 12, color: "var(--warn)", marginTop: 4,
+              }}>
+                ⏱ Bu videoda {timelineQs.length} quiz var — video müəyyən anlarda avtomatik dayanacaq.
               </div>
             )}
-          </div>
+          </Tile>
         )}
 
         {/* Text content */}
         {lesson.content && (
-          <div className="lesson-content-section panel">
-            <div className="lesson-content">{lesson.content}</div>
-          </div>
+          <Tile>
+            <div
+              className="rich-content"
+              dangerouslySetInnerHTML={{ __html: lesson.content }}
+            />
+          </Tile>
         )}
 
         {/* Inline quiz questions */}
         {inlineQs.length > 0 && (
-          <div className="lesson-quiz-section">
-            <h2 style={{ marginBottom: 16 }}>Quiz Sualları</h2>
-            <div className="inline-questions-list">
-              {inlineQs.map((q) => (
+          <div>
+            <div style={{
+              fontFamily: "var(--font-mono)", fontSize: 10, fontWeight: 700,
+              letterSpacing: "0.16em", textTransform: "uppercase", color: "var(--ink-4)",
+              marginBottom: 12,
+            }}>
+              Quiz Sualları
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              {inlineQs.map(q => (
                 <InlineQuestionBlock
                   key={q.id}
                   question={q}
@@ -489,44 +602,41 @@ export default function LessonPage() {
           </div>
         )}
 
-        {/* Navigation / complete */}
-        <div className="lesson-nav">
-          <Link to={`/courses/${slug}`} className="btn btn-secondary">
-            ← Kursa qayıt
-          </Link>
-          {hasNoQuestions && !completed && (
-            <button
-              type="button"
-              className="btn btn-primary"
-              onClick={handleMarkComplete}
-              disabled={completing}
-            >
-              {completing ? "..." : "✓ Tamamlandı kimi işarələ"}
-            </button>
-          )}
-          {completed && (
-            <span className="lesson-nav-done">✓ Bu dərs tamamlandı</span>
-          )}
-        </div>
+        {/* Navigation */}
+        <Tile style={{ padding: "14px 20px" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+            <Button variant="ghost" as={Link} to={`/courses/${slug}`}>
+              ← Kursa qayıt
+            </Button>
+            <div style={{ display: "flex", gap: 8 }}>
+              {hasNoQuestions && !completed && (
+                <Button variant="accent" onClick={handleMarkComplete} disabled={completing}>
+                  {completing ? "..." : "✓ Tamamlandı kimi işarələ"}
+                </Button>
+              )}
+              {completed && (
+                <span style={{
+                  display: "inline-flex", alignItems: "center", gap: 6,
+                  padding: "7px 14px", borderRadius: 10, fontSize: 13, fontWeight: 600,
+                  background: "rgba(110,255,214,0.08)", border: "1px solid rgba(110,255,214,0.25)",
+                  color: "var(--ok)",
+                }}>
+                  ✓ Bu dərs tamamlandı
+                </span>
+              )}
+            </div>
+          </div>
+        </Tile>
+
       </div>
 
-      {/* Quiz Modal overlay for video-triggered questions */}
+      {/* Video quiz modal */}
       {activeQuestion && (
-        <div>
-          <QuizModal
-            question={activeQuestion}
-            onSubmit={handleModalSubmit}
-          />
-          <div className="quiz-modal-footer">
-            <button
-              type="button"
-              className="btn btn-primary"
-              onClick={handleModalContinue}
-            >
-              Videoya davam et →
-            </button>
-          </div>
-        </div>
+        <QuizModal
+          question={activeQuestion}
+          onSubmit={handleModalSubmit}
+          onContinue={handleModalContinue}
+        />
       )}
     </AppShell>
   );

@@ -1,165 +1,240 @@
 import { useEffect, useRef, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import AppShell from "../components/AppShell";
+import Tile, { TileHead } from "../components/ui/Tile";
+import Button from "../components/ui/Button";
+import { Chip } from "../components/ui/Chip";
+import Bar from "../components/ui/Bar";
+import { TileSkeleton } from "../components/ui/Skeleton";
 import { endpoints } from "../services/endpoints";
 
-/* ── Timer component ──────────────────────────────────────────── */
+/* ── Timer ──────────────────────────────────────────────────────── */
 function Timer({ totalSeconds, onExpire }) {
   const [remaining, setRemaining] = useState(totalSeconds);
   const ref = useRef(null);
 
   useEffect(() => {
     ref.current = setInterval(() => {
-      setRemaining((prev) => {
-        if (prev <= 1) {
-          clearInterval(ref.current);
-          onExpire();
-          return 0;
-        }
+      setRemaining(prev => {
+        if (prev <= 1) { clearInterval(ref.current); onExpire(); return 0; }
         return prev - 1;
       });
     }, 1000);
     return () => clearInterval(ref.current);
   }, [onExpire]);
 
-  const m = String(Math.floor(remaining / 60)).padStart(2, "0");
-  const s = String(remaining % 60).padStart(2, "0");
+  const m       = String(Math.floor(remaining / 60)).padStart(2, "0");
+  const s       = String(remaining % 60).padStart(2, "0");
   const warning = remaining < 60;
 
   return (
-    <span className={`ms-timer${warning ? " warning" : ""}`}>
+    <div style={{
+      display: "inline-flex", alignItems: "center", gap: 8,
+      padding: "6px 14px", borderRadius: "var(--r-pill)",
+      background: warning ? "rgba(255,36,66,0.12)" : "var(--bg-card-2)",
+      border: `1px solid ${warning ? "var(--accent-ring)" : "var(--line-2)"}`,
+      fontFamily: "var(--font-mono)", fontSize: 14, fontWeight: 700,
+      color: warning ? "var(--accent)" : "var(--ink-2)",
+      flexShrink: 0,
+    }}>
       ⏱ {m}:{s}
-    </span>
-  );
-}
-
-/* ── Question card ───────────────────────────────────────────── */
-function QuestionCard({ question, index, selectedChoices, answerText, onToggle, onTextChange, locked }) {
-  const isOpen = question.question_type === "open";
-  const answered = isOpen ? answerText.trim().length > 0 : selectedChoices.length > 0;
-
-  return (
-    <div className={`ms-question-card${answered ? " answered" : ""}`}>
-      <div className="ms-question-num">Question {index + 1}</div>
-      <div className="ms-question-text">{question.question_text}</div>
-      <div className="ms-question-type">
-        {isOpen ? "Open question" : "Closed test question"}
-      </div>
-      {isOpen ? (
-        <textarea
-          className="xk-input"
-          value={answerText}
-          onChange={(e) => !locked && onTextChange(question.id, e.target.value)}
-          placeholder="Cavabınızı yazın..."
-          rows={5}
-          style={{ width: "100%", resize: "vertical" }}
-          disabled={locked}
-        />
-      ) : (
-        <div className="ms-choices">
-          {question.choices.map((c) => {
-            const sel = selectedChoices.includes(c.id);
-            return (
-              <div
-                key={c.id}
-                className={`ms-choice${sel ? " selected" : ""}`}
-                onClick={() => !locked && onToggle(question.id, c.id, question.is_multiple)}
-              >
-                <div className="ms-choice-indicator">{sel ? "✓" : ""}</div>
-                <div className="ms-choice-text">{c.choice_text}</div>
-              </div>
-            );
-          })}
-        </div>
-      )}
     </div>
   );
 }
 
-/* ── Result view ─────────────────────────────────────────────── */
+/* ── Question card ──────────────────────────────────────────────── */
+function QuestionCard({ question, index, selectedChoices, answerText, onToggle, onTextChange, locked }) {
+  const isOpen   = question.question_type === "open";
+  const answered = isOpen ? answerText.trim().length > 0 : selectedChoices.length > 0;
+
+  return (
+    <Tile style={{ border: answered ? "1px solid var(--accent-ring)" : undefined }}>
+      {answered && (
+        <div style={{
+          position: "absolute", top: 0, left: 0, right: 0, height: 2,
+          background: "var(--accent)", opacity: 0.6,
+        }} />
+      )}
+
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
+        <span style={{
+          fontFamily: "var(--font-mono)", fontSize: 10,
+          letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--ink-4)",
+        }}>
+          Sual {index + 1}
+        </span>
+        {answered && <Chip size="sm" tone="accent">✓ Cavablandı</Chip>}
+      </div>
+
+      <div style={{ fontSize: 15, fontWeight: 600, color: "var(--ink-1)", lineHeight: 1.65 }}>
+        {question.question_text}
+      </div>
+
+      <div style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--ink-4)" }}>
+        {isOpen ? "Açıq sual" : "Çoxseçimli test"}
+      </div>
+
+      {isOpen ? (
+        <textarea
+          rows={5}
+          value={answerText}
+          onChange={e => !locked && onTextChange(question.id, e.target.value)}
+          placeholder="Cavabınızı yazın..."
+          disabled={locked}
+          style={{
+            width: "100%", boxSizing: "border-box",
+            padding: "12px 14px", borderRadius: 10, resize: "vertical",
+            background: "var(--bg-elev)", border: "1px solid var(--line)",
+            color: "var(--ink-1)", outline: "none", lineHeight: 1.65,
+            fontSize: 13, fontFamily: "inherit",
+            transition: "border-color var(--dur-1)",
+          }}
+          onFocus={e => { e.target.style.borderColor = "var(--accent-ring)"; }}
+          onBlur={e => { e.target.style.borderColor = "var(--line)"; }}
+        />
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
+          {(question.choices || []).map(c => {
+            const sel = selectedChoices.includes(c.id);
+            return (
+              <label key={c.id} style={{
+                display: "flex", alignItems: "center", gap: 12,
+                padding: "11px 14px", borderRadius: 10,
+                cursor: locked ? "default" : "pointer",
+                border: `1px solid ${sel ? "var(--accent-ring)" : "var(--line)"}`,
+                background: sel ? "var(--accent-soft)" : "var(--bg-card-2)",
+                fontSize: 13, color: sel ? "var(--ink-1)" : "var(--ink-2)",
+                transition: "all var(--dur-1)", userSelect: "none",
+                pointerEvents: locked ? "none" : "auto",
+              }}>
+                <input
+                  type="radio"
+                  name={`q-${question.id}`}
+                  style={{ display: "none" }}
+                  checked={sel}
+                  onChange={() => !locked && onToggle(question.id, c.id, question.is_multiple)}
+                />
+                <span style={{
+                  width: 17, height: 17, borderRadius: "50%", flexShrink: 0,
+                  border: `2px solid ${sel ? "var(--accent)" : "var(--line-2)"}`,
+                  background: sel ? "var(--accent)" : "transparent",
+                  display: "grid", placeItems: "center",
+                  transition: "all var(--dur-1)",
+                }}>
+                  {sel && <span style={{ width: 5, height: 5, borderRadius: "50%", background: "#fff" }} />}
+                </span>
+                <span style={{ flex: 1 }}>{c.choice_text}</span>
+              </label>
+            );
+          })}
+        </div>
+      )}
+    </Tile>
+  );
+}
+
+/* ── Result view ────────────────────────────────────────────────── */
 function ResultView({ result, exam, missionSlug, onRetry, canRetry }) {
   const passed = result.passed;
   const score  = result.score ?? 0;
 
   return (
     <>
-      <div className={`ms-result-card ${passed ? "passed" : "failed"}`}>
-        <div className="ms-result-icon">{passed ? "🎉" : "😞"}</div>
-        <div className={`ms-result-title ${passed ? "passed" : "failed"}`}>
-          {passed ? "Mission Complete!" : "Not Passed"}
+      <Tile style={{
+        textAlign: "center",
+        background: passed
+          ? "linear-gradient(135deg, rgba(110,255,214,0.08) 0%, var(--bg-card) 100%)"
+          : "linear-gradient(135deg, rgba(255,36,66,0.08) 0%, var(--bg-card) 100%)",
+        border: `1px solid ${passed ? "rgba(110,255,214,0.25)" : "rgba(255,36,66,0.25)"}`,
+      }}>
+        <div style={{ fontSize: 52, marginBottom: 12 }}>{passed ? "🎉" : "😞"}</div>
+        <div style={{
+          fontSize: 24, fontWeight: 700, marginBottom: 6,
+          color: passed ? "var(--ok)" : "var(--accent)",
+        }}>
+          {passed ? "Mission Tamamlandı!" : "Keçilmədi"}
         </div>
-        <div className={`ms-result-score ${passed ? "passed" : "failed"}`}>
+        <div style={{
+          fontSize: 52, fontWeight: 800, fontFamily: "var(--font-mono)",
+          color: passed ? "var(--ok)" : "var(--accent)",
+          marginBottom: 12, letterSpacing: "-0.02em",
+        }}>
           {score.toFixed(1)}%
         </div>
-        <div className="ms-result-desc">
+        <p style={{ fontSize: 13, color: "var(--ink-3)", maxWidth: 440, margin: "0 auto 20px", lineHeight: 1.7 }}>
           {passed
-            ? `You scored ${score.toFixed(1)}% — well above the ${exam?.passing_score}% passing threshold. Mission XP has been awarded!`
-            : `You scored ${score.toFixed(1)}%. You need at least ${exam?.passing_score}% to pass.`}
-        </div>
-        <div className="ms-result-actions">
-          <Link to={`/missions/${missionSlug}`} className="ms-btn ms-btn-secondary">
-            ← Back to Mission
-          </Link>
+            ? `${score.toFixed(1)}% — keçmə həddi ${exam?.passing_score}%-dən yüksəkdir. Mission XP verildi!`
+            : `${score.toFixed(1)}% qazandın. Keçmək üçün ən azı ${exam?.passing_score}% lazımdır.`}
+        </p>
+        <Bar value={score} max={100} tone={passed ? "mint" : "accent"} />
+        <div style={{ display: "flex", gap: 8, justifyContent: "center", marginTop: 20, flexWrap: "wrap" }}>
+          <Button variant="ghost" as={Link} to={`/missions/${missionSlug}`}>← Missiona qayıt</Button>
           {!passed && canRetry && (
-            <button className="ms-btn ms-btn-primary" onClick={onRetry}>
-              🔄 Retry Exam
-            </button>
+            <Button variant="accent" onClick={onRetry}>🔄 Yenidən cəhd et</Button>
           )}
           {passed && (
-            <Link to="/missions" className="ms-btn ms-btn-primary">
-              Next Mission →
-            </Link>
+            <Button variant="accent" as={Link} to="/missions">Növbəti Mission →</Button>
           )}
         </div>
-      </div>
+      </Tile>
 
-      {/* Answer breakdown */}
       {result.answers_detail?.length > 0 && (
-        <div>
-          <div style={{ marginBottom: 12, fontFamily: "var(--display)", fontWeight: 700, color: "var(--t1)", fontSize: 15 }}>
-            Answer Review
-          </div>
-          {result.answers_detail.map((a, i) => {
-            const correct = a.is_correct;
-            const isOpen = a.question_type === "open";
-            return (
-              <div key={a.question_id} className="ms-explanation-card">
-                <div className="ms-explanation-q">
-                  <div className="ms-explanation-q-icon">{correct ? "✅" : "❌"}</div>
-                  <div className="ms-explanation-q-text">
-                    {i + 1}. {a.question_text}
+        <Tile>
+          <TileHead eyebrow="Review" title="Cavabların nəzərdən keçirilməsi" />
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            {result.answers_detail.map((a, i) => {
+              const correct = a.is_correct;
+              const isOpen  = a.question_type === "open";
+              return (
+                <div key={a.question_id} style={{
+                  padding: "14px 16px", borderRadius: 12,
+                  background: correct ? "rgba(110,255,214,0.06)" : "rgba(255,122,138,0.06)",
+                  border: `1px solid ${correct ? "rgba(110,255,214,0.22)" : "rgba(255,122,138,0.22)"}`,
+                  display: "flex", flexDirection: "column", gap: 10,
+                }}>
+                  <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
+                    <span style={{
+                      width: 26, height: 26, borderRadius: 7, flexShrink: 0,
+                      display: "grid", placeItems: "center", fontSize: 12, fontWeight: 700,
+                      background: correct ? "rgba(110,255,214,0.12)" : "rgba(255,122,138,0.12)",
+                      border: `1px solid ${correct ? "rgba(110,255,214,0.28)" : "rgba(255,122,138,0.28)"}`,
+                      color: correct ? "var(--ok)" : "var(--bad)",
+                    }}>
+                      {correct ? "✓" : "✗"}
+                    </span>
+                    <div style={{ fontSize: 13, color: "var(--ink-1)", fontWeight: 500, lineHeight: 1.5, flex: 1 }}>
+                      {i + 1}. {a.question_text}
+                    </div>
                   </div>
-                </div>
-                <div className="ms-explanation-body">
+
                   {isOpen ? (
-                    <div style={{ display: "grid", gap: 8, fontSize: 13 }}>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 12, fontFamily: "var(--font-mono)" }}>
                       <div>
-                        <strong>Your answer:</strong> {a.submitted_answer || "—"}
+                        <span style={{ color: "var(--ink-4)", textTransform: "uppercase", fontSize: 10, letterSpacing: "0.1em" }}>
+                          Cavabınız:{" "}
+                        </span>
+                        <span style={{ color: "var(--ink-3)" }}>{a.submitted_answer || "—"}</span>
                       </div>
                       <div>
-                        <strong>Accepted answer:</strong> {a.expected_answers?.join(" / ") || "—"}
+                        <span style={{ color: "var(--ink-4)", textTransform: "uppercase", fontSize: 10, letterSpacing: "0.1em" }}>
+                          Düzgün:{" "}
+                        </span>
+                        <span style={{ color: "var(--ok)" }}>{a.expected_answers?.join(" / ") || "—"}</span>
                       </div>
                     </div>
                   ) : (
-                    <div style={{ marginBottom: 8 }}>
-                      {a.choices.map((c) => {
-                        const wasSelected = a.selected_choice_ids.includes(c.id);
-                        const isCorrect   = a.correct_choice_ids.includes(c.id);
-                        let color = "var(--t3)";
-                        if (isCorrect) color = "var(--green)";
-                        if (wasSelected && !isCorrect) color = "var(--hard)";
+                    <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                      {(a.choices || []).map(c => {
+                        const wasSelected = a.selected_choice_ids?.includes(c.id);
+                        const isCorrect   = a.correct_choice_ids?.includes(c.id);
+                        let color = "var(--ink-4)";
+                        if (isCorrect) color = "var(--ok)";
+                        if (wasSelected && !isCorrect) color = "var(--bad)";
                         return (
-                          <div
-                            key={c.id}
-                            style={{
-                              display: "flex",
-                              alignItems: "center",
-                              gap: 8,
-                              padding: "4px 0",
-                              color,
-                              fontSize: 13,
-                            }}
-                          >
+                          <div key={c.id} style={{
+                            display: "flex", alignItems: "center", gap: 8,
+                            padding: "4px 0", color, fontSize: 13,
+                          }}>
                             <span>{isCorrect ? "✓" : wasSelected ? "✗" : "○"}</span>
                             <span>{c.choice_text}</span>
                           </div>
@@ -167,38 +242,40 @@ function ResultView({ result, exam, missionSlug, onRetry, canRetry }) {
                       })}
                     </div>
                   )}
+
                   {a.explanation && (
-                    <div style={{ color: "var(--t3)", borderTop: "1px solid var(--b1)", paddingTop: 8, marginTop: 4 }}>
+                    <div style={{
+                      fontSize: 12, color: "var(--ink-3)", lineHeight: 1.6,
+                      paddingTop: 8, borderTop: "1px solid var(--line)",
+                    }}>
                       💡 {a.explanation}
                     </div>
                   )}
                 </div>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+        </Tile>
       )}
     </>
   );
 }
 
-/* ── Main component ───────────────────────────────────────────── */
+/* ── Main component ─────────────────────────────────────────────── */
 export default function MissionExamPage() {
-  const { slug }   = useParams();
-  const navigate   = useNavigate();
+  const { slug } = useParams();
 
-  const [exam, setExam]           = useState(null);
-  const [mission, setMission]     = useState(null);
-  const [loading, setLoading]     = useState(true);
-  const [attemptId, setAttemptId] = useState(null);
-  const [started, setStarted]     = useState(false);
-  const [starting, setStarting]   = useState(false);
+  const [exam, setExam]             = useState(null);
+  const [mission, setMission]       = useState(null);
+  const [loading, setLoading]       = useState(true);
+  const [attemptId, setAttemptId]   = useState(null);
+  const [started, setStarted]       = useState(false);
+  const [starting, setStarting]     = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [result, setResult]       = useState(null);
-  const [error, setError]         = useState(null);
+  const [result, setResult]         = useState(null);
+  const [error, setError]           = useState(null);
 
-  // answers: { [questionId]: [choiceId, ...] }
-  const [answers, setAnswers] = useState({});
+  const [answers, setAnswers]         = useState({});
   const [openAnswers, setOpenAnswers] = useState({});
 
   useEffect(() => {
@@ -210,52 +287,45 @@ export default function MissionExamPage() {
         setExam(examRes.data);
         setMission(missionRes.data);
       })
-      .catch(() => setError("Exam not found or not available."))
+      .catch(() => setError("Exam tapılmadı və ya mövcud deyil."))
       .finally(() => setLoading(false));
   }, [slug]);
 
   const handleStartExam = async () => {
-    setStarting(true);
-    setError(null);
+    setStarting(true); setError(null);
     try {
       const { data } = await endpoints.missionExamStart(slug);
       setAttemptId(data.attempt_id);
       setStarted(true);
-      setAnswers({});
-      setOpenAnswers({});
+      setAnswers({}); setOpenAnswers({});
     } catch (e) {
-      setError(e?.response?.data?.detail || "Failed to start exam.");
+      setError(e?.response?.data?.detail || "Exam başladıla bilmədi.");
     } finally {
       setStarting(false);
     }
   };
 
   const handleToggleChoice = (questionId, choiceId, isMultiple) => {
-    setAnswers((prev) => {
+    setAnswers(prev => {
       const current = prev[questionId] || [];
       if (isMultiple) {
         return {
           ...prev,
           [questionId]: current.includes(choiceId)
-            ? current.filter((c) => c !== choiceId)
+            ? current.filter(c => c !== choiceId)
             : [...current, choiceId],
         };
       }
-      // single choice
-      return {
-        ...prev,
-        [questionId]: current.includes(choiceId) ? [] : [choiceId],
-      };
+      return { ...prev, [questionId]: current.includes(choiceId) ? [] : [choiceId] };
     });
   };
 
   const handleSubmit = async () => {
     if (submitting) return;
-    setSubmitting(true);
-    setError(null);
+    setSubmitting(true); setError(null);
     try {
       const payload = {
-        answers: (exam?.questions || []).map((q) => ({
+        answers: (exam?.questions || []).map(q => ({
           question_id: q.id,
           ...(q.question_type === "open"
             ? { answer_text: openAnswers[q.id] || "" }
@@ -263,190 +333,165 @@ export default function MissionExamPage() {
         })),
       };
       const { data } = await endpoints.missionExamSubmit(slug, attemptId, payload);
-      setResult(data);
-      setStarted(false);
+      setResult(data); setStarted(false);
     } catch (e) {
-      setError(e?.response?.data?.detail || "Submission failed.");
+      setError(e?.response?.data?.detail || "Göndərilə bilmədi.");
     } finally {
       setSubmitting(false);
     }
   };
 
   const handleRetry = () => {
-    setResult(null);
-    setStarted(false);
-    setAttemptId(null);
-    setAnswers({});
-    setOpenAnswers({});
-    // Reload exam to update attempts_used
+    setResult(null); setStarted(false); setAttemptId(null);
+    setAnswers({}); setOpenAnswers({});
     endpoints.missionExamDetail(slug).then(({ data }) => setExam(data));
   };
 
-  const handleTimerExpire = () => {
-    if (started && !submitting) handleSubmit();
-  };
+  const handleTimerExpire = () => { if (started && !submitting) handleSubmit(); };
 
-  if (loading) return <AppShell title="Final Exam"><div className="ms-spinner" /></AppShell>;
-  if (error && !exam) return <AppShell title="Final Exam"><div className="ms-empty">{error}</div></AppShell>;
+  if (loading) {
+    return (
+      <AppShell>
+        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          <TileSkeleton height={110} />
+          <TileSkeleton height={200} />
+        </div>
+      </AppShell>
+    );
+  }
 
-  const questions = exam?.questions || [];
-  const answeredCount = questions.filter((q) => {
-    if (q.question_type === "open") {
-      return (openAnswers[q.id] || "").trim().length > 0;
-    }
+  const questions     = exam?.questions || [];
+  const answeredCount = questions.filter(q => {
+    if (q.question_type === "open") return (openAnswers[q.id] || "").trim().length > 0;
     return (answers[q.id] || []).length > 0;
   }).length;
-  const allAnswered = answeredCount === questions.length;
-  const canAttempt = exam?.can_attempt;
+  const allAnswered  = answeredCount === questions.length;
+  const canAttempt   = exam?.can_attempt;
   const attemptsUsed = exam?.attempts_used ?? 0;
-  const maxAttempts = exam?.max_attempts ?? 0;
+  const maxAttempts  = exam?.max_attempts ?? 0;
   const attemptsLeft = maxAttempts === 0 ? null : maxAttempts - attemptsUsed;
-  const canRetry = maxAttempts === 0 || attemptsUsed < maxAttempts;
+  const canRetry     = maxAttempts === 0 || attemptsUsed < maxAttempts;
 
   return (
-    <AppShell title="Final Exam">
-      <div className="ms-exam-page">
-        {/* Breadcrumb */}
-        <div className="ms-pass-nav">
-          <Link to="/missions">Missions</Link>
-          <span className="ms-pass-nav-sep">/</span>
-          <Link to={`/missions/${slug}`}>{mission?.title}</Link>
-          <span className="ms-pass-nav-sep">/</span>
-          <span className="ms-pass-current">Final Exam</span>
-        </div>
+    <AppShell>
+      {/* Breadcrumb */}
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 20, flexWrap: "wrap" }}>
+        <Link to="/missions"
+          style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--ink-4)", textDecoration: "none" }}>
+          Missions
+        </Link>
+        <span style={{ color: "var(--line-3)" }}>/</span>
+        <Link to={`/missions/${slug}`}
+          style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--ink-3)", textDecoration: "none" }}>
+          {mission?.title}
+        </Link>
+        <span style={{ color: "var(--line-3)" }}>/</span>
+        <span style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--ink-1)", fontWeight: 600 }}>
+          Final Exam
+        </span>
+      </div>
+
+      <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
 
         {result ? (
-          <ResultView
-            result={result}
-            exam={exam}
-            missionSlug={slug}
-            onRetry={handleRetry}
-            canRetry={canRetry}
-          />
+          <ResultView result={result} exam={exam} missionSlug={slug} onRetry={handleRetry} canRetry={canRetry} />
         ) : (
           <>
             {/* Exam header */}
-            <div className="ms-exam-header">
-              <div className="ms-exam-header-icon">📋</div>
-              <div style={{ flex: 1 }}>
-                <div className="ms-exam-header-title">{exam?.title}</div>
-                {exam?.description && (
-                  <div className="ms-exam-header-desc">{exam.description}</div>
-                )}
-                <div className="ms-exam-header-meta">
-                  <span className="ms-badge ms-badge-exam">{questions.length} questions</span>
-                  <span className="ms-badge ms-badge-info">Pass: {exam?.passing_score}%</span>
-                  {exam?.time_limit_minutes > 0 && (
-                    <span className="ms-badge ms-badge-info">
-                      ⏱ {exam.time_limit_minutes} min
-                    </span>
+            <Tile style={{ background: "linear-gradient(135deg, var(--bg-card) 0%, rgba(255,36,66,0.04) 100%)" }}>
+              <div style={{ display: "flex", alignItems: "flex-start", gap: 16 }}>
+                <span style={{
+                  width: 56, height: 56, borderRadius: 16, flexShrink: 0,
+                  background: "var(--accent-soft)", border: "1px solid var(--accent-ring)",
+                  display: "grid", placeItems: "center", fontSize: 26,
+                }}>
+                  📋
+                </span>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div className="page-eyebrow" style={{ marginBottom: 4 }}>Final Exam</div>
+                  <h1 style={{ margin: "0 0 6px", fontSize: 22, fontWeight: 700, color: "var(--ink-1)" }}>
+                    {exam?.title}
+                  </h1>
+                  {exam?.description && (
+                    <p style={{ fontSize: 13, color: "var(--ink-3)", margin: "0 0 10px" }}>
+                      {exam.description}
+                    </p>
                   )}
-                  {maxAttempts > 0 && (
-                    <span className="ms-badge ms-badge-info">
-                      Attempt {attemptsUsed + 1}/{maxAttempts}
-                    </span>
-                  )}
-                  {exam?.xp_reward > 0 && (
-                    <span className="ms-badge" style={{ background: "rgba(158,255,0,.1)", color: "var(--green)", border: "1px solid var(--green-ring)" }}>
-                      +{exam.xp_reward} XP
-                    </span>
-                  )}
+                  <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                    <Chip size="sm" tone="accent">{questions.length} sual</Chip>
+                    <Chip size="sm">Keç: {exam?.passing_score}%</Chip>
+                    {exam?.time_limit_minutes > 0 && (
+                      <Chip size="sm">⏱ {exam.time_limit_minutes} dəq</Chip>
+                    )}
+                    {maxAttempts > 0 && (
+                      <Chip size="sm">Cəhd: {attemptsUsed + 1}/{maxAttempts}</Chip>
+                    )}
+                    {exam?.xp_reward > 0 && (
+                      <Chip size="sm" tone="mint">+{exam.xp_reward} XP</Chip>
+                    )}
+                  </div>
                 </div>
+                {started && exam?.time_limit_minutes > 0 && (
+                  <Timer totalSeconds={exam.time_limit_minutes * 60} onExpire={handleTimerExpire} />
+                )}
               </div>
-              {started && exam?.time_limit_minutes > 0 && (
-                <Timer
-                  totalSeconds={exam.time_limit_minutes * 60}
-                  onExpire={handleTimerExpire}
-                />
-              )}
-            </div>
+            </Tile>
 
-            {/* Locked / prerequisite */}
+            {/* Locked notice */}
             {!exam?.passes_completed && (
-              <div className="ms-locked-banner">
-                <span className="ms-locked-banner-icon">🔒</span>
-                Complete all passes before taking the final exam.
+              <div style={{
+                padding: "14px 18px", borderRadius: 12,
+                background: "rgba(255,184,107,0.08)", border: "1px solid rgba(255,184,107,0.28)",
+                display: "flex", alignItems: "center", gap: 12,
+                color: "var(--warn)", fontSize: 13, fontWeight: 600,
+              }}>
+                <span style={{ fontSize: 20 }}>🔒</span>
+                Bütün pass-ları tamamlayandan sonra final exam-a qatıla bilərsiniz.
               </div>
             )}
 
-            {/* Max attempts reached */}
+            {/* Attempts exhausted */}
             {exam?.passes_completed && !canAttempt && !started && (
-              <div
-                style={{
-                  background: "var(--hard-dim)",
-                  border: "1.5px solid rgba(255,61,90,.25)",
-                  borderRadius: "var(--r3)",
-                  padding: 16,
-                  marginBottom: 16,
-                  color: "var(--t2)",
-                  fontSize: 14,
-                }}
-              >
-                ❌ You have used all {maxAttempts} attempt{maxAttempts !== 1 ? "s" : ""} for this exam.
+              <div style={{
+                padding: "14px 18px", borderRadius: 12,
+                background: "rgba(255,36,66,0.08)", border: "1px solid rgba(255,36,66,0.25)",
+                color: "var(--accent)", fontSize: 13, fontWeight: 600,
+              }}>
+                ❌ Bu exam üçün {maxAttempts} cəhdinizi tükətdiniz.
               </div>
             )}
 
             {error && (
-              <div
-                style={{
-                  background: "var(--hard-dim)",
-                  border: "1.5px solid rgba(255,61,90,.25)",
-                  borderRadius: "var(--r3)",
-                  padding: 12,
-                  marginBottom: 16,
-                  color: "var(--hard)",
-                  fontSize: 14,
-                }}
-              >
+              <div style={{
+                padding: "12px 16px", borderRadius: 12,
+                background: "rgba(255,122,138,0.08)", border: "1px solid rgba(255,122,138,0.28)",
+                color: "var(--bad)", fontSize: 13,
+              }}>
                 {error}
               </div>
             )}
 
             {/* Start screen */}
             {!started && canAttempt && exam?.passes_completed && (
-              <div
-                style={{
-                  background: "var(--s1)",
-                  border: "1.5px solid var(--b1)",
-                  borderRadius: "var(--r4)",
-                  padding: "32px",
-                  textAlign: "center",
-                }}
-              >
-                <div style={{ fontSize: 40, marginBottom: 16 }}>📋</div>
-                <div
-                  style={{
-                    fontFamily: "var(--display)",
-                    fontSize: 18,
-                    fontWeight: 700,
-                    color: "var(--t1)",
-                    marginBottom: 8,
-                  }}
-                >
-                  Ready for the Final Exam?
-                </div>
-                <div
-                  style={{
-                    fontSize: 14,
-                    color: "var(--t3)",
-                    maxWidth: 400,
-                    margin: "0 auto 24px",
-                    lineHeight: 1.7,
-                  }}
-                >
-                  {questions.length} questions · Pass threshold {exam?.passing_score}%
-                  {exam?.time_limit_minutes > 0 && ` · ${exam.time_limit_minutes} min limit`}
-                  {attemptsLeft !== null && ` · ${attemptsLeft} attempt${attemptsLeft !== 1 ? "s" : ""} remaining`}
-                </div>
-                <button
-                  className="ms-btn ms-btn-primary"
-                  style={{ padding: "12px 32px", fontSize: 15 }}
+              <Tile style={{ textAlign: "center", padding: "48px 32px" }}>
+                <div style={{ fontSize: 52, marginBottom: 16 }}>📋</div>
+                <h2 style={{ margin: "0 0 8px", fontSize: 20, fontWeight: 700 }}>
+                  Final Exam-a hazırsınız?
+                </h2>
+                <p style={{ fontSize: 14, color: "var(--ink-3)", maxWidth: 420, margin: "0 auto 28px", lineHeight: 1.7 }}>
+                  {questions.length} sual · Keçmə həddi {exam?.passing_score}%
+                  {exam?.time_limit_minutes > 0 && ` · ${exam.time_limit_minutes} dəq limit`}
+                  {attemptsLeft !== null && ` · ${attemptsLeft} cəhd qalıb`}
+                </p>
+                <Button
+                  variant="accent"
                   onClick={handleStartExam}
                   disabled={starting}
+                  style={{ padding: "12px 32px", fontSize: 15 }}
                 >
-                  {starting ? "Starting…" : "🚀 Start Exam"}
-                </button>
-              </div>
+                  {starting ? "Başlanır..." : "🚀 Exam-ı Başlat"}
+                </Button>
+              </Tile>
             )}
 
             {/* Questions */}
@@ -460,29 +505,44 @@ export default function MissionExamPage() {
                     selectedChoices={answers[q.id] || []}
                     answerText={openAnswers[q.id] || ""}
                     onToggle={handleToggleChoice}
-                    onTextChange={(questionId, value) => setOpenAnswers((prev) => ({ ...prev, [questionId]: value }))}
+                    onTextChange={(qId, val) =>
+                      setOpenAnswers(prev => ({ ...prev, [qId]: val }))
+                    }
                     locked={submitting}
                   />
                 ))}
 
-                {/* Submit bar */}
-                <div className="ms-exam-submit-bar">
-                  <div className="ms-exam-progress-text">
-                    {answeredCount}/{questions.length} answered
-                    {!allAnswered && (
-                      <span style={{ color: "var(--amber)", marginLeft: 8 }}>
-                        — answer all questions before submitting
+                {/* Sticky submit bar */}
+                <Tile style={{
+                  padding: "14px 20px",
+                  position: "sticky", bottom: 16,
+                  background: "rgba(17,20,26,0.96)",
+                  backdropFilter: "blur(16px)",
+                  border: "1px solid var(--line-2)",
+                }}>
+                  <div style={{
+                    display: "flex", alignItems: "center",
+                    justifyContent: "space-between", gap: 12, flexWrap: "wrap",
+                  }}>
+                    <div>
+                      <span style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--ink-3)" }}>
+                        {answeredCount}/{questions.length} cavablandı
                       </span>
-                    )}
+                      {!allAnswered && (
+                        <span style={{ color: "var(--warn)", marginLeft: 8, fontSize: 12 }}>
+                          — göndərməzdən əvvəl bütün suallara cavab verin
+                        </span>
+                      )}
+                    </div>
+                    <Button
+                      variant="accent"
+                      onClick={handleSubmit}
+                      disabled={!allAnswered || submitting}
+                    >
+                      {submitting ? "Göndərilir..." : "Exam-ı göndər →"}
+                    </Button>
                   </div>
-                  <button
-                    className="ms-btn ms-btn-primary"
-                    onClick={handleSubmit}
-                    disabled={!allAnswered || submitting}
-                  >
-                    {submitting ? "Submitting…" : "Submit Exam →"}
-                  </button>
-                </div>
+                </Tile>
               </>
             )}
           </>

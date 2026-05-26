@@ -262,13 +262,11 @@ export default function RoomDetailPage() {
                   {curTask.title}
                 </h2>
                 {curTask.content && (
-                  <p style={{
-                    fontSize: 13, color: "var(--ink-2)", lineHeight: 1.75,
-                    whiteSpace: "pre-wrap", margin: 0,
-                    borderLeft: "3px solid var(--accent-ring)", paddingLeft: 14,
-                  }}>
-                    {curTask.content}
-                  </p>
+                  <div
+                    className="rich-content"
+                    style={{ borderLeft: "3px solid var(--accent-ring)", paddingLeft: 14 }}
+                    dangerouslySetInnerHTML={{ __html: curTask.content }}
+                  />
                 )}
               </Tile>
 
