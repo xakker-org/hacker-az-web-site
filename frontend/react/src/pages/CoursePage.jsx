@@ -23,171 +23,130 @@ function LessonRow({ lesson, idx, slug, accent }) {
   return (
     <Link
       to={`/courses/${slug}/lessons/${lesson.id}`}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      style={{
-        display: "flex",
-        flexDirection: "row",
-        alignItems: "center",
-        gap: "14px",
-        padding: "14px 16px",
-        borderRadius: "12px",
-        background: done
-          ? "rgba(110,255,214,0.05)"
-          : hovered
-          ? "var(--bg-elev)"
-          : "var(--bg-card-2)",
-        border: `1px solid ${
-          done
-            ? "rgba(110,255,214,0.20)"
-            : hovered
-            ? "var(--line-3)"
-            : "var(--line-2)"
-        }`,
-        textDecoration: "none",
-        color: "inherit",
-        transition: "background 140ms ease, border-color 140ms ease",
-        cursor: "pointer",
-        width: "100%",
-        boxSizing: "border-box",
-      }}
+      style={{ display: "block", textDecoration: "none", color: "inherit" }}
     >
-      {/* Index / check badge */}
-      <div style={{
-        width: 36,
-        height: 36,
-        borderRadius: "10px",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        flexShrink: 0,
-        fontFamily: "var(--font-mono)",
-        fontSize: done ? "16px" : "12px",
-        fontWeight: 700,
-        background: done
-          ? "rgba(110,255,214,0.12)"
-          : hovered
-          ? `${accent}18`
-          : "var(--bg-elev)",
-        color: done ? "var(--ok)" : hovered ? accent : "var(--ink-4)",
-        border: `1px solid ${
-          done
-            ? "rgba(110,255,214,0.28)"
-            : hovered
-            ? `${accent}40`
-            : "var(--line-2)"
-        }`,
-        transition: "all 140ms ease",
-      }}>
-        {done ? "✓" : idx + 1}
-      </div>
-
-      {/* Title + meta */}
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{
-          fontSize: "13px",
-          fontWeight: 600,
-          color: done ? "var(--ink-3)" : "var(--ink-1)",
-          overflow: "hidden",
-          textOverflow: "ellipsis",
-          whiteSpace: "nowrap",
-          marginBottom: "5px",
-          transition: "color 140ms ease",
-        }}>
-          {lesson.title}
-        </div>
-        <div style={{
+      <div
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+        style={{
           display: "flex",
-          gap: "6px",
-          flexWrap: "wrap",
           alignItems: "center",
+          gap: 14,
+          padding: "13px 16px",
+          borderRadius: 12,
+          background: done
+            ? "rgba(110,255,214,0.04)"
+            : hovered
+            ? "rgba(255,255,255,0.04)"
+            : "transparent",
+          border: `1px solid ${
+            done
+              ? "rgba(110,255,214,0.18)"
+              : hovered
+              ? "var(--line-2)"
+              : "var(--line)"
+          }`,
+          transition: "background 150ms, border-color 150ms",
+          cursor: "pointer",
+        }}
+      >
+        {/* Badge */}
+        <div style={{
+          width: 34,
+          height: 34,
+          borderRadius: 9,
+          flexShrink: 0,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontFamily: "var(--font-mono)",
+          fontSize: done ? 15 : 11,
+          fontWeight: 700,
+          background: done
+            ? "rgba(110,255,214,0.10)"
+            : hovered
+            ? `${accent}15`
+            : "var(--bg-elev)",
+          color: done ? "var(--ok)" : hovered ? accent : "var(--ink-4)",
+          border: `1px solid ${
+            done
+              ? "rgba(110,255,214,0.25)"
+              : hovered
+              ? `${accent}35`
+              : "var(--line-2)"
+          }`,
+          transition: "all 150ms",
         }}>
-          {lesson.has_video && (
+          {done ? "✓" : idx + 1}
+        </div>
+
+        {/* Content */}
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{
+            fontSize: 13,
+            fontWeight: 600,
+            color: done ? "var(--ink-3)" : "var(--ink-1)",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+            marginBottom: 4,
+          }}>
+            {lesson.title}
+          </div>
+          <div style={{ display: "flex", gap: 5, alignItems: "center" }}>
+            {lesson.has_video && (
+              <span style={{
+                fontSize: 10, fontWeight: 600,
+                padding: "1px 7px", borderRadius: 99,
+                background: "rgba(108,179,255,0.10)",
+                color: "#6cb3ff",
+                border: "1px solid rgba(108,179,255,0.20)",
+              }}>▶ Video</span>
+            )}
+            {lesson.has_text && (
+              <span style={{
+                fontSize: 10, fontWeight: 600,
+                padding: "1px 7px", borderRadius: 99,
+                background: "rgba(192,132,252,0.10)",
+                color: "#c084fc",
+                border: "1px solid rgba(192,132,252,0.20)",
+              }}>≡ Mətn</span>
+            )}
+            {(lesson.question_count || 0) > 0 && (
+              <span style={{
+                fontSize: 10, fontWeight: 600,
+                padding: "1px 7px", borderRadius: 99,
+                background: "rgba(255,184,107,0.10)",
+                color: "#ffb86b",
+                border: "1px solid rgba(255,184,107,0.20)",
+              }}>{lesson.question_count} quiz</span>
+            )}
+          </div>
+        </div>
+
+        {/* Right side */}
+        <div style={{ flexShrink: 0 }}>
+          {done ? (
             <span style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "4px",
-              padding: "2px 8px",
-              borderRadius: "999px",
-              fontSize: "10px",
-              fontWeight: 600,
-              background: "rgba(108,179,255,0.10)",
-              color: "var(--c-6)",
-              border: "1px solid rgba(108,179,255,0.22)",
+              fontSize: 11, fontWeight: 600,
+              padding: "3px 10px", borderRadius: 99,
+              background: "rgba(110,255,214,0.10)",
+              color: "var(--ok)",
+              border: "1px solid rgba(110,255,214,0.22)",
+              display: "flex", alignItems: "center", gap: 4,
             }}>
-              ▶ Video
+              ✓ Tamamlandı
             </span>
-          )}
-          {lesson.has_text && (
+          ) : (
             <span style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "4px",
-              padding: "2px 8px",
-              borderRadius: "999px",
-              fontSize: "10px",
-              fontWeight: 600,
-              background: "rgba(192,132,252,0.10)",
-              color: "var(--c-5)",
-              border: "1px solid rgba(192,132,252,0.22)",
-            }}>
-              ≡ Mətn
-            </span>
-          )}
-          {(lesson.question_count || 0) > 0 && (
-            <span style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "4px",
-              padding: "2px 8px",
-              borderRadius: "999px",
-              fontSize: "10px",
-              fontWeight: 600,
-              background: "rgba(255,184,107,0.10)",
-              color: "var(--c-3)",
-              border: "1px solid rgba(255,184,107,0.22)",
-            }}>
-              ? {lesson.question_count} quiz
-            </span>
+              fontSize: 16,
+              color: hovered ? accent : "var(--ink-4)",
+              transition: "color 150ms, transform 150ms",
+              display: "block",
+              transform: hovered ? "translateX(3px)" : "none",
+            }}>→</span>
           )}
         </div>
-      </div>
-
-      {/* Status */}
-      <div style={{ flexShrink: 0 }}>
-        {done ? (
-          <span style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: "5px",
-            padding: "4px 10px",
-            borderRadius: "999px",
-            fontSize: "11px",
-            fontWeight: 600,
-            background: "rgba(110,255,214,0.10)",
-            color: "var(--ok)",
-            border: "1px solid rgba(110,255,214,0.25)",
-          }}>
-            ✓ Tamamlandı
-          </span>
-        ) : (
-          <span style={{
-            display: "inline-flex",
-            alignItems: "center",
-            justifyContent: "center",
-            width: "28px",
-            height: "28px",
-            borderRadius: "8px",
-            fontSize: "14px",
-            fontWeight: 700,
-            color: hovered ? accent : "var(--ink-4)",
-            background: hovered ? `${accent}14` : "transparent",
-            border: `1px solid ${hovered ? `${accent}35` : "transparent"}`,
-            transition: "all 140ms ease",
-          }}>
-            →
-          </span>
-        )}
       </div>
     </Link>
   );
@@ -345,7 +304,7 @@ export default function CoursePage() {
             description="Bu kursda hələ dərs əlavə edilməyib."
           />
         ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
             {lessons.map((lesson, idx) => (
               <LessonRow
                 key={lesson.id}
