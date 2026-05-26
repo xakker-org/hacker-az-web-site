@@ -26,8 +26,8 @@ function LessonRow({ lesson, idx, slug, accent }) {
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       style={{
-        display: "grid",
-        gridTemplateColumns: "36px 1fr auto",
+        display: "flex",
+        flexDirection: "row",
         alignItems: "center",
         gap: "14px",
         padding: "14px 16px",
@@ -48,6 +48,8 @@ function LessonRow({ lesson, idx, slug, accent }) {
         color: "inherit",
         transition: "background 140ms ease, border-color 140ms ease",
         cursor: "pointer",
+        width: "100%",
+        boxSizing: "border-box",
       }}
     >
       {/* Index / check badge */}
@@ -81,7 +83,7 @@ function LessonRow({ lesson, idx, slug, accent }) {
       </div>
 
       {/* Title + meta */}
-      <div style={{ minWidth: 0 }}>
+      <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{
           fontSize: "13px",
           fontWeight: 600,
