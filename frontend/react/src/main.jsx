@@ -10,6 +10,7 @@ import "./styles/base.css";
 import "./styles/shell.css";
 import "./styles/bento.css";
 import "./styles/compat.css";
+import "./styles/dashboard.css";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>

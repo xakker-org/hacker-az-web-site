@@ -15,12 +15,12 @@ html {
 }
 
 body {
-  font-family: var(--font-text);
+  font-family: var(--font-body);
   background: var(--bg);
   color: var(--ink-2);
   line-height: 1.55;
   font-size: 14px;
-  font-feature-settings: "ss01" on, "cv11" on, "tnum" on;
+  -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
 }
 
