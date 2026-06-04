@@ -240,47 +240,28 @@ export default function QuestionDetailPage() {
           {/* Choices or textarea */}
           <Tile>
             {question.question_type === "closed" ? (
-              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              <div className="xk-quiz-opts">
                 {(question.choices || []).map((choice, index) => {
                   const letter    = OPTION_LETTERS[index] || `${index + 1}`;
                   const isSel     = selectedId === choice.id;
                   const isCorrect = correctIds.includes(choice.id);
-                  let bg = "var(--bg-card-2)", border = "var(--line)", color = "var(--ink-2)";
+                  let cls = "xk-quiz-opt";
                   if (locked) {
-                    if (isCorrect)         { bg = "rgba(110,255,214,0.10)"; border = "rgba(110,255,214,0.30)"; color = "var(--ok)"; }
-                    else if (isSel)        { bg = "rgba(255,122,138,0.10)"; border = "rgba(255,122,138,0.30)"; color = "var(--bad)"; }
-                    else                   { bg = "var(--bg-card-2)"; border = "var(--line)"; color = "var(--ink-4)"; }
-                  } else if (isSel)        { bg = "var(--accent-soft)"; border = "var(--accent-ring)"; color = "var(--ink-1)"; }
+                    if (isCorrect) cls += " right";
+                    else if (isSel) cls += " wrong";
+                    else cls += " dim";
+                  } else if (isSel) cls += " sel";
                   return (
-                    <label
-                      key={choice.id}
-                      style={{
-                        display: "flex", alignItems: "center", gap: 12,
-                        padding: "12px 14px", borderRadius: 10,
-                        background: bg, border: `1px solid ${border}`, color,
-                        cursor: locked ? "default" : "pointer",
-                        pointerEvents: locked ? "none" : "auto",
-                        transition: "all var(--dur-1)", userSelect: "none",
-                      }}
-                    >
-                      <input type="radio" name="qchoice" style={{ display: "none" }}
-                        checked={isSel} onChange={() => !locked && setSelectedId(choice.id)} />
-                      <span style={{
-                        width: 26, height: 26, borderRadius: 8, flexShrink: 0,
-                        fontFamily: "var(--font-mono)", fontSize: 11, fontWeight: 700,
-                        display: "grid", placeItems: "center",
-                        background: isSel ? (locked && !isCorrect ? "rgba(255,122,138,0.12)" : "rgba(255,36,66,0.12)") : "var(--bg-elev)",
-                        border: `1px solid ${border}`,
-                        color: isSel ? color : "var(--ink-4)",
-                      }}>{letter}</span>
-                      <span style={{ flex: 1, fontSize: 13, lineHeight: 1.5 }}>{choice.text}</span>
+                    <button key={choice.id} type="button" className={cls} disabled={locked}
+                      onClick={() => !locked && setSelectedId(choice.id)}>
+                      <span className="xk-q-key">{letter}</span>
+                      <span style={{ flex: 1, lineHeight: 1.5 }}>{choice.text}</span>
                       {locked && isCorrect && (
-                        <Chip size="sm" tone="mint">{t.correct}</Chip>
+                        <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="#19c37d" strokeWidth={2.5} strokeLinecap="round" className="xk-q-mark">
+                          <path d="M5 12l4 4 10-10"/>
+                        </svg>
                       )}
-                      {locked && isSel && !isCorrect && (
-                        <Chip size="sm" tone="accent">{t.yourChoice}</Chip>
-                      )}
-                    </label>
+                    </button>
                   );
                 })}
               </div>

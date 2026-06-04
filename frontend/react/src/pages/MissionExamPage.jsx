@@ -42,35 +42,28 @@ function Timer({ totalSeconds, onExpire }) {
   );
 }
 
-/* ── Question card ──────────────────────────────────────────────── */
+/* ── Question card — uses xk-q-* vocabulary ───────────────────── */
 function QuestionCard({ question, index, selectedChoices, answerText, onToggle, onTextChange, locked }) {
   const isOpen   = question.question_type === "open";
   const answered = isOpen ? answerText.trim().length > 0 : selectedChoices.length > 0;
 
   return (
-    <Tile style={{ border: answered ? "1px solid var(--accent-ring)" : undefined }}>
+    <div className="xk-card" style={{
+      border: answered ? "1px solid var(--accent-ring)" : undefined,
+      overflow: "hidden", position: "relative",
+    }}>
       {answered && (
-        <div style={{
-          position: "absolute", top: 0, left: 0, right: 0, height: 2,
-          background: "var(--accent)", opacity: 0.6,
-        }} />
+        <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 3, background: "var(--accent)" }} />
       )}
 
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
-        <span style={{
-          fontFamily: "var(--font-mono)", fontSize: 10,
-          letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--ink-4)",
-        }}>
-          Sual {index + 1}
-        </span>
-        {answered && <Chip size="sm" tone="accent">✓ Cavablandı</Chip>}
+      <div className="xk-card-head">
+        <span className="xk-card-eyebrow">Sual {index + 1}</span>
+        {answered && <span className="xk-badge xk-badge-accent">✓ Cavablandı</span>}
       </div>
 
-      <div style={{ fontSize: 15, fontWeight: 600, color: "var(--ink-1)", lineHeight: 1.65 }}>
-        {question.question_text}
-      </div>
+      <p className="xk-q-prompt">{question.question_text}</p>
 
-      <div style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--ink-4)" }}>
+      <div className="xk-card-eyebrow" style={{ marginBottom: 10 }}>
         {isOpen ? "Açıq sual" : "Çoxseçimli test"}
       </div>
 
@@ -81,55 +74,29 @@ function QuestionCard({ question, index, selectedChoices, answerText, onToggle, 
           onChange={e => !locked && onTextChange(question.id, e.target.value)}
           placeholder="Cavabınızı yazın..."
           disabled={locked}
-          style={{
-            width: "100%", boxSizing: "border-box",
-            padding: "12px 14px", borderRadius: 10, resize: "vertical",
-            background: "var(--bg-elev)", border: "1px solid var(--line)",
-            color: "var(--ink-1)", outline: "none", lineHeight: 1.65,
-            fontSize: 13, fontFamily: "inherit",
-            transition: "border-color var(--dur-1)",
-          }}
-          onFocus={e => { e.target.style.borderColor = "var(--accent-ring)"; }}
-          onBlur={e => { e.target.style.borderColor = "var(--line)"; }}
+          className="input"
+          style={{ minHeight: 100, resize: "vertical", height: "auto", padding: "12px 14px" }}
         />
       ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
-          {(question.choices || []).map(c => {
+        <div className="xk-q-opts">
+          {(question.choices || []).map((c, ci) => {
             const sel = selectedChoices.includes(c.id);
             return (
-              <label key={c.id} style={{
-                display: "flex", alignItems: "center", gap: 12,
-                padding: "11px 14px", borderRadius: 10,
-                cursor: locked ? "default" : "pointer",
-                border: `1px solid ${sel ? "var(--accent-ring)" : "var(--line)"}`,
-                background: sel ? "var(--accent-soft)" : "var(--bg-card-2)",
-                fontSize: 13, color: sel ? "var(--ink-1)" : "var(--ink-2)",
-                transition: "all var(--dur-1)", userSelect: "none",
-                pointerEvents: locked ? "none" : "auto",
-              }}>
-                <input
-                  type="radio"
-                  name={`q-${question.id}`}
-                  style={{ display: "none" }}
-                  checked={sel}
-                  onChange={() => !locked && onToggle(question.id, c.id, question.is_multiple)}
-                />
-                <span style={{
-                  width: 17, height: 17, borderRadius: "50%", flexShrink: 0,
-                  border: `2px solid ${sel ? "var(--accent)" : "var(--line-2)"}`,
-                  background: sel ? "var(--accent)" : "transparent",
-                  display: "grid", placeItems: "center",
-                  transition: "all var(--dur-1)",
-                }}>
-                  {sel && <span style={{ width: 5, height: 5, borderRadius: "50%", background: "#fff" }} />}
-                </span>
-                <span style={{ flex: 1 }}>{c.choice_text}</span>
-              </label>
+              <button
+                key={c.id}
+                type="button"
+                className={`xk-q-opt${sel ? " right" : ""}`}
+                disabled={locked}
+                onClick={() => !locked && onToggle(question.id, c.id, question.is_multiple)}
+              >
+                <span className="xk-q-key">{String.fromCharCode(65 + ci)}</span>
+                <span>{c.choice_text}</span>
+              </button>
             );
           })}
         </div>
       )}
-    </Tile>
+    </div>
   );
 }
 
@@ -140,43 +107,30 @@ function ResultView({ result, exam, missionSlug, onRetry, canRetry }) {
 
   return (
     <>
-      <Tile style={{
-        textAlign: "center",
-        background: passed
-          ? "linear-gradient(135deg, rgba(110,255,214,0.08) 0%, var(--bg-card) 100%)"
-          : "linear-gradient(135deg, rgba(255,36,66,0.08) 0%, var(--bg-card) 100%)",
-        border: `1px solid ${passed ? "rgba(110,255,214,0.25)" : "rgba(255,36,66,0.25)"}`,
-      }}>
-        <div style={{ fontSize: 52, marginBottom: 12 }}>{passed ? "🎉" : "😞"}</div>
-        <div style={{
-          fontSize: 24, fontWeight: 700, marginBottom: 6,
-          color: passed ? "var(--ok)" : "var(--accent)",
-        }}>
+      <div className="sc-exam-result">
+        <div className="sc-exam-result-icon">{passed ? "🎉" : "😞"}</div>
+        <div className="sc-exam-result-title" style={{ color: passed ? "var(--ok)" : "var(--accent)" }}>
           {passed ? "Mission Tamamlandı!" : "Keçilmədi"}
         </div>
-        <div style={{
-          fontSize: 52, fontWeight: 800, fontFamily: "var(--font-mono)",
-          color: passed ? "var(--ok)" : "var(--accent)",
-          marginBottom: 12, letterSpacing: "-0.02em",
-        }}>
+        <div className="sc-exam-result-score" style={{ color: passed ? "var(--ok)" : "var(--accent)" }}>
           {score.toFixed(1)}%
         </div>
-        <p style={{ fontSize: 13, color: "var(--ink-3)", maxWidth: 440, margin: "0 auto 20px", lineHeight: 1.7 }}>
+        <p className="sc-exam-result-sub">
           {passed
             ? `${score.toFixed(1)}% — keçmə həddi ${exam?.passing_score}%-dən yüksəkdir. Mission XP verildi!`
             : `${score.toFixed(1)}% qazandın. Keçmək üçün ən azı ${exam?.passing_score}% lazımdır.`}
         </p>
         <Bar value={score} max={100} tone={passed ? "mint" : "accent"} />
-        <div style={{ display: "flex", gap: 8, justifyContent: "center", marginTop: 20, flexWrap: "wrap" }}>
-          <Button variant="ghost" as={Link} to={`/missions/${missionSlug}`}>← Missiona qayıt</Button>
+        <div style={{ display: "flex", gap: 8, marginTop: 8, flexWrap: "wrap", justifyContent: "center" }}>
+          <Link to={`/missions/${missionSlug}`} className="xk-btn ghost">← Missiona qayıt</Link>
           {!passed && canRetry && (
-            <Button variant="accent" onClick={onRetry}>🔄 Yenidən cəhd et</Button>
+            <button className="xk-btn primary" onClick={onRetry}>🔄 Yenidən cəhd et</button>
           )}
           {passed && (
-            <Button variant="accent" as={Link} to="/missions">Növbəti Mission →</Button>
+            <Link to="/missions" className="xk-btn primary">Növbəti Mission →</Link>
           )}
         </div>
-      </Tile>
+      </div>
 
       {result.answers_detail?.length > 0 && (
         <Tile>

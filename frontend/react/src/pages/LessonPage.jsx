@@ -76,100 +76,56 @@ function QuizModal({ question, onSubmit, onContinue }) {
           {question.text}
         </p>
 
-        {/* Choices */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        {/* Choices — prototype xk-quiz-opt */}
+        <div className="xk-quiz-opts">
           {(question.choices || []).map((choice, idx) => {
-            const letter        = OPTION_LETTERS[idx] || `${idx + 1}`;
-            const isSelected    = answered
+            const letter      = OPTION_LETTERS[idx] || `${idx + 1}`;
+            const isSelected  = answered
               ? (result?.selected_choice_id ?? attempt?.selected_choice_id) === choice.id
               : selected === choice.id;
-            const isCorrectCh   = correctIds.includes(choice.id);
+            const isCorrectCh = correctIds.includes(choice.id);
 
-            let bg = "var(--bg-card-2)", border = "var(--line)", color = "var(--ink-2)";
+            let cls = "xk-quiz-opt";
             if (answered) {
-              if (isCorrectCh)              { bg = "rgba(110,255,214,0.10)"; border = "rgba(110,255,214,0.30)"; color = "var(--ok)"; }
-              else if (isSelected)          { bg = "rgba(255,122,138,0.10)"; border = "rgba(255,122,138,0.30)"; color = "var(--bad)"; }
-              else                          { bg = "var(--bg-card-2)"; border = "var(--line)"; color = "var(--ink-4)"; }
-            } else if (isSelected)          { bg = "var(--accent-soft)"; border = "var(--accent-ring)"; color = "var(--ink-1)"; }
+              if (isCorrectCh) cls += " right";
+              else if (isSelected) cls += " wrong";
+              else cls += " dim";
+            } else if (isSelected) cls += " sel";
 
             return (
-              <button
-                key={choice.id}
-                type="button"
-                disabled={answered}
-                onClick={() => !answered && setSelected(choice.id)}
-                style={{
-                  display: "flex", alignItems: "center", gap: 12,
-                  padding: "11px 14px", borderRadius: 10,
-                  background: bg, border: `1px solid ${border}`, color,
-                  cursor: answered ? "default" : "pointer",
-                  fontSize: 13, textAlign: "left",
-                  transition: "all var(--dur-1)",
-                  fontFamily: "inherit",
-                }}
-              >
-                <span style={{
-                  width: 26, height: 26, borderRadius: 8, flexShrink: 0,
-                  fontFamily: "var(--font-mono)", fontSize: 11, fontWeight: 700,
-                  display: "grid", placeItems: "center",
-                  background: isSelected ? (answered && !isCorrectCh ? "rgba(255,122,138,0.12)" : "rgba(255,36,66,0.12)") : "var(--bg-elev)",
-                  border: `1px solid ${border}`,
-                  color: isSelected ? color : "var(--ink-4)",
-                }}>
-                  {letter}
-                </span>
+              <button key={choice.id} type="button" className={cls}
+                disabled={answered} onClick={() => !answered && setSelected(choice.id)}>
+                <span className="xk-q-key">{letter}</span>
                 <span style={{ flex: 1 }}>{choice.text}</span>
-                {answered && isCorrectCh   && <Chip size="sm" tone="mint">✓ Düzgün</Chip>}
-                {answered && isSelected && !isCorrectCh && <Chip size="sm" tone="accent">Seçdiniz</Chip>}
+                {answered && isCorrectCh && (
+                  <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="#19c37d" strokeWidth={2.5} strokeLinecap="round" className="xk-q-mark">
+                    <path d="M5 12l4 4 10-10"/>
+                  </svg>
+                )}
               </button>
             );
           })}
         </div>
 
-        {/* Result */}
         {answered && (
-          <div style={{
-            padding: "12px 14px", borderRadius: 10,
-            background: isCorrect ? "rgba(110,255,214,0.08)" : "rgba(255,36,66,0.08)",
-            border: `1px solid ${isCorrect ? "rgba(110,255,214,0.28)" : "rgba(255,36,66,0.25)"}`,
-            fontSize: 13, color: isCorrect ? "var(--ok)" : "var(--accent)",
-          }}>
-            <div style={{ fontWeight: 600, marginBottom: 4 }}>
-              {isCorrect ? "✓ Düzgün cavab!" : "✗ Yanlış cavab"}
-              <span style={{ float: "right", fontFamily: "var(--font-mono)" }}>
-                {result?.points_awarded > 0
-                  ? `+${result.points_awarded} xal`
-                  : attempt?.points_awarded > 0
-                  ? `+${attempt.points_awarded} xal (əvvəl qazanılıb)`
-                  : "xal verilmir"}
-              </span>
-            </div>
+          <div className={`xk-explain ${isCorrect ? "ok" : "no"}`}>
+            <b>{isCorrect ? "Doğru!" : "Düzgün cavab işarələnib."}</b>
             {(result?.explanation || attempt?.explanation) && (
-              <p style={{ margin: "8px 0 0", color: "var(--ink-3)", lineHeight: 1.6 }}>
-                {result?.explanation || attempt?.explanation}
-              </p>
-            )}
-            {attempt && !result && (
-              <p style={{ margin: "8px 0 0", color: "var(--ink-4)", fontSize: 12 }}>
-                Bu suala artıq cavab vermişdiniz.
-              </p>
+              <span> {result?.explanation || attempt?.explanation}</span>
             )}
           </div>
         )}
 
-        {/* Action */}
-        {!answered ? (
-          <Button variant="accent" onClick={handleSubmit} disabled={!selected || submitting}
-            style={{ width: "100%", justifyContent: "center" }}>
-            {submitting ? "Göndərilir..." : "Cavabı göndər"}
-          </Button>
-        ) : null}
+        {!answered && (
+          <button className="xk-btn primary block" onClick={handleSubmit} disabled={!selected || submitting}>
+            {submitting ? "Göndərilir..." : "Yoxla"}
+          </button>
+        )}
       </div>
 
-      {/* Continue button */}
-      <Button variant="accent" onClick={onContinue}>
+      <button className="xk-btn primary" onClick={onContinue}>
         Videoya davam et →
-      </Button>
+      </button>
     </div>
   );
 }

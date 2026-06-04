@@ -1,313 +1,203 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import AppShell from "../components/AppShell";
-import Tile, { TileHead } from "../components/ui/Tile";
-import Stat from "../components/ui/Stat";
-import Bar from "../components/ui/Bar";
-import Button from "../components/ui/Button";
-import { Chip } from "../components/ui/Chip";
-import EmptyState from "../components/ui/EmptyState";
 import { TileSkeleton } from "../components/ui/Skeleton";
 import { endpoints } from "../services/endpoints";
 
-const CATEGORY_ACCENT = {
-  web: "#6cb3ff", network: "#6effd6", linux: "#ffb86b",
-  crypto: "#c084fc", forensics: "#9eff6e", osint: "#ff7a8a",
-  reverse: "#ffb86b", pwn: "#ff7a8a",
+const CAT_HUE = {
+  web:215, network:175, linux:265, sistem:265, system:265,
+  crypto:140, kripto:140, osint:35, recon:35, pentest:0,
 };
+function catHue(c) {
+  const key = (c.category || c.category_name || "").toLowerCase();
+  for (const [k, v] of Object.entries(CAT_HUE)) { if (key.includes(k)) return v; }
+  return 215;
+}
 
-function LessonRow({ lesson, idx, slug, accent }) {
-  const navigate = useNavigate();
-  const [hovered, setHovered] = useState(false);
-  const done = lesson.user_completed;
-
+function ChevronIcon() {
   return (
-    <div
-      role="button"
-      tabIndex={0}
-      onClick={() => navigate(`/courses/${slug}/lessons/${lesson.id}`)}
-      onKeyDown={e => e.key === "Enter" && navigate(`/courses/${slug}/lessons/${lesson.id}`)}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      style={{
-        display: "flex",
-        flexDirection: "row",
-        alignItems: "center",
-        gap: 14,
-        padding: "13px 16px",
-        borderRadius: 12,
-        background: done
-          ? "rgba(110,255,214,0.05)"
-          : hovered
-          ? "rgba(255,255,255,0.04)"
-          : "transparent",
-        border: `1px solid ${done ? "rgba(110,255,214,0.20)" : hovered ? "var(--line-2)" : "var(--line)"}`,
-        transition: "background 150ms, border-color 150ms",
-        cursor: "pointer",
-        userSelect: "none",
-      }}
-    >
-      {/* Nömrə / tamamlandı badge */}
-      <div style={{
-        width: 34,
-        height: 34,
-        borderRadius: 9,
-        flexShrink: 0,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        fontFamily: "var(--font-mono)",
-        fontSize: done ? 15 : 12,
-        fontWeight: 700,
-        background: done ? "rgba(110,255,214,0.12)" : hovered ? `${accent}18` : "var(--bg-elev)",
-        color: done ? "var(--ok)" : hovered ? accent : "var(--ink-4)",
-        border: `1px solid ${done ? "rgba(110,255,214,0.28)" : hovered ? `${accent}40` : "var(--line-2)"}`,
-        transition: "all 150ms",
-      }}>
-        {done ? "✓" : idx + 1}
-      </div>
-
-      {/* Başlıq + chip-lər */}
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{
-          fontSize: 13,
-          fontWeight: 600,
-          color: done ? "var(--ink-3)" : "var(--ink-1)",
-          overflow: "hidden",
-          textOverflow: "ellipsis",
-          whiteSpace: "nowrap",
-          marginBottom: 5,
-        }}>
-          {lesson.title}
-        </div>
-        <div style={{ display: "flex", flexDirection: "row", gap: 5, alignItems: "center" }}>
-          {lesson.has_video && (
-            <span style={{
-              display: "inline-block",
-              fontSize: 10, fontWeight: 600,
-              padding: "2px 8px", borderRadius: 99,
-              background: "rgba(108,179,255,0.10)",
-              color: "#6cb3ff",
-              border: "1px solid rgba(108,179,255,0.22)",
-            }}>&#9654; Video</span>
-          )}
-          {lesson.has_text && (
-            <span style={{
-              display: "inline-block",
-              fontSize: 10, fontWeight: 600,
-              padding: "2px 8px", borderRadius: 99,
-              background: "rgba(192,132,252,0.10)",
-              color: "#c084fc",
-              border: "1px solid rgba(192,132,252,0.22)",
-            }}>Mətn</span>
-          )}
-          {(lesson.question_count || 0) > 0 && (
-            <span style={{
-              display: "inline-block",
-              fontSize: 10, fontWeight: 600,
-              padding: "2px 8px", borderRadius: 99,
-              background: "rgba(255,184,107,0.10)",
-              color: "#ffb86b",
-              border: "1px solid rgba(255,184,107,0.22)",
-            }}>{lesson.question_count} quiz</span>
-          )}
-        </div>
-      </div>
-
-      {/* Sağ: status */}
-      <div style={{ flexShrink: 0 }}>
-        {done ? (
-          <span style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: 4,
-            fontSize: 11, fontWeight: 600,
-            padding: "3px 10px", borderRadius: 99,
-            background: "rgba(110,255,214,0.10)",
-            color: "var(--ok)",
-            border: "1px solid rgba(110,255,214,0.25)",
-          }}>
-            ✓ Tamamlandı
-          </span>
-        ) : (
-          <span style={{
-            fontSize: 16,
-            color: hovered ? accent : "var(--ink-4)",
-            transition: "color 150ms, transform 150ms",
-            display: "inline-block",
-            transform: hovered ? "translateX(3px)" : "none",
-          }}>&#8594;</span>
-        )}
-      </div>
-    </div>
+    <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round">
+      <path d="M15 6l-6 6 6 6" />
+    </svg>
+  );
+}
+function CheckIcon() {
+  return (
+    <svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round">
+      <path d="M5 12l4 4 10-10" />
+    </svg>
+  );
+}
+function ArrowIcon() {
+  return (
+    <svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round">
+      <path d="M5 12h14M13 6l6 6-6 6" />
+    </svg>
+  );
+}
+function BookIcon() {
+  return (
+    <svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round">
+      <path d="M4 5a2 2 0 012-2h13v16H6a2 2 0 00-4 2zM4 19a2 2 0 012-2h13" />
+    </svg>
   );
 }
 
 export default function CoursePage() {
   const { slug } = useParams();
+  const navigate = useNavigate();
   const [course, setCourse]   = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError]     = useState("");
+  const [selIdx, setSelIdx]   = useState(0);
+  const [done, setDone]       = useState(new Set());
 
   useEffect(() => {
     setLoading(true);
     endpoints.courseDetail(slug)
-      .then(({ data }) => setCourse(data))
-      .catch(() => setError("Kurs yüklənə bilmədi."))
+      .then(({ data }) => {
+        setCourse(data);
+        const pct   = data.progress_percent || 0;
+        const cnt   = data.lessons?.length || 0;
+        const start = Math.min(Math.floor((pct / 100) * cnt), cnt - 1);
+        setSelIdx(start);
+        const doneSet = new Set();
+        (data.lessons || []).forEach((l, i) => { if (l.user_completed || i < start) doneSet.add(i); });
+        setDone(doneSet);
+      })
+      .catch(() => {})
       .finally(() => setLoading(false));
   }, [slug]);
 
   if (loading) {
     return (
       <AppShell>
-        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-          <TileSkeleton height={220} />
-          <TileSkeleton height={380} />
+        <TileSkeleton height={40} />
+        <div className="xk-course-detail" style={{ marginTop: 16 }}>
+          <TileSkeleton height={480} />
+          <TileSkeleton height={480} />
         </div>
       </AppShell>
     );
   }
 
-  if (error || !course) {
+  if (!course) {
     return (
       <AppShell>
-        <Tile>
-          <EmptyState icon="▤" title="Kurs tapılmadı" description={error || ""}
-            action={<Button as={Link} to="/courses" variant="accent">← Kurslara qayıt</Button>} />
-        </Tile>
+        <div className="xk-back-row"><Link to="/courses" className="xk-back"><ChevronIcon /> Geri</Link></div>
+        <div className="xk-empty-screen"><h3>Kurs tapılmadı</h3></div>
       </AppShell>
     );
   }
 
-  const lessons        = course.lessons || [];
-  const completedCount = lessons.filter(l => l.user_completed).length;
-  const pct            = lessons.length > 0 ? Math.round((completedCount / lessons.length) * 100) : 0;
-  const catKey         = (course.category || "").toLowerCase();
-  const accent         = course.cover_color || CATEGORY_ACCENT[catKey] || "var(--accent)";
+  const lessons  = course.lessons || [];
+  const lesson   = lessons[selIdx] || {};
+  const hue      = catHue(course);
+  const pct      = done.size > 0 ? Math.round((done.size / Math.max(lessons.length, 1)) * 100) : course.progress_percent || 0;
+
+  /* Build curriculum sections */
+  const half     = Math.ceil(lessons.length / 2);
+  const sections = [
+    { label: "Bölmə 1 · Əsaslar", items: lessons.slice(0, half) },
+    { label: "Bölmə 2 · Praktika", items: lessons.slice(half) },
+  ].filter(s => s.items.length > 0);
+
+  const complete = () => {
+    setDone(s => new Set(s).add(selIdx));
+    if (selIdx < lessons.length - 1) setSelIdx(selIdx + 1);
+  };
 
   return (
     <AppShell>
-      {/* Hero tile */}
-      <Tile style={{
-        marginBottom: 0,
-        overflow: "hidden",
-        background: `linear-gradient(135deg, ${accent}10 0%, var(--bg-card) 55%)`,
-        border: `1px solid ${accent}25`,
-      }}>
-        <div style={{
-          position: "absolute", top: 0, left: 0, right: 0, height: "3px",
-          background: `linear-gradient(90deg, ${accent}, ${accent}60)`,
-          opacity: 0.8,
-        }} />
+      {/* Back */}
+      <div className="xk-back-row xk-reveal">
+        <Link to="/courses" className="xk-back"><ChevronIcon /> Geri</Link>
+        <div className="xk-crumbs">
+          <span>Kurslar</span>
+          <span className="xk-crumb-sep">/</span>
+          <span className="cur">{course.category || course.category_name || "Kurs"}</span>
+        </div>
+      </div>
 
-        <Button variant="ghost" size="sm" as={Link} to="/courses"
-          style={{ alignSelf: "flex-start" }}>
-          ← Kurslara qayıt
-        </Button>
+      <div className="xk-course-detail" style={{ "--ch": hue }}>
 
-        <div style={{ display: "flex", alignItems: "flex-start", gap: "18px" }}>
-          <div style={{
-            width: "64px",
-            height: "64px",
-            borderRadius: "16px",
-            flexShrink: 0,
-            background: `${accent}18`,
-            border: `1px solid ${accent}30`,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            fontSize: "30px",
-          }}>
-            {course.icon || "▤"}
+        {/* Left: player + info */}
+        <div className="xk-course-main xk-reveal" style={{ animationDelay: "60ms" }}>
+          {/* Video player */}
+          <div className="xk-player">
+            <div className="xk-course-thumb-grid" />
+            <button className="xk-player-play" onClick={() => navigate(`/courses/${slug}/lessons/${lesson.id}`)}>
+              <svg width={26} height={26} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round">
+                <path d="M5 12h14M13 6l6 6-6 6" />
+              </svg>
+            </button>
+            <div className="xk-player-cap">
+              {lesson.has_video ? "VİDEO" : "MƏTN"} · {lesson.estimated_minutes || 5} dəq
+            </div>
           </div>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            {course.category && (
-              <div style={{
-                fontFamily: "var(--font-mono)",
-                fontSize: "10px",
-                fontWeight: 700,
-                letterSpacing: "0.16em",
-                textTransform: "uppercase",
-                color: accent,
-                marginBottom: "6px",
-              }}>
-                {course.category}
-              </div>
-            )}
-            <h1 style={{ margin: "0 0 6px", fontSize: "26px", fontWeight: 700, color: "var(--ink-1)" }}>
-              {course.title}
+
+          {/* Course info */}
+          <div className="xk-course-info">
+            <div style={{
+              fontFamily: "var(--font-mono)", fontSize: 11, fontWeight: 600,
+              letterSpacing: ".1em", textTransform: "uppercase",
+              color: `hsl(${hue} 80% 70%)`, marginBottom: 8,
+            }}>
+              {course.category || "Kurs"}
+              {(course.author_name || course.instructor) && ` · ${course.author_name || course.instructor}`}
+            </div>
+            <h1 style={{ fontFamily: "var(--font-display)", fontSize: 22, fontWeight: 700, color: "var(--text)", marginBottom: 10, lineHeight: 1.15 }}>
+              {lesson.title || course.title}
             </h1>
-            {course.description && (
-              <p style={{
-                fontSize: "13px",
-                color: "var(--ink-3)",
-                lineHeight: 1.65,
-                margin: "0 0 12px",
-                maxWidth: "600px",
-              }}>
-                {course.description}
-              </p>
-            )}
-            <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
-              <Chip size="sm" tone="sky">{lessons.length} dərs</Chip>
-              {course.room_count > 0 && <Chip size="sm">{course.room_count} otaq</Chip>}
-              {completedCount > 0 && (
-                <Chip size="sm" tone="mint">{completedCount}/{lessons.length} tamamlandı</Chip>
-              )}
+            <p style={{ color: "var(--text-2)", fontSize: 14, lineHeight: 1.6, marginBottom: 20 }}>
+              Bu dərsdə {course.title.toLowerCase()} mövzusunun "{(lesson.title || "").toLowerCase()}" hissəsini addım-addım keçirik.
+            </p>
+            <div className="xk-lesson-foot" style={{ borderTop: "1px solid var(--border)", paddingTop: 18, marginTop: 0 }}>
+              <button className="xk-btn ghost" onClick={() => selIdx > 0 ? setSelIdx(selIdx - 1) : navigate("/courses")}>
+                Əvvəlki
+              </button>
+              <button className="xk-btn primary" onClick={lesson.id ? () => navigate(`/courses/${slug}/lessons/${lesson.id}`) : complete}>
+                {done.has(selIdx) ? "Növbəti" : "Tamamla və davam et"}
+                <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round">
+                  <path d="M5 12h14M13 6l6 6-6 6" />
+                </svg>
+              </button>
             </div>
           </div>
         </div>
 
-        {lessons.length > 0 && (
-          <Bar value={pct} max={100} tone={pct >= 100 ? "mint" : "accent"} rightCaption={`${pct}%`} />
-        )}
-      </Tile>
-
-      {/* Stats row */}
-      {lessons.length > 0 && (
-        <div className="bento" style={{ marginBottom: 0 }}>
-          <Tile span={4}><Stat label="Dərslər" value={lessons.length} size="md" /></Tile>
-          <Tile span={4}><Stat label="Tamamlandı" value={completedCount} size="md" hint={`${pct}%`} /></Tile>
-          <Tile span={4}><Stat label="Otaqlar" value={course.room_count || 0} size="md" /></Tile>
-        </div>
-      )}
-
-      {/* Lessons list */}
-      <Tile>
-        <TileHead
-          eyebrow="Proqram"
-          title="Dərslər"
-          action={
-            <span style={{
-              fontFamily: "var(--font-mono)",
-              fontSize: "11px",
-              color: "var(--ink-3)",
-            }}>
-              {completedCount}/{lessons.length}
-            </span>
-          }
-        />
-
-        {lessons.length === 0 ? (
-          <EmptyState
-            icon="◌"
-            title="Hələ dərs yoxdur"
-            description="Bu kursda hələ dərs əlavə edilməyib."
-          />
-        ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-            {lessons.map((lesson, idx) => (
-              <LessonRow
-                key={lesson.id}
-                lesson={lesson}
-                idx={idx}
-                slug={slug}
-                accent={accent}
-              />
+        {/* Right: curriculum */}
+        <div className="xk-card xk-curriculum xk-reveal" style={{ animationDelay: "120ms" }}>
+          <div className="xk-curr-head">
+            <h3 className="xk-card-title">Kurs proqramı</h3>
+            <span className="xk-mission-pct">{pct}%</span>
+          </div>
+          <div className="xk-track" style={{ height: 4 }}>
+            <div className="xk-fill" style={{ width: `${pct}%`, background: `hsl(${hue} 70% 55%)` }} />
+          </div>
+          <div className="xk-curr-sections">
+            {sections.map((sec, si) => (
+              <div key={si} className="xk-curr-section">
+                <div className="xk-curr-label">{sec.label}</div>
+                {sec.items.map((l) => {
+                  const idx    = lessons.indexOf(l);
+                  const isDone = done.has(idx) || l.user_completed;
+                  const isCur  = idx === selIdx;
+                  return (
+                    <button key={l.id} className={`xk-curr-row${isCur ? " cur" : ""}${isDone ? " done" : ""}`}
+                      onClick={() => setSelIdx(idx)}>
+                      <span className="xk-curr-ico">
+                        {isDone ? <CheckIcon /> : l.has_video ? <ArrowIcon /> : <BookIcon />}
+                      </span>
+                      <span className="xk-curr-title">{l.title}</span>
+                      <span className="xk-curr-min">{l.estimated_minutes || 5}d</span>
+                    </button>
+                  );
+                })}
+              </div>
             ))}
           </div>
-        )}
-      </Tile>
+        </div>
+      </div>
     </AppShell>
   );
 }

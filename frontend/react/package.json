@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "deploy": "vite build && cp dist/app.js ../../static/js/spa/app.js && cp dist/app.css ../../static/js/spa/app.css",
     "preview": "vite preview"
   },
   "dependencies": {

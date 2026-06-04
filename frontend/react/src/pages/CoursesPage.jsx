@@ -2,238 +2,190 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import AppShell from "../components/AppShell";
 import { useLang } from "../contexts/LanguageContext";
+import { endpoints } from "../services/endpoints";
+import { TileSkeleton } from "../components/ui/Skeleton";
 
 const T = {
   az: {
-    eyebrow: "Courses", title: "Strukturlu öyrənmə",
-    sub: "Video dərslər, quizlər və real lab tapşırıqları.",
-    totalCourses: "Cəmi kurs", enrolled: "Qeydiyyatlı", completed: "Tamamlandı", lessons: "Dərs",
-    searchPlaceholder: "Kurs axtar...", results: "nəticə",
+    eyebrow: "Platforma", title: "Kurslar",
+    sub: "Strukturlu video və mətn kursları ilə dərinləş.",
+    all: "Hamısı", web: "Web", network: "Network", system: "Sistem",
+    crypto: "Kripto", recon: "Kəşfiyyat",
+    lessons: "dərs", hours: "saat", cont: "Davam edir", new: "Yeni",
     notFound: "Kurs tapılmadı",
-    resetFilters: "Axtarış sözünü dəyişdir və ya kateqoriyanı sıfırla.",
-    resetBtn: "Filtrləri sıfırla",
-    done: "✓ Tamam", active: "→ Davam",
-    all: "Hamısı",
   },
   en: {
-    eyebrow: "Courses", title: "Structured learning",
-    sub: "Video lessons, quizzes and real lab challenges.",
-    totalCourses: "Total courses", enrolled: "Enrolled", completed: "Completed", lessons: "Lessons",
-    searchPlaceholder: "Search courses...", results: "results",
+    eyebrow: "Platform", title: "Courses",
+    sub: "Deepen your skills with structured video and text courses.",
+    all: "All", web: "Web", network: "Network", system: "System",
+    crypto: "Crypto", recon: "Recon",
+    lessons: "lessons", hours: "hours", cont: "Active", new: "New",
     notFound: "No courses found",
-    resetFilters: "Change your search or reset the category.",
-    resetBtn: "Reset filters",
-    done: "✓ Done", active: "→ Active",
-    all: "All",
   },
 };
-import Tile, { TileHead } from "../components/ui/Tile";
-import Stat from "../components/ui/Stat";
-import Bar from "../components/ui/Bar";
-import Tabs from "../components/ui/Tabs";
-import { Input } from "../components/ui/Field";
-import { Chip } from "../components/ui/Chip";
-import EmptyState from "../components/ui/EmptyState";
-import { TileSkeleton } from "../components/ui/Skeleton";
-import Button from "../components/ui/Button";
-import { endpoints } from "../services/endpoints";
 
-const CATEGORY_ACCENT = {
-  "web": "#6cb3ff",
-  "network": "#6effd6",
-  "linux": "#ffb86b",
-  "crypto": "#c084fc",
-  "forensics": "#9eff6e",
-  "osint": "#ff7a8a",
-  "reverse": "#ffb86b",
-  "pwn": "#ff7a8a",
+/* hue degrees for each category — drives xk-course-thumb gradient */
+const CAT_HUE = {
+  web: 215, network: 175, linux: 265, sistem: 265, system: 265,
+  crypto: 140, kripto: 140, osint: 35, recon: 35, pentest: 0,
 };
-
-function categoryAccent(name) {
-  const key = (name || "").toLowerCase();
-  return CATEGORY_ACCENT[key] || "var(--accent)";
+function catHue(c) {
+  const key = (c.category || c.category_name || "").toLowerCase();
+  for (const [k, v] of Object.entries(CAT_HUE)) {
+    if (key.includes(k)) return v;
+  }
+  return 215;
 }
+
+const FILTERS = ["Hamısı", "Web", "Network", "Sistem", "Kripto", "Kəşfiyyat"];
+const FILTER_KEYS = {
+  "Web": "web", "Network": "network", "Sistem": "linux", "Kripto": "crypto", "Kəşfiyyat": "osint",
+};
 
 export default function CoursesPage() {
   const { lang } = useLang();
   const t = T[lang] || T.az;
+
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError]     = useState("");
-  const [search, setSearch]   = useState("");
-  const [activeCat, setCat]   = useState("");
+  const [filter, setFilter]   = useState("Hamısı");
 
   useEffect(() => {
     let ok = true;
     endpoints.courses()
       .then(({ data }) => { if (ok) setCourses(Array.isArray(data) ? data : []); })
-      .catch(() => { if (ok) setError("Kurslar yüklənə bilmədi"); })
       .finally(() => { if (ok) setLoading(false); });
     return () => { ok = false; };
   }, []);
 
-  const cats = useMemo(() => {
-    const seen = new Set();
-    const list = [];
-    courses.forEach(c => {
-      const cat = c.category || c.category_name || "";
-      if (cat && !seen.has(cat)) { seen.add(cat); list.push(cat); }
-    });
-    return list;
-  }, [courses]);
-
-  const catTabs = [
-    { value: "", label: t.all },
-    ...cats.map(c => ({ value: c, label: c })),
-  ];
-
   const filtered = useMemo(() => {
-    const q = search.trim().toLowerCase();
+    if (filter === "Hamısı") return courses;
+    const key = FILTER_KEYS[filter] || filter.toLowerCase();
     return courses.filter(c => {
-      const matchCat = !activeCat || (c.category || c.category_name || "") === activeCat;
-      const matchQ   = !q || `${c.title} ${c.description || ""} ${c.category || ""}`.toLowerCase().includes(q);
-      return matchCat && matchQ;
+      const cat = (c.category || c.category_name || "").toLowerCase();
+      return cat.includes(key);
     });
-  }, [courses, search, activeCat]);
-
-  const enrolled  = courses.filter(c => c.enrolled).length;
-  const completed = courses.filter(c => c.progress_percent >= 100).length;
-  const totalLess = courses.reduce((s, c) => s + (c.lesson_count || 0), 0);
+  }, [courses, filter]);
 
   return (
     <AppShell>
-      <div className="page-head">
-        <div>
-          <div className="page-eyebrow">{t.eyebrow}</div>
-          <h1 className="page-title">{t.title}</h1>
-          <div className="page-sub">{t.sub}</div>
+      <div className="xk-screen">
+        <div className="xk-screen-head xk-reveal">
+          <div>
+            <div className="xk-greet-eyebrow">{t.eyebrow}</div>
+            <h1 className="xk-screen-title">{t.title}</h1>
+            <p className="xk-greet-sub">{t.sub}</p>
+          </div>
         </div>
-      </div>
 
-      {/* Stats */}
-      <div className="bento" style={{ marginBottom: 16 }}>
-        <Tile span={3}><Stat label={t.totalCourses} value={courses.length} size="md" /></Tile>
-        <Tile span={3}><Stat label={t.enrolled} value={enrolled} size="md" /></Tile>
-        <Tile span={3}>
-          <Stat label={t.completed} value={completed} size="md"
-            hint={enrolled > 0 ? `${Math.round(completed / enrolled * 100)}%` : ""} />
-        </Tile>
-        <Tile span={3}><Stat label={t.lessons} value={totalLess} size="md" /></Tile>
-      </div>
-
-      {/* Category tabs */}
-      {catTabs.length > 1 && (
-        <div style={{ marginBottom: 14 }}>
-          <Tabs value={activeCat} onChange={setCat} options={catTabs} ariaLabel="Kateqoriyalar" />
-        </div>
-      )}
-
-      {/* Search */}
-      <div style={{ display: "flex", gap: 10, alignItems: "center", marginBottom: 20 }}>
-        <Input
-          placeholder={t.searchPlaceholder}
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          style={{ maxWidth: 320, flex: 1 }}
-        />
-        <Chip size="sm" tone={filtered.length > 0 ? "accent" : "neutral"} style={{ marginLeft: "auto" }}>
-          {filtered.length} {t.results}
-        </Chip>
-      </div>
-
-      {error && (
-        <Tile style={{ marginBottom: 16 }}>
-          <div style={{ color: "var(--bad)", padding: 4 }}>{error}</div>
-        </Tile>
-      )}
-
-      {loading ? (
-        <div className="bento">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="span-4"><TileSkeleton height={210} /></div>
+        <div className="xk-filters xk-reveal" style={{ animationDelay: "60ms" }}>
+          {FILTERS.map(f => (
+            <button key={f} type="button"
+              className={`xk-filter${filter === f ? " on" : ""}`}
+              onClick={() => setFilter(f)}>
+              {f}
+            </button>
           ))}
         </div>
-      ) : filtered.length === 0 ? (
-        <Tile>
-          <EmptyState
-            icon="▤"
-            title={t.notFound}
-            description={t.resetFilters}
-            action={search || activeCat
-              ? <Button variant="ghost" onClick={() => { setSearch(""); setCat(""); }}>{t.resetBtn}</Button>
-              : null}
-          />
-        </Tile>
-      ) : (
-        <div className="bento">
-          {filtered.map(c => {
-            const catName  = c.category || c.category_name || "";
-            const accent   = c.cover_color || categoryAccent(catName);
-            const isEnroll = Boolean(c.enrolled);
-            const pct      = c.progress_percent || 0;
-            const done     = pct >= 100;
 
-            return (
-              <Tile key={c.id} span={4} as={Link} to={`/courses/${c.slug}`} interactive style={{ overflow: "hidden" }}>
-                {/* Colored top accent bar */}
-                <div style={{
-                  position: "absolute", top: 0, left: 0, right: 0, height: 2,
-                  background: accent, opacity: done ? 0.8 : 0.4,
-                }} />
+        {loading ? (
+          <div className="xk-course-grid">
+            {Array.from({ length: 6 }).map((_, i) => <TileSkeleton key={i} height={260} />)}
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="xk-empty-screen">
+            <div className="xk-empty-ico">▤</div>
+            <h3>{t.notFound}</h3>
+          </div>
+        ) : (
+          <div className="xk-course-grid">
+            {filtered.map((c, i) => {
+              const hue    = catHue(c);
+              const pct    = c.progress_percent || 0;
+              const done   = pct >= 100;
+              const catName = c.category || c.category_name || "";
+              const authorInitial = (c.author_name || c.instructor || "X").charAt(0).toUpperCase();
 
-                {/* Icon + title */}
-                <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
-                  <span style={{
-                    width: 44, height: 44, borderRadius: 12, flexShrink: 0,
-                    background: `${accent}18`,
-                    border: `1px solid ${accent}30`,
-                    display: "grid", placeItems: "center", fontSize: 20,
-                  }}>
-                    {c.icon || "▤"}
-                  </span>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{
-                      fontSize: 14, fontWeight: 700, color: "var(--ink-1)",
-                      marginBottom: 4, overflow: "hidden",
-                      textOverflow: "ellipsis", whiteSpace: "nowrap",
-                    }}>
-                      {c.title}
-                    </div>
-                    <div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>
-                      {catName && <Chip size="sm">{catName}</Chip>}
-                      {done && <Chip size="sm" tone="mint">{t.done}</Chip>}
-                      {isEnroll && !done && <Chip size="sm" tone="sky">{t.active}</Chip>}
-                    </div>
+              return (
+                <Link
+                  key={c.id}
+                  to={`/courses/${c.slug}`}
+                  className="xk-card xk-int xk-course xk-reveal"
+                  style={{ "--ch": hue, animationDelay: `${100 + i * 70}ms`, textDecoration: "none", color: "inherit" }}
+                >
+                  {/* Thumbnail */}
+                  <div className="xk-course-thumb">
+                    <div className="xk-course-thumb-grid" />
+                    {catName && <span className="xk-course-cat">{catName}</span>}
+                    <span className="xk-course-play">
+                      <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round">
+                        <path d="M12 3l9 5-9 5-9-5zM3 13l9 5 9-5M3 17l9 5 9-5" />
+                      </svg>
+                    </span>
                   </div>
-                </div>
 
-                {c.description && (
-                  <p style={{
-                    fontSize: 12, color: "var(--ink-3)", lineHeight: 1.6, margin: 0,
-                    display: "-webkit-box", WebkitLineClamp: 3,
-                    WebkitBoxOrient: "vertical", overflow: "hidden",
-                  }}>
-                    {c.description}
-                  </p>
-                )}
+                  {/* Body */}
+                  <div className="xk-course-body">
+                    <div className="xk-course-top">
+                      <span className="xk-badge tone-muted">
+                        {{ beginner:"Başlanğıc", intermediate:"Orta", advanced:"Çətin", easy:"Asan", medium:"Orta", hard:"Çətin" }[c.level] || c.level || "Orta"}
+                      </span>
+                      {pct > 0 && !done && (
+                        <span className="xk-course-cont">
+                          <svg width={8} height={8} viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg>
+                          Davam edir
+                        </span>
+                      )}
+                    </div>
 
-                {isEnroll && (
-                  <Bar value={pct} tone={done ? "mint" : "accent"} rightCaption={`${pct}%`} />
-                )}
+                    <h3 className="xk-course-title">{c.title}</h3>
 
-                <div style={{
-                  display: "flex", alignItems: "center", justifyContent: "space-between",
-                  marginTop: "auto", paddingTop: 8, borderTop: "1px solid var(--line)",
-                  fontSize: 11, color: "var(--ink-4)", fontFamily: "var(--font-mono)",
-                }}>
-                  <span>{c.lesson_count || 0} dərs · {c.room_count || 0} otaq</span>
-                  <span style={{ color: accent, fontWeight: 700 }}>→</span>
-                </div>
-              </Tile>
-            );
-          })}
-        </div>
-      )}
+                    <div className="xk-course-meta">
+                      {c.lesson_count > 0 && (
+                        <span>
+                          <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round">
+                            <path d="M12 3l9 5-9 5-9-5zM3 13l9 5 9-5M3 17l9 5 9-5" />
+                          </svg>
+                          {c.lesson_count} {t.lessons}
+                        </span>
+                      )}
+                      {c.estimated_hours > 0 && (
+                        <span>
+                          <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round">
+                            <circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>
+                          </svg>
+                          {c.estimated_hours} {t.hours}
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="xk-course-foot">
+                      <div className="xk-course-author">
+                        <div className="xk-avatar" style={{
+                          width: 22, height: 22, fontSize: 10, borderRadius: 6,
+                          background: `hsl(${hue} 60% 35%)`,
+                        }}>{authorInitial}</div>
+                        {c.author_name || c.instructor || "Xakker"}
+                      </div>
+                      {done
+                        ? <span className="xk-badge tone-ok">✓</span>
+                        : pct > 0
+                        ? <span className="xk-course-pct">{pct}%</span>
+                        : <span className="xk-course-new">Yeni</span>}
+                    </div>
+
+                    {pct > 0 && (
+                      <div className="xk-track" style={{ height: 3 }}>
+                        <div className="xk-fill" style={{ width: `${pct}%`, background: `hsl(${hue} 70% 55%)` }} />
+                      </div>
+                    )}
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        )}
+      </div>
     </AppShell>
   );
 }

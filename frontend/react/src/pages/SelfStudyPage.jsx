@@ -127,11 +127,13 @@ export default function SelfStudyPage() {
 
   return (
     <AppShell>
-      <div className="page-head">
+      <div className="xk-screen">
+      {/* Head */}
+      <div className="xk-screen-head xk-reveal">
         <div>
-          <div className="page-eyebrow">{t.eyebrow}</div>
-          <h1 className="page-title">{t.title}</h1>
-          <div className="page-sub">{t.sub}</div>
+          <div className="xk-greet-eyebrow">Platforma</div>
+          <h1 className="xk-screen-title">{t.title}</h1>
+          <p className="xk-greet-sub">{t.sub}</p>
         </div>
         <Segmented
           value={lang}
@@ -141,31 +143,32 @@ export default function SelfStudyPage() {
         />
       </div>
 
-      {/* Progress tiles */}
-      <div className="bento" style={{ marginBottom: 20 }}>
-        <Tile span={6} style={{ background: "linear-gradient(135deg, var(--bg-card) 0%, rgba(255,36,66,0.04) 100%)" }}>
-          <TileHead eyebrow={t.progress} title={`${pct}% tamamlandı`} sub={`${progress.correct_answers || 0} / ${progress.total_questions || 0}`} />
-          <div style={{ display: "flex", alignItems: "center", gap: 24 }}>
-            <ProgressRing value={pct} size={100} strokeWidth={10} tone="accent" label={`${pct}%`} sub="solved" />
-            <div style={{ flex: 1, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-              <Stat size="sm" label={t.correct}  value={progress.correct_answers || 0} />
-              <Stat size="sm" label={t.attempts} value={progress.total_attempts || 0} />
-              <Stat size="sm" label={t.answered} value={progress.answered_questions || 0} />
-              <Stat size="sm" label={t.accuracy} value={Math.round(accuracy)} unit="%" />
+      {/* "Davam etdiyin material" hero */}
+      <div className="xk-card xk-reading xk-reveal" style={{ animationDelay: "70ms" }}>
+        <div className="xk-reading-ico">
+          <svg width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+            <path d="M4 5a2 2 0 012-2h13v16H6a2 2 0 00-4 2zM4 19a2 2 0 012-2h13" />
+          </svg>
+        </div>
+        <div className="xk-reading-meta">
+          <div className="xk-card-eyebrow">Davam etdiyin material</div>
+          <h3 className="xk-reading-title">Praktiki suallar — {pct}% tamamlandı</h3>
+          <div className="xk-reading-prog">
+            <div className="xk-track" style={{ height: 5 }}>
+              <div className="xk-fill" style={{ width: `${pct}%` }} />
             </div>
+            <span className="xk-mission-pct">{pct}%</span>
           </div>
-        </Tile>
-
-        <Tile span={3}>
-          <Stat label={t.xp} value={(progress.total_points_earned || 0).toLocaleString()} size="lg" />
-          <Bar value={progress.correct_answers || 0} max={progress.total_questions || 1} tone="accent" />
-        </Tile>
-
-        <Tile span={3}>
-          <Stat label={t.answered} value={progress.answered_questions || 0} unit={`/${progress.total_questions || 0}`} size="lg" />
-          <Bar value={progress.answered_questions || 0} max={progress.total_questions || 1} tone="sky" />
-        </Tile>
+        </div>
+        <button className="xk-btn primary" onClick={reset}>
+          Davam et
+          <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round">
+            <path d="M5 12h14M13 6l6 6-6 6" />
+          </svg>
+        </button>
       </div>
+
+      <div className="xk-section-label xk-reveal" style={{ animationDelay: "120ms" }}>Suallar</div>
 
       {/* Filters + Questions */}
       <div className="bento" style={{ alignItems: "start" }}>
@@ -270,80 +273,32 @@ export default function SelfStudyPage() {
             </Tile>
           ) : (
             <>
-              <div className="bento">
-                {paged.map(q => {
+              <div className="fi-grid">
+                {paged.map((q, qi) => {
                   const tm = TYPE_META[q.question_type] || TYPE_META.closed;
                   const us = q.user_status || "pending";
                   const ss = STATUS_STYLE[us] || STATUS_STYLE.pending;
+                  const qIcon = q.question_type === "terminal" ? "⌨️" : q.question_type === "open" ? "✏️" : "📝";
 
                   return (
-                    <Tile
+                    <Link
                       key={q.id}
-                      span={4}
-                      as={Link}
                       to={`/self-study/question/${q.id}`}
-                      interactive
-                      pad="sm"
-                      style={{
-                        background: ss.bg !== "transparent" ? ss.bg : undefined,
-                        borderColor: us !== "pending" ? ss.border : undefined,
-                        overflow: "hidden",
-                      }}
+                      className="fi-cs-item"
+                      style={{ animationDelay: `${qi * 30}ms`, gridColumn: "span 1" }}
                     >
-                      {/* Top accent if answered */}
-                      {us !== "pending" && (
-                        <div style={{
-                          position: "absolute", top: 0, left: 0, right: 0, height: 2,
-                          background: ss.color, opacity: 0.6,
-                        }} />
-                      )}
-
-                      {/* Status + difficulty row */}
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
-                        <DiffBadge level={q.level} />
-                        <div style={{
-                          width: 22, height: 22, borderRadius: 6, flexShrink: 0,
-                          display: "grid", placeItems: "center", fontSize: 11,
-                          fontWeight: 700, fontFamily: "var(--font-mono)",
-                          background: ss.bg !== "transparent" ? ss.bg : "var(--bg-elev)",
-                          border: `1px solid ${ss.border}`,
-                          color: ss.color,
-                        }}>
-                          {ss.icon}
+                      <div className="fi-cs-ico" style={{ background: ss.bg !== "transparent" ? ss.bg : undefined, borderColor: us !== "pending" ? ss.border : undefined }}>
+                        {us === "correct" ? "✓" : us === "wrong" ? "✗" : qIcon}
+                      </div>
+                      <div className="fi-cs-body">
+                        <div className="fi-cs-name">{q.title}</div>
+                        <div className="fi-cs-meta">
+                          {q.course?.title && `${q.course.title} · `}
+                          {(tm.label[lang] || tm.label.en)} · {q.points} XP
                         </div>
                       </div>
-
-                      {/* Title */}
-                      <div style={{
-                        fontSize: 13, fontWeight: 600, color: "var(--ink-1)",
-                        lineHeight: 1.5,
-                        display: "-webkit-box", WebkitLineClamp: 2,
-                        WebkitBoxOrient: "vertical", overflow: "hidden",
-                      }}>
-                        {q.title}
-                      </div>
-
-                      {/* Course */}
-                      {q.course?.title && (
-                        <div style={{ fontSize: 11, color: "var(--ink-4)", fontFamily: "var(--font-mono)" }}>
-                          {q.course.title}
-                        </div>
-                      )}
-
-                      {/* Footer */}
-                      <div style={{
-                        display: "flex", alignItems: "center", justifyContent: "space-between",
-                        marginTop: "auto", paddingTop: 6, borderTop: "1px solid var(--line)",
-                        fontSize: 11,
-                      }}>
-                        <Chip size="sm" tone={tm.tone}>
-                          {tm.label[lang] || tm.label.en}
-                        </Chip>
-                        <span className="mono tnum" style={{ color: "var(--accent)", fontWeight: 700 }}>
-                          ★ {q.points}
-                        </span>
-                      </div>
-                    </Tile>
+                      <div className="fi-cs-arrow">→</div>
+                    </Link>
                   );
                 })}
               </div>
@@ -373,6 +328,7 @@ export default function SelfStudyPage() {
           )}
         </div>
       </div>
+      </div>{/* xk-screen */}
     </AppShell>
   );
 }

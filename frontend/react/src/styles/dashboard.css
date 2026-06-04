@@ -75,10 +75,9 @@
 .xk-card {
   background: var(--bg-card);
   border: 1px solid var(--line);
-  border-radius: 16px;
-  padding: 22px;
-  box-shadow: var(--shadow-tile);
-  transition: transform 220ms cubic-bezier(0.22,1,0.36,1), border-color 220ms, box-shadow 220ms;
+  border-radius: 14px;
+  padding: 20px 22px;
+  transition: transform 200ms cubic-bezier(0.22,1,0.36,1), border-color 200ms;
 }
 .xk-card-int:hover {
   transform: translateY(-3px);

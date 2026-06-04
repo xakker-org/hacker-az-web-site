@@ -1,46 +1,14 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import AppShell from "../components/AppShell";
 import { useLang } from "../contexts/LanguageContext";
 import ProgressRing from "../components/ui/ProgressRing";
 import Heatmap from "../components/ui/Heatmap";
 import Avatar from "../components/ui/Avatar";
+import AnimatedNumber from "../components/ui/AnimatedNumber";
+import XKBar from "../components/ui/XKBar";
 import { endpoints } from "../services/endpoints";
 import { clearTokens, getAccessToken } from "../utils/tokens";
-
-/* ─── Animated counter ─────────────────────────────────────── */
-function AnimatedNumber({ value, duration = 1100 }) {
-  const [display, setDisplay] = useState(0);
-  const ref = useRef({ raf: 0, from: 0 });
-  useEffect(() => {
-    const from = ref.current.from;
-    const start = performance.now();
-    const tick = (now) => {
-      const p = Math.min(1, (now - start) / duration);
-      const e = 1 - Math.pow(1 - p, 3);
-      const v = from + (value - from) * e;
-      setDisplay(v);
-      if (p < 1) ref.current.raf = requestAnimationFrame(tick);
-      else ref.current.from = value;
-    };
-    cancelAnimationFrame(ref.current.raf);
-    ref.current.raf = requestAnimationFrame(tick);
-    const fb = setTimeout(() => { setDisplay(value); ref.current.from = value; }, duration + 400);
-    return () => { cancelAnimationFrame(ref.current.raf); clearTimeout(fb); };
-  }, [value, duration]);
-  return <span>{Math.round(display).toLocaleString("az")}</span>;
-}
-
-/* ─── Progress bar ─────────────────────────────────────────── */
-function XKBar({ value, max = 100, height = 6, color }) {
-  const [w, setW] = useState(0);
-  useEffect(() => { const id = setTimeout(() => setW((value / max) * 100), 60); return () => clearTimeout(id); }, [value, max]);
-  return (
-    <div className="xk-track" style={{ height }}>
-      <div className="xk-fill" style={{ width: `${w}%`, background: color || "var(--accent)" }} />
-    </div>
-  );
-}
 
 /* ─── Translations ──────────────────────────────────────────── */
 const T = {

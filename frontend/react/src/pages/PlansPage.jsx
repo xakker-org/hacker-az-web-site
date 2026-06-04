@@ -1,118 +1,120 @@
 import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import AppShell from "../components/AppShell";
-import Tile, { TileHead } from "../components/ui/Tile";
-import Stat from "../components/ui/Stat";
-import Bar from "../components/ui/Bar";
-import Sparkline from "../components/ui/Sparkline";
-import { Input } from "../components/ui/Field";
-import { Chip, DiffBadge } from "../components/ui/Chip";
-import EmptyState from "../components/ui/EmptyState";
-import { TileSkeleton } from "../components/ui/Skeleton";
 import { endpoints } from "../services/endpoints";
+import { TileSkeleton } from "../components/ui/Skeleton";
+import XKBar from "../components/ui/XKBar";
+
+const TRACK_COLORS = {
+  web:"#3b82f6", network:"#14b8a6", linux:"#8b5cf6", sistem:"#8b5cf6",
+  crypto:"#22c55e", kripto:"#22c55e", pentest:"#ff3b3b", recon:"#f59e0b", osint:"#f59e0b",
+};
+function pathColor(p) {
+  if (p.color) return p.color;
+  const k = (p.title || "").toLowerCase();
+  for (const [key, val] of Object.entries(TRACK_COLORS)) { if (k.includes(key)) return val; }
+  return "var(--accent)";
+}
 
 export default function PlansPage() {
   const [plans, setPlans]     = useState([]);
-  const [search, setSearch]   = useState("");
   const [loading, setLoading] = useState(true);
+  const [search, setSearch]   = useState("");
 
   useEffect(() => {
-    let mounted = true;
+    let ok = true;
     endpoints.plans()
-      .then(({ data }) => { if (mounted) setPlans(Array.isArray(data) ? data : []); })
-      .finally(() => { if (mounted) setLoading(false); });
-    return () => { mounted = false; };
+      .then(({ data }) => { if (ok) setPlans(Array.isArray(data) ? data : []); })
+      .finally(() => { if (ok) setLoading(false); });
+    return () => { ok = false; };
   }, []);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     if (!q) return plans;
-    return plans.filter(p => `${p.title} ${p.summary || ""} ${p.level || ""}`.toLowerCase().includes(q));
+    return plans.filter(p => `${p.title} ${p.summary || ""}`.toLowerCase().includes(q));
   }, [plans, search]);
-
-  const totalRooms = plans.reduce((s, p) => s + (p.room_count || 0), 0);
-  const totalHours = plans.reduce((s, p) => s + (p.estimated_hours || 0), 0);
 
   return (
     <AppShell>
-      <div className="page-head">
-        <div>
-          <div className="page-eyebrow">Learning Paths</div>
-          <h1 className="page-title">Karyer marşrutu</h1>
-          <div className="page-sub">Strukturlu plan ilə kiber-təhlükəsizlik mütəxəssisi ol.</div>
+      <div className="xk-screen">
+        <div className="xk-screen-head xk-reveal">
+          <div>
+            <div className="xk-greet-eyebrow">Platforma</div>
+            <h1 className="xk-screen-title">Öyrənmə yolları</h1>
+            <p className="xk-greet-sub">Sıfırdan mütəxəssisə qədər strukturlu marşrutlar.</p>
+          </div>
         </div>
-      </div>
 
-      <div className="bento" style={{ marginBottom: 16 }}>
-        <Tile span={4}><Stat label="Cəmi plan" value={plans.length} size="md" /></Tile>
-        <Tile span={4}><Stat label="Otaq" value={totalRooms} size="md" /></Tile>
-        <Tile span={4}><Stat label="Saat" value={totalHours} unit="h" size="md" /></Tile>
-      </div>
+        {loading ? (
+          <div className="xk-mission-grid">
+            {Array.from({ length: 3 }).map((_, i) => <TileSkeleton key={i} height={260} />)}
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="xk-empty-screen">
+            <div className="xk-empty-ico">🗺️</div>
+            <h3>Plan tapılmadı</h3>
+          </div>
+        ) : (
+          <div className="xk-mission-grid">
+            {filtered.map((p, i) => {
+              const color  = pathColor(p);
+              const total  = p.room_count || p.courses?.length || p.missions || 0;
+              const done   = p.user_progress?.completed_rooms || p.user_progress?.completed || 0;
+              const pct    = total > 0 ? Math.round((done / total) * 100) : 0;
 
-      <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 16 }}>
-        <Input
-          placeholder="Plan axtar..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          style={{ maxWidth: 320 }}
-        />
-        <Chip size="sm" style={{ marginLeft: "auto" }}>{filtered.length} plan</Chip>
-      </div>
+              return (
+                <div
+                  key={p.id}
+                  className="xk-card xk-int xk-mission xk-reveal"
+                  style={{ "--mc": color, animationDelay: `${100 + i * 80}ms`, cursor: "pointer" }}
+                  onClick={() => {}}
+                >
+                  <div className="xk-mission-bar" />
 
-      {loading ? (
-        <div className="bento">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="span-6"><TileSkeleton height={240} /></div>
-          ))}
-        </div>
-      ) : filtered.length === 0 ? (
-        <Tile>
-          <EmptyState icon="↗" title="Plan tapılmadı" description="Backend-də heç bir plan yoxdur və ya axtarışa uyğun gəlmir." />
-        </Tile>
-      ) : (
-        <div className="bento">
-          {filtered.map(p => (
-            <Tile key={p.id} span={6}>
-              <TileHead
-                eyebrow={p.level || "Plan"}
-                title={p.title}
-                sub={p.summary}
-                action={<DiffBadge level={p.level} />}
-              />
-              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                {(p.courses || []).slice(0, 6).map((item, idx) => (
-                  <div key={item.id} style={{
-                    display: "flex", alignItems: "center", gap: 10,
-                    padding: "8px 10px",
-                    background: "var(--bg-card-2)", border: "1px solid var(--line)",
-                    borderRadius: 10,
-                    fontSize: 12,
-                  }}>
-                    <span className="mono" style={{
-                      width: 22, height: 22, borderRadius: 6,
-                      background: "var(--accent-soft)", color: "var(--accent)",
-                      border: "1px solid var(--accent-ring)",
-                      display: "grid", placeItems: "center",
-                      fontSize: 10, fontWeight: 700,
-                      flexShrink: 0,
-                    }}>{idx + 1}</span>
-                    <span style={{ flex: 1, color: "var(--ink-1)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.course?.title || "—"}</span>
-                    <span style={{ color: "var(--ink-3)", fontSize: 11 }}>{item.course?.category || ""}</span>
+                  {/* Icon */}
+                  <div className="xk-lab-icon" style={{ background: `${color}18`, color, border: `1px solid ${color}30` }}>
+                    <svg width={22} height={22} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M6 19a3 3 0 100-6 3 3 0 000 6zM18 11a3 3 0 100-6 3 3 0 000 6zM9 17h6a3 3 0 003-3M6 13V9a3 3 0 013-3" />
+                    </svg>
                   </div>
-                ))}
-                {(p.courses?.length || 0) > 6 && (
-                  <div style={{ fontSize: 11, color: "var(--ink-4)", textAlign: "center", padding: 4 }}>
-                    +{p.courses.length - 6} digər kurs
+
+                  <h3 className="xk-mission-title">{p.title}</h3>
+
+                  {p.summary && (
+                    <p style={{ fontSize: 13, color: "var(--text-2)", lineHeight: 1.5, margin: 0 }}>{p.summary}</p>
+                  )}
+
+                  <div className="xk-mission-meta">
+                    <span>
+                      <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round"><circle cx="8" cy="8" r="6"/><circle cx="8" cy="8" r="3"/></svg>
+                      {total} missiya
+                    </span>
                   </div>
-                )}
-              </div>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "auto", paddingTop: 8, borderTop: "1px solid var(--line)", fontSize: 11, color: "var(--ink-3)", fontFamily: "var(--font-mono)" }}>
-                <span>{p.room_count || 0} otaq · {p.estimated_hours || 0}h</span>
-                <Sparkline data={[1,2,3,5,4,6,7,8]} tone="accent" height={20} variant="area" />
-              </div>
-            </Tile>
-          ))}
-        </div>
-      )}
+
+                  <div className="xk-mission-prog">
+                    <div className="xk-track" style={{ height: 5 }}>
+                      <div className="xk-fill" style={{ width: `${pct}%`, background: color }} />
+                    </div>
+                    <span className="xk-mission-pct">{done}/{total}</span>
+                  </div>
+
+                  <button
+                    className="xk-btn outline block"
+                    style={{ pointerEvents: "none" }}
+                    tabIndex={-1}
+                  >
+                    {pct > 0 ? "Davam et" : "Yola başla"}
+                    <svg width={15} height={15} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round">
+                      <path d="M5 12h14M13 6l6 6-6 6" />
+                    </svg>
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
     </AppShell>
   );
 }

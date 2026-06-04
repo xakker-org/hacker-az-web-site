@@ -1,24 +1,34 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import AppShell from "../components/AppShell";
-import Tile from "../components/ui/Tile";
-import Button from "../components/ui/Button";
-import { Chip } from "../components/ui/Chip";
-import Bar from "../components/ui/Bar";
 import { TileSkeleton } from "../components/ui/Skeleton";
-import EmptyState from "../components/ui/EmptyState";
 import { endpoints } from "../services/endpoints";
+
+function ChevronIcon() {
+  return (
+    <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round">
+      <path d="M15 6l-6 6 6 6" />
+    </svg>
+  );
+}
+function ArrowIcon({ size = 16 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round">
+      <path d="M5 12h14M13 6l6 6-6 6" />
+    </svg>
+  );
+}
 
 export default function PassContentPage() {
   const { slug, passId } = useParams();
-  const navigate          = useNavigate();
+  const navigate         = useNavigate();
 
-  const [pass, setPass]               = useState(null);
-  const [mission, setMission]         = useState(null);
-  const [loading, setLoading]         = useState(true);
-  const [completing, setCompleting]   = useState(false);
-  const [result, setResult]           = useState(null);
-  const [error, setError]             = useState(null);
+  const [pass, setPass]             = useState(null);
+  const [mission, setMission]       = useState(null);
+  const [loading, setLoading]       = useState(true);
+  const [completing, setCompleting] = useState(false);
+  const [result, setResult]         = useState(null);
+  const [error, setError]           = useState(null);
 
   useEffect(() => {
     setLoading(true); setResult(null);
@@ -67,11 +77,9 @@ export default function PassContentPage() {
   if (loading) {
     return (
       <AppShell>
-        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-          <TileSkeleton height={80} />
-          <TileSkeleton height={420} />
-          <TileSkeleton height={64} />
-        </div>
+        <TileSkeleton height={40} />
+        <TileSkeleton height={60} style={{ marginTop: 16 }} />
+        <TileSkeleton height={400} style={{ marginTop: 16 }} />
       </AppShell>
     );
   }
@@ -79,10 +87,12 @@ export default function PassContentPage() {
   if (error && !pass) {
     return (
       <AppShell>
-        <Tile>
-          <EmptyState icon="◌" title="Pass tapılmadı" description={error || ""}
-            action={<Button as={Link} to={`/missions/${slug}`} variant="accent">← Mission</Button>} />
-        </Tile>
+        <div className="xk-back-row">
+          <Link to={`/missions/${slug}`} className="xk-back"><ChevronIcon /> Mission</Link>
+        </div>
+        <div className="xk-empty-screen">
+          <h3>Pass tapılmadı</h3><p>{error}</p>
+        </div>
       </AppShell>
     );
   }
@@ -97,177 +107,106 @@ export default function PassContentPage() {
 
   return (
     <AppShell>
-      {/* Breadcrumb */}
-      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 20, flexWrap: "wrap" }}>
-        <Link to="/missions"
-          style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--ink-4)", textDecoration: "none" }}>
-          Missions
-        </Link>
-        <span style={{ color: "var(--line-3)" }}>/</span>
-        <Link to={`/missions/${slug}`}
-          style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--ink-3)", textDecoration: "none" }}>
-          {mission?.title}
-        </Link>
-        <span style={{ color: "var(--line-3)" }}>/</span>
-        <span style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--ink-1)", fontWeight: 600 }}>
-          Pass {pass?.order}
-        </span>
+      {/* Back */}
+      <div className="xk-back-row xk-reveal">
+        <Link to="/missions" className="xk-back"><ChevronIcon /> Geri</Link>
+        <div className="xk-crumbs">
+          <span>{mission?.title}</span>
+          <span className="xk-crumb-sep">/</span>
+          <span className="cur">Pass {pass?.order}</span>
+        </div>
       </div>
 
-      <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-
-        {/* Pass header */}
-        <Tile style={{ background: "linear-gradient(135deg, var(--bg-card) 0%, rgba(255,36,66,0.03) 100%)" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-            <span style={{
-              width: 48, height: 48, borderRadius: 13, flexShrink: 0,
-              background: alreadyDone ? "rgba(110,255,214,0.12)" : "var(--accent-soft)",
-              border: `1px solid ${alreadyDone ? "rgba(110,255,214,0.28)" : "var(--accent-ring)"}`,
-              display: "grid", placeItems: "center",
-              fontFamily: "var(--font-mono)", fontSize: 16, fontWeight: 700,
-              color: alreadyDone ? "var(--ok)" : "var(--accent)",
-            }}>
-              {alreadyDone ? "✓" : String(pass?.order || 1).padStart(2, "0")}
-            </span>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: "var(--ink-1)", lineHeight: 1.25 }}>
-                {pass?.title}
-              </h2>
-              <div style={{ display: "flex", gap: 12, marginTop: 6, flexWrap: "wrap", alignItems: "center" }}>
-                <span style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--ink-4)" }}>
-                  ⏱ ~{pass?.estimated_minutes} dəq
-                </span>
-                <span style={{ color: "var(--line-2)", fontSize: 12 }}>·</span>
-                <span style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--ink-4)" }}>
-                  {currentIndex + 1} / {passes.length}
-                </span>
-                {alreadyDone && <Chip size="sm" tone="mint">✓ Tamamlandı</Chip>}
-              </div>
+      <div className="xk-lesson-view">
+        {/* Progress bar + dots */}
+        <div className="xk-lesson-head xk-reveal" style={{ animationDelay: "60ms" }}>
+          <div className="xk-lesson-progress">
+            <div className="xk-lp-track">
+              <div className="xk-lp-fill" style={{ width: `${passes.length > 0 ? ((currentIndex + 1) / passes.length) * 100 : 0}%` }} />
             </div>
+            <span className="xk-lp-label">Dərs {currentIndex + 1} / {passes.length}</span>
           </div>
-          <Bar
-            value={currentIndex + 1}
-            max={passes.length}
-            tone={alreadyDone ? "mint" : "accent"}
-            rightCaption={`${currentIndex + 1}/${passes.length}`}
-          />
-        </Tile>
-
-        {/* Success banner */}
-        {justCompleted && (
-          <div style={{
-            padding: "14px 18px", borderRadius: 12,
-            background: "rgba(110,255,214,0.08)", border: "1px solid rgba(110,255,214,0.28)",
-            display: "flex", alignItems: "center", gap: 12,
-            fontSize: 13, fontWeight: 600, color: "var(--ok)",
-          }}>
-            <span style={{ fontSize: 18 }}>✓</span>
-            <span>Pass tamamlandı!</span>
-            {result?.all_passes_done && mission?.exam && (
-              <span style={{ color: "var(--c-3)", marginLeft: 4 }}>
-                🎉 Bütün pass-lar bitdi — Final Exam açıldı!
-              </span>
-            )}
-            {result?.all_passes_done && !mission?.exam && (
-              <span style={{ marginLeft: 4 }}>🎉 Mission tamamlandı!</span>
-            )}
+          <div className="xk-lesson-dots">
+            {passes.map((p, i) => (
+              <Link
+                key={p.id}
+                to={`/missions/${slug}/passes/${p.id}`}
+                className={`xk-ldot${i === currentIndex ? " cur" : ""}${i < currentIndex || p.is_completed ? " done" : ""}`}
+                title={`Pass ${p.order}`}
+              />
+            ))}
           </div>
-        )}
+        </div>
 
-        {error && !justCompleted && (
-          <div style={{
-            padding: "12px 16px", borderRadius: 12,
-            background: "rgba(255,122,138,0.08)", border: "1px solid rgba(255,122,138,0.28)",
-            color: "var(--bad)", fontSize: 13,
-          }}>
-            {error}
+        {/* Lesson stage */}
+        <div className="xk-lesson-stage xk-reveal" style={{ animationDelay: "80ms" }}>
+          <div className="xk-lesson-type-tag">
+            <svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+              <path d="M4 5a2 2 0 012-2h13v16H6a2 2 0 00-4 2zM4 19a2 2 0 012-2h13" />
+            </svg>
+            Nəzəriyyə · +{pass?.xp_reward || 10} XP
+            {alreadyDone && " · ✓ Tamamlandı"}
           </div>
-        )}
 
-        {/* Content */}
-        <Tile>
+          <h1 className="xk-lesson-h1">{pass?.title}</h1>
+
+          {/* Content */}
           <div
             className="rich-content"
-            dangerouslySetInnerHTML={{ __html: pass?.content || "<p>İçerik mövcud deyil.</p>" }}
+            style={{ color: "var(--text-2)", fontSize: 15, lineHeight: 1.65 }}
+            dangerouslySetInnerHTML={{ __html: pass?.content || "<p>Məzmun yükləmək mümkün olmadı.</p>" }}
           />
-        </Tile>
 
-        {/* Sticky actions bar */}
-        <Tile style={{
-          padding: "14px 20px",
-          position: "sticky", bottom: 16,
-          background: "rgba(17,20,26,0.96)",
-          backdropFilter: "blur(16px)",
-          border: "1px solid var(--line-2)",
-        }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
-            {/* Left: back + pass dots */}
-            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              {prevPass ? (
-                <Button variant="ghost" size="sm" as={Link} to={`/missions/${slug}/passes/${prevPass.id}`}>
-                  ← Əvvəlki
-                </Button>
-              ) : (
-                <Button variant="ghost" size="sm" as={Link} to={`/missions/${slug}`}>
-                  ← Mission
-                </Button>
+          {/* Success banner */}
+          {justCompleted && (
+            <div className="xk-explain ok" style={{ marginTop: 20 }}>
+              <b>✓ Pass tamamlandı!</b>
+              {result?.all_passes_done && mission?.exam && (
+                <span style={{ color: "var(--text-2)", marginLeft: 8 }}>
+                  🎉 Bütün pass-lar bitdi — Final Exam açıldı!
+                </span>
               )}
-              <div style={{ display: "flex", gap: 4 }}>
-                {passes.map((p, i) => (
-                  <Link
-                    key={p.id}
-                    to={`/missions/${slug}/passes/${p.id}`}
-                    style={{
-                      width: 8, height: 8, borderRadius: "50%", display: "block",
-                      background: i === currentIndex
-                        ? "var(--accent)"
-                        : i < currentIndex ? "var(--ok)" : "var(--line-2)",
-                      transition: "background var(--dur-1)",
-                      flexShrink: 0,
-                    }}
-                  />
-                ))}
-              </div>
+              {result?.all_passes_done && !mission?.exam && (
+                <span style={{ marginLeft: 8 }}>🎉 Mission tamamlandı!</span>
+              )}
             </div>
+          )}
 
-            {/* Right: complete + next */}
+          {error && !justCompleted && (
+            <div className="xk-explain no" style={{ marginTop: 16 }}>
+              {error}
+            </div>
+          )}
+
+          {/* Footer nav */}
+          <div className="xk-lesson-foot">
+            <button className="xk-btn ghost" onClick={() => prevPass ? navigate(`/missions/${slug}/passes/${prevPass.id}`) : navigate(`/missions/${slug}`)}>
+              Əvvəlki
+            </button>
             <div style={{ display: "flex", gap: 8 }}>
               {!alreadyDone && !justCompleted ? (
-                <Button variant="accent" onClick={handleComplete} disabled={completing}>
+                <button className="xk-btn primary" onClick={handleComplete} disabled={completing}>
                   {completing ? "Saxlanır..." : "✓ Tamamlandı kimi işarələ"}
-                </Button>
+                </button>
               ) : (
-                <span style={{
-                  display: "inline-flex", alignItems: "center", gap: 6,
-                  padding: "7px 14px", borderRadius: 10, fontSize: 13, fontWeight: 600,
-                  background: "rgba(110,255,214,0.08)", border: "1px solid rgba(110,255,214,0.25)",
-                  color: "var(--ok)",
-                }}>
+                <span className="xk-badge" style={{ background: "rgba(25,195,125,.14)", color: "#19c37d", border: "1px solid rgba(25,195,125,.3)", padding: "8px 14px", borderRadius: 9 }}>
                   ✓ Tamamlandı
                 </span>
               )}
-
               {(alreadyDone || justCompleted) && (
                 isLast ? (
-                  mission?.exam ? (
-                    <Button variant="accent" as={Link} to={`/missions/${slug}/exam`}>
-                      📋 Final Exam →
-                    </Button>
-                  ) : (
-                    <Button variant="ghost" as={Link} to={`/missions/${slug}`}>
-                      ← Mission
-                    </Button>
-                  )
+                  mission?.exam
+                    ? <Link to={`/missions/${slug}/exam`} className="xk-btn primary">📋 Final Exam <ArrowIcon /></Link>
+                    : <Link to={`/missions/${slug}`} className="xk-btn ghost">← Mission</Link>
                 ) : (
-                  <Button variant="accent" onClick={handleNext}>
-                    Növbəti →
-                  </Button>
+                  <button className="xk-btn primary" onClick={handleNext}>
+                    Növbəti dərs <ArrowIcon />
+                  </button>
                 )
               )}
             </div>
           </div>
-        </Tile>
-
+        </div>
       </div>
     </AppShell>
   );
