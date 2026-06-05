@@ -9,6 +9,7 @@ import EmptyState from "../components/ui/EmptyState";
 import { endpoints } from "../services/endpoints";
 import { getStoredStudyLanguage, pickByLanguage, setStoredStudyLanguage } from "../utils/selfStudyI18n";
 import { useLang } from "../contexts/LanguageContext";
+import { getMockQuestions } from "../data/mockData";
 import TerminalQuestion from "../components/TerminalQuestion";
 
 const OPTION_LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -114,7 +115,15 @@ export default function QuestionDetailPage() {
       } else {
         setAnswerText(data.question_type === "terminal" ? data.starter_code || "" : "");
       }
-    }).catch(() => setError(t.loadError)).finally(() => setLoading(false));
+    }).catch(() => {
+      const mockQ = getMockQuestions().find(q => q.id === Number(id));
+      if (mockQ) {
+        setQuestion(mockQ);
+        if (mockQ.question_type === "terminal") setAnswerText(mockQ.starter_code || "");
+      } else {
+        setError(t.loadError);
+      }
+    }).finally(() => setLoading(false));
   }, [id, t.loadError]);
 
   const submitAnswer = async () => {

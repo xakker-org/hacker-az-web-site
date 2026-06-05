@@ -183,7 +183,7 @@ const TAB_WORDS = [
 ];
 
 /* Commands that are purely navigational — skip API check */
-const SKIP_CHECK = new Set(["help","clear","whoami","id","echo","ls"]);
+const SKIP_CHECK = new Set(["help","clear","whoami","id","ls"]);
 
 function runSim(raw) {
   const c = raw.trim().toLowerCase();
@@ -347,6 +347,7 @@ export default function TerminalQuestion({
 
     if (result.clear) {
       setBlocks(makeInit());
+      setTimeout(() => inputRef.current?.focus(), 0);
       return;
     }
 
@@ -360,8 +361,13 @@ export default function TerminalQuestion({
     /* Check against server on non-trivial commands */
     if (shouldCheck && !solved) {
       setChecking(true);
+
+      /* If simulated output contains a flag (xkr{…}), submit the flag as answer */
+      const flagLine = simLines.find(l => l.v && /xkr\{[^}]+\}/.test(l.v));
+      const answerText = flagLine ? flagLine.v.match(/xkr\{[^}]+\}/)?.[0] || c : c;
+
       try {
-        const data = await onAttempt(c);
+        const data = await onAttempt(answerText);
         if (data?.is_correct) {
           /* Mark replay as done BEFORE locked prop change triggers the effect */
           lockedReplayed.current = true;
@@ -370,12 +376,17 @@ export default function TerminalQuestion({
             ...prev,
             { type: "success", lines: buildSuccessBanner(points) },
           ]);
+        } else {
+          setTimeout(() => inputRef.current?.focus(), 0);
         }
       } catch {
         /* Server unreachable or not authenticated — silently ignore */
+        setTimeout(() => inputRef.current?.focus(), 0);
       } finally {
         setChecking(false);
       }
+    } else {
+      setTimeout(() => inputRef.current?.focus(), 0);
     }
   }, [cmd, solved, checking, makeInit, onAttempt, points]);
 
@@ -419,8 +430,8 @@ export default function TerminalQuestion({
       overflow: "hidden",
       display: "flex",
       flexDirection: "column",
-      minHeight: 440,
-      maxHeight: 620,
+      minHeight: 380,
+      maxHeight: 800,
     }}>
       {/* Traffic-light + tab bar */}
       <div className="lab-tabs" style={{ background: "rgba(255,255,255,0.025)", padding: "0 8px" }}>
@@ -560,14 +571,15 @@ export default function TerminalQuestion({
       {!solved && (
         <div className="lab-term-input-row">
           <span style={{
-            fontFamily: "var(--font-mono)", fontSize: 13,
+            fontFamily: "var(--font-mono)", fontSize: 15,
             color: "var(--accent)", fontWeight: 700,
-            marginRight: 8, userSelect: "none",
+            marginRight: 10, userSelect: "none",
           }}>$</span>
           <input
             ref={inputRef}
             className="lab-term-inp"
             value={cmd}
+            autoFocus
             autoComplete="off"
             autoCorrect="off"
             spellCheck={false}

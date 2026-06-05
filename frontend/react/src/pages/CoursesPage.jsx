@@ -4,6 +4,7 @@ import AppShell from "../components/AppShell";
 import { useLang } from "../contexts/LanguageContext";
 import { endpoints } from "../services/endpoints";
 import { TileSkeleton } from "../components/ui/Skeleton";
+import { getMockCourses } from "../data/mockData";
 
 const T = {
   az: {
@@ -53,7 +54,12 @@ export default function CoursesPage() {
   useEffect(() => {
     let ok = true;
     endpoints.courses()
-      .then(({ data }) => { if (ok) setCourses(Array.isArray(data) ? data : []); })
+      .then(({ data }) => {
+        if (!ok) return;
+        const items = Array.isArray(data) && data.length > 0 ? data : getMockCourses();
+        setCourses(items);
+      })
+      .catch(() => { if (ok) setCourses(getMockCourses()); })
       .finally(() => { if (ok) setLoading(false); });
     return () => { ok = false; };
   }, []);

@@ -14,6 +14,7 @@ import { TileSkeleton } from "../components/ui/Skeleton";
 import { endpoints } from "../services/endpoints";
 import { getStoredStudyLanguage, pickByLanguage, setStoredStudyLanguage } from "../utils/selfStudyI18n";
 import { useLang } from "../contexts/LanguageContext";
+import { getMockQuestions, getMockQuestionProgress } from "../data/mockData";
 
 const PAGE_SIZE = 12;
 
@@ -89,10 +90,17 @@ export default function SelfStudyPage() {
     ])
       .then(([q, p]) => {
         if (!ok) return;
-        setQuestions(q.data || []);
-        setProgress(p.data || {});
+        const qData = q.data || [];
+        const pData = p.data || {};
+        setQuestions(qData.length > 0 ? qData : getMockQuestions());
+        setProgress(pData.total_questions ? pData : getMockQuestionProgress());
       })
-      .catch(() => { if (ok) setError("Suallar yüklənmədi"); })
+      .catch(() => {
+        if (ok) {
+          setQuestions(getMockQuestions());
+          setProgress(getMockQuestionProgress());
+        }
+      })
       .finally(() => { if (ok) setLoading(false); });
     return () => { ok = false; };
     // eslint-disable-next-line react-hooks/exhaustive-deps

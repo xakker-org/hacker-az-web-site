@@ -3,7 +3,6 @@ import { Link, useNavigate } from "react-router-dom";
 import AppShell from "../components/AppShell";
 import { useLang } from "../contexts/LanguageContext";
 import ProgressRing from "../components/ui/ProgressRing";
-import Heatmap from "../components/ui/Heatmap";
 import Avatar from "../components/ui/Avatar";
 import AnimatedNumber from "../components/ui/AnimatedNumber";
 import XKBar from "../components/ui/XKBar";
@@ -163,28 +162,6 @@ function StatRank({ rank, rankPct, xpToNext, nextRank, globalRank, t }) {
       </div>
       <div className="xk-rank-global">
         {globalRank ? `#${globalRank} ${t.global}` : t.notRanked}
-      </div>
-    </div>
-  );
-}
-
-/* ─── Activity card ─────────────────────────────────────────── */
-function ActivityCard({ days, xp, streak, weekXP, t }) {
-  const activeDays = days.filter(d => Number(d.value) > 0).length;
-  return (
-    <div className="xk-card xk-activity" style={{ animationDelay: "360ms" }}>
-      <div className="xk-card-head">
-        <div>
-          <div className="xk-card-eyebrow">{t.activity}</div>
-          <h3 className="xk-card-title">{t.last18w}</h3>
-        </div>
-        <div className="xk-chip-row">
-          {streak > 0 && <span className="xk-chip amber">🔥 {streak}g streak</span>}
-          <span className="xk-chip accent">+{weekXP > 0 ? weekXP : 0} XP</span>
-        </div>
-      </div>
-      <div style={{ flex: 1 }}>
-        <Heatmap days={days} />
       </div>
     </div>
   );
@@ -565,9 +542,8 @@ export default function DashboardPage() {
         <StatRank rank={rank} rankPct={rankPct} xpToNext={xpToNext} nextRank={nextRank} globalRank={globalRank} t={t} />
       </div>
 
-      {/* ── Mid: activity + continue ── */}
+      {/* ── Mid: continue ── */}
       <div className="xk-mid-grid">
-        <ActivityCard days={days} xp={xp} streak={streak} weekXP={weekXP} t={t} />
         <ContinueCard rooms={activeRooms} t={t} />
       </div>
 

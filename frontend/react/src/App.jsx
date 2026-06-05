@@ -9,6 +9,7 @@ import PassContentPage from "./pages/PassContentPage";
 import RoomsPage from "./pages/RoomsPage";
 import RoomDetailPage from "./pages/RoomDetailPage";
 import PlansPage from "./pages/PlansPage";
+import PlanDetailPage from "./pages/PlanDetailPage";
 import LeaderboardPage from "./pages/LeaderboardPage";
 import ProfilePage from "./pages/ProfilePage";
 import SelfStudyPage from "./pages/SelfStudyPage";
@@ -50,6 +51,7 @@ export default function App() {
         <Route path="/rooms" element={<RoomsPage />} />
         <Route path="/rooms/:slug" element={<RoomDetailPage />} />
         <Route path="/plans" element={<PlansPage />} />
+        <Route path="/plans/:slug" element={<PlanDetailPage />} />
         <Route path="/courses" element={<CoursesPage />} />
         <Route path="/courses/:slug" element={<CoursePage />} />
         <Route path="/courses/:slug/lessons/:lessonId" element={<LessonPage />} />

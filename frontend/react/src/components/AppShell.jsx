@@ -155,18 +155,30 @@ export default function AppShell({ children }) {
       )}
 
       <aside className={`sb${drawer ? " is-open" : ""}`}>
-        {/* Brand */}
-        <Link to="/dashboard" className="sb-brand" onClick={() => setDrawer(false)}>
-          <img
-            src={collapsed ? "/static/logo/logoXakker.png" : "/static/logo/xakkerLogoWhite2.png"}
-            alt="Xakker"
-            className="sb-brand-img"
-            onError={(e) => {
-              e.currentTarget.src = "/static/logo/logoXakker.png";
-              e.currentTarget.onerror = null;
-            }}
-          />
-        </Link>
+        {/* Brand + collapse toggle */}
+        <div className="sb-brand-row">
+          <Link to="/dashboard" className="sb-brand" onClick={() => setDrawer(false)}>
+            <img
+              src={collapsed ? "/static/logo/logoXakker.png" : "/static/logo/xakkerLogoWhite2.png"}
+              alt="Xakker"
+              className="sb-brand-img"
+              onError={(e) => {
+                e.currentTarget.src = "/static/logo/logoXakker.png";
+                e.currentTarget.onerror = null;
+              }}
+            />
+          </Link>
+          <button
+            type="button"
+            className="sb-toggle"
+            onClick={toggleCollapsed}
+            title={collapsed ? (lang === "az" ? "Genişləndir" : "Expand") : (lang === "az" ? "Daralt" : "Collapse")}
+          >
+            <svg width={16} height={16} viewBox="0 0 16 16" fill="none" style={{ display: "block" }}>
+              <path d="M2 4h12M2 8h12M2 12h12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+            </svg>
+          </button>
+        </div>
 
         {/* Nav sections */}
         <nav className="sb-nav">
@@ -180,7 +192,7 @@ export default function AppShell({ children }) {
                 onClick={() => setDrawer(false)}
                 title={collapsed ? (item.label[lang] || item.label.az) : undefined}
               >
-                <span className="sb-link-ico"><Icon name={item.icon} /></span>
+                <span className="sb-link-ico"><Icon name={item.icon} size={22} /></span>
                 <span className="sb-link-label">{item.label[lang] || item.label.az}</span>
                 {item.badge && <span className="sb-link-badge">{item.badge}</span>}
               </NavLink>
@@ -197,7 +209,7 @@ export default function AppShell({ children }) {
                 onClick={() => setDrawer(false)}
                 title={collapsed ? (item.label[lang] || item.label.az) : undefined}
               >
-                <span className="sb-link-ico"><Icon name={item.icon} /></span>
+                <span className="sb-link-ico"><Icon name={item.icon} size={22} /></span>
                 <span className="sb-link-label">{item.label[lang] || item.label.az}</span>
               </NavLink>
             ))}
@@ -206,20 +218,9 @@ export default function AppShell({ children }) {
 
         <div className="sb-spacer" />
 
-        {/* Collapse toggle */}
-        <button
-          type="button"
-          className="sb-toggle"
-          onClick={toggleCollapsed}
-          title={collapsed ? (lang === "az" ? "Genişləndir" : "Expand") : (lang === "az" ? "Daralt" : "Collapse")}
-        >
-          <Icon name={collapsed ? "chevronRight" : "chevronLeft"} size={14} />
-          <span className="sb-toggle-label">{lang === "az" ? "Daralt" : "Collapse"}</span>
-        </button>
-
         {/* User */}
         <div className="sb-user" title={collapsed ? `${profile?.full_name || profile?.username || "Hacker"} — ${rankDisp}` : undefined}>
-          <Avatar user={profile || { username: "X" }} size={32} rounded="md" />
+          <Avatar user={profile || { username: "X" }} size={36} rounded="md" />
           <div className="sb-user-info">
             <div className="sb-user-name">{profile?.full_name || profile?.username || "Hacker"}</div>
             <div className="sb-user-meta">{rankDisp} · {xp.toLocaleString()} XP</div>

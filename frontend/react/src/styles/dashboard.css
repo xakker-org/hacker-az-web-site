@@ -235,7 +235,7 @@
 /* ── Mid grid ── */
 .xk-mid-grid {
   display: grid;
-  grid-template-columns: 1.55fr 1fr;
+  grid-template-columns: 1fr;
   gap: 16px;
   margin-bottom: 16px;
 }

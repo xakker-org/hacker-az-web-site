@@ -5,6 +5,7 @@ import { useLang } from "../contexts/LanguageContext";
 import { endpoints } from "../services/endpoints";
 import { TileSkeleton } from "../components/ui/Skeleton";
 import XKBar from "../components/ui/XKBar";
+import { getMockMissions } from "../data/mockData";
 
 const T = {
   az: {
@@ -73,7 +74,12 @@ export default function MissionsPage() {
   useEffect(() => {
     let ok = true;
     endpoints.missions()
-      .then(({ data }) => ok && setMissions(Array.isArray(data) ? data : []))
+      .then(({ data }) => {
+        if (!ok) return;
+        const items = Array.isArray(data) && data.length > 0 ? data : getMockMissions();
+        setMissions(items);
+      })
+      .catch(() => { if (ok) setMissions(getMockMissions()); })
       .finally(() => { if (ok) setLoading(false); });
     return () => { ok = false; };
   }, []);

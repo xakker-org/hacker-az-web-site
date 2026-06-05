@@ -28,31 +28,45 @@
 .sb::-webkit-scrollbar-thumb { background: var(--line-2); border-radius: 3px; }
 .shell.sb-collapsed .sb { width: var(--sidebar-w-collapsed); }
 
-/* ── Brand ── */
+/* ── Brand row (logo + toggle) ── */
+.sb-brand-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid var(--line);
+  flex-shrink: 0;
+  min-height: 64px;
+}
+
 .sb-brand {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 18px 16px 16px;
-  border-bottom: 1px solid var(--line);
+  flex: 1;
+  padding: 14px 56px 14px 16px;
   text-decoration: none;
   color: var(--ink-1);
-  min-height: 68px;
   overflow: hidden;
-  flex-shrink: 0;
+  min-width: 0;
 }
 .sb-brand-img {
-  height: 30px;
+  height: 36px;
   width: auto;
-  max-width: 160px;
+  max-width: 170px;
+
   object-fit: contain;
   flex-shrink: 0;
 }
 .shell.sb-collapsed .sb-brand-img {
-  height: 32px;
-  width: 32px;
-  max-width: 32px;
+  height: 34px;
+  width: 34px;
+  max-width: 34px;
   object-fit: contain;
+}
+.shell.sb-collapsed .sb-brand {
+  display: none;
+}
+.shell.sb-collapsed .sb-brand-row {
+  justify-content: center;
 }
 .sb-brand-mark {
   width: 28px; height: 28px;
@@ -71,29 +85,29 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
-  padding: 8px 8px;
+  padding: 10px 10px;
   flex: 1;
 }
 
 .sb-section {
   display: flex;
   flex-direction: column;
-  gap: 1px;
-  margin-bottom: 4px;
+  gap: 2px;
+  margin-bottom: 6px;
 }
 
 .sb-label {
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: 10.5px;
   font-weight: 700;
-  letter-spacing: 0.16em;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--ink-4);
-  padding: 12px 10px 4px;
+  padding: 16px 10px 8px;
   overflow: hidden;
   white-space: nowrap;
   transition: opacity var(--dur-2), max-height var(--dur-3) var(--ease), padding var(--dur-3) var(--ease);
-  max-height: 40px;
+  max-height: 48px;
 }
 .shell.sb-collapsed .sb-label {
   opacity: 0;
@@ -105,18 +119,21 @@
 .sb-link {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 7px 10px;
-  border-radius: 8px;
+  gap: 12px;
+  padding: 12px 15px;
+  border-radius: 9px;
   color: var(--ink-3);
-  font-size: 13px;
+  font-size: 14.5px;
   font-weight: 500;
   text-decoration: none;
   position: relative;
   transition: background var(--dur-1), color var(--dur-1), padding var(--dur-3) var(--ease);
   overflow: hidden;
 }
-.sb-link:hover { background: rgba(255,255,255,0.05); color: var(--ink-1); }
+.sb-link:hover {
+  background: rgba(255,255,255,0.055);
+  color: var(--ink-1);
+}
 .sb-link.is-active {
   background: rgba(255,59,59,0.1);
   color: var(--ink-1);
@@ -124,18 +141,18 @@
 .sb-link.is-active::before {
   content: "";
   position: absolute;
-  left: 0; top: 6px; bottom: 6px;
+  left: 0; top: 8px; bottom: 8px;
   width: 3px;
   border-radius: 0 3px 3px 0;
   background: var(--accent);
 }
 .shell.sb-collapsed .sb-link {
   justify-content: center;
-  padding: 10px;
+  padding: 13px;
 }
 
 .sb-link-ico {
-  width: 18px; height: 18px;
+  width: 24px; height: 24px;
   display: flex; align-items: center; justify-content: center;
   flex-shrink: 0;
   color: var(--ink-3);
@@ -155,9 +172,9 @@
 
 .sb-link-badge {
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: 9.5px;
   font-weight: 700;
-  padding: 2px 6px;
+  padding: 3px 8px;
   border-radius: var(--r-pill);
   background: var(--accent-soft);
   color: var(--accent);
@@ -169,39 +186,44 @@
 
 .sb-spacer { flex: 1; min-height: 8px; }
 
-/* ── Collapse toggle ── */
+/* ── Collapse toggle (sidebar sağ kənarında) ── */
 .sb-toggle {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 8px 18px;
+  justify-content: center;
+  width: 40px;
   background: none;
   border: none;
+  border-left: 1px solid var(--line-2);
+  border-radius: 0;
   color: var(--ink-4);
-  font-size: 11px;
-  font-family: var(--font-mono);
   cursor: pointer;
-  width: 100%;
-  text-align: left;
-  transition: color var(--dur-1), padding var(--dur-3) var(--ease), justify-content var(--dur-3) var(--ease);
-  flex-shrink: 0;
+  transition: color var(--dur-1), background var(--dur-1);
 }
-.sb-toggle:hover { color: var(--ink-2); }
-.shell.sb-collapsed .sb-toggle { justify-content: center; padding: 8px 10px; }
-.sb-toggle-label {
-  overflow: hidden; white-space: nowrap;
-  max-width: 120px;
-  transition: opacity var(--dur-2), max-width var(--dur-3) var(--ease);
+.sb-toggle:hover {
+  color: var(--ink-2);
+  background: rgba(255,255,255,0.04);
 }
-.shell.sb-collapsed .sb-toggle-label { opacity: 0; max-width: 0; }
+.shell.sb-collapsed .sb-toggle {
+  position: static;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--line-2);
+  border-radius: 9px;
+  margin: 0;
+}
 
 /* ── User panel ── */
 .sb-user {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 10px 12px;
-  margin: 4px 8px 8px;
+  padding: 13px 16px;
+  margin: 4px 8px 10px;
   border-radius: var(--r-card);
   background: var(--bg-card-2);
   border: 1px solid var(--line);
@@ -209,7 +231,7 @@
   overflow: hidden;
   transition: padding var(--dur-3) var(--ease), justify-content var(--dur-3) var(--ease);
 }
-.shell.sb-collapsed .sb-user { justify-content: center; padding: 10px; }
+.shell.sb-collapsed .sb-user { justify-content: center; padding: 12px; }
 
 .sb-user-info {
   min-width: 0; flex: 1;
@@ -220,12 +242,12 @@
 .shell.sb-collapsed .sb-user-info { opacity: 0; max-width: 0; }
 
 .sb-user-name {
-  font-size: 12px; font-weight: 600; color: var(--ink-1);
+  font-size: 14px; font-weight: 600; color: var(--ink-1);
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .sb-user-meta {
-  font-family: var(--font-mono); font-size: 10px; color: var(--ink-3);
-  letter-spacing: 0.04em; margin-top: 1px;
+  font-family: var(--font-mono); font-size: 11.5px; color: var(--ink-3);
+  letter-spacing: 0.04em; margin-top: 2px;
   white-space: nowrap; overflow: hidden;
 }
 .sb-user-logout {
@@ -252,10 +274,11 @@
   position: sticky; top: 0; height: var(--topbar-h);
   display: flex; align-items: center; gap: 12px;
   padding: 0 28px;
-  background: rgba(8, 8, 10, 0.92);
-  backdrop-filter: blur(20px) saturate(160%);
-  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  background: rgba(8, 8, 10, 0.94);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
   border-bottom: 1px solid var(--line);
+  box-shadow: 0 1px 0 rgba(255,255,255,0.03);
   z-index: var(--z-sticky);
 }
 .tb-burger {
@@ -273,15 +296,23 @@
   display: inline-flex; align-items: center; gap: 10px;
   padding: 0 10px 0 12px;
   border-radius: 10px;
-  background: var(--bg-card-2);
+  background: linear-gradient(180deg, var(--bg-card-2) 0%, rgba(15,15,19,0.95) 100%);
   border: 1px solid var(--line-2);
-  color: var(--ink-4); cursor: pointer;
+  box-shadow: 0 1px 0 rgba(255,255,255,0.04) inset, 0 1px 3px rgba(0,0,0,0.35);
+  color: var(--ink-3); cursor: pointer;
   min-width: 260px; height: 36px; font-size: 13px;
-  transition: border-color var(--dur-1), background var(--dur-1);
+  font-family: var(--font-body);
+  transition: border-color var(--dur-1), box-shadow var(--dur-1), color var(--dur-1);
 }
-.tb-cmd:hover { border-color: var(--line-3); background: var(--bg-elev); }
-.tb-cmd-label { flex: 1; text-align: left; }
-.tb-right { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+.tb-cmd:hover {
+  border-color: var(--line-3);
+  box-shadow: 0 1px 0 rgba(255,255,255,0.06) inset, 0 1px 4px rgba(0,0,0,0.45);
+  color: var(--ink-2);
+}
+.tb-cmd-label { flex: 1; text-align: left; font-size: 12.5px; color: var(--ink-4); }
+.tb-cmd svg { color: var(--ink-4); flex-shrink: 0; transition: color var(--dur-1); }
+.tb-cmd:hover svg { color: var(--ink-3); }
+.tb-right { margin-left: auto; display: flex; align-items: center; gap: 7px; }
 
 /* ── Language toggle ── */
 .tb-lang {
@@ -291,25 +322,25 @@
   border: 1px solid var(--line-2);
   border-radius: var(--r-pill);
   padding: 2px;
-  gap: 2px;
 }
 .tb-lang-btn {
-  padding: 3px 9px;
+  padding: 3px 10px;
   border-radius: var(--r-pill);
   border: none;
   background: transparent;
   color: var(--ink-4);
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 10.5px;
   font-weight: 700;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.08em;
   cursor: pointer;
-  transition: background var(--dur-1), color var(--dur-1);
+  transition: background var(--dur-2) var(--ease), color var(--dur-2) var(--ease), box-shadow var(--dur-2) var(--ease);
 }
 .tb-lang-btn:hover { color: var(--ink-2); }
 .tb-lang-btn.active {
   background: var(--accent);
   color: #fff;
+  box-shadow: 0 1px 4px rgba(255,59,59,0.35);
 }
 
 /* ── Content ── */
@@ -380,19 +411,18 @@
   .shell.sb-collapsed .sb .sb-link-label,
   .shell.sb-collapsed .sb .sb-brand-name,
   .shell.sb-collapsed .sb .sb-label,
-  .shell.sb-collapsed .sb .sb-user-info,
-  .shell.sb-collapsed .sb .sb-toggle-label {
+  .shell.sb-collapsed .sb .sb-user-info {
     opacity: 1; max-width: 160px;
   }
+  .shell.sb-collapsed .sb .sb-brand { padding: 14px 16px; justify-content: flex-start; }
+  .shell.sb-collapsed .sb .sb-brand-img { height: 36px; width: auto; max-width: 170px; }
   .shell.sb-collapsed .sb .sb-link { justify-content: flex-start; padding: 8px 10px; }
   .shell.sb-collapsed .sb .sb-user { justify-content: flex-start; padding: 10px 12px; }
-  .shell.sb-collapsed .sb .sb-toggle { justify-content: flex-start; padding: 8px 18px; }
 
   .tb-burger { display: inline-flex; }
   .content { padding: 24px 16px 64px; }
   .tb { padding: 0 16px; }
   .tb-cmd { min-width: 0; flex: 1; }
-  .sb-toggle { display: none; }
 }
 
 @keyframes fadeInUp {

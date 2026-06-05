@@ -4,6 +4,7 @@ import AppShell from "../components/AppShell";
 import { useLang } from "../contexts/LanguageContext";
 import { endpoints } from "../services/endpoints";
 import { TileSkeleton } from "../components/ui/Skeleton";
+import { getMockRooms } from "../data/mockData";
 
 /* ── Difficulty config ─────────────────────────────────────────── */
 const DIFF = {
@@ -137,7 +138,12 @@ export default function RoomsPage() {
     let ok = true;
     setLoading(true);
     endpoints.rooms({ search: deb, level: activeTab })
-      .then(r => { if (ok) setRooms(r.data || []); })
+      .then(r => {
+        if (!ok) return;
+        const items = (r.data || []).filter(x => x).length > 0 ? (r.data || []) : getMockRooms();
+        setRooms(items);
+      })
+      .catch(() => { if (ok) setRooms(getMockRooms()); })
       .finally(() => { if (ok) setLoading(false); });
     return () => { ok = false; };
   }, [deb, activeTab]);

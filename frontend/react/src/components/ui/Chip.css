@@ -2,30 +2,38 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 3px 9px;
+  padding: 3px 8px;
   border-radius: var(--r-pill);
   font-size: 11px;
   font-weight: 600;
+  font-family: var(--font-mono);
+  letter-spacing: 0.04em;
   background: var(--bg-card-2);
   color: var(--ink-2);
   border: 1px solid var(--line-2);
+  box-shadow: 0 1px 0 rgba(255,255,255,0.03) inset;
   white-space: nowrap;
-  letter-spacing: 0.02em;
+  line-height: 1;
 }
 .chip-mono { font-family: var(--font-mono); letter-spacing: 0.06em; text-transform: uppercase; font-size: 10px; }
-.chip-sm { padding: 2px 8px; font-size: 10px; }
+.chip-sm { padding: 2px 7px; font-size: 10px; }
 .chip-lg { padding: 5px 12px; font-size: 12px; }
 
 .chip-neutral { /* default */ }
-.chip-accent { background: var(--accent-soft); color: var(--accent); border-color: var(--accent-ring); }
-.chip-easy   { background: rgba(110,255,214,0.10); color: var(--d-easy); border-color: rgba(110,255,214,0.28); }
-.chip-med    { background: rgba(255,184,107,0.10); color: var(--d-med);  border-color: rgba(255,184,107,0.28); }
-.chip-hard   { background: rgba(255,122,138,0.10); color: var(--d-hard); border-color: rgba(255,122,138,0.28); }
-.chip-expert { background: rgba(192,132,252,0.10); color: var(--d-expert); border-color: rgba(192,132,252,0.28); }
-.chip-mint   { background: rgba(110,255,214,0.10); color: var(--c-1); border-color: rgba(110,255,214,0.28); }
-.chip-amber  { background: rgba(255,184,107,0.10); color: var(--c-3); border-color: rgba(255,184,107,0.28); }
-.chip-coral  { background: rgba(255,122,138,0.10); color: var(--c-4); border-color: rgba(255,122,138,0.28); }
-.chip-violet { background: rgba(192,132,252,0.10); color: var(--c-5); border-color: rgba(192,132,252,0.28); }
-.chip-sky    { background: rgba(108,179,255,0.10); color: var(--c-6); border-color: rgba(108,179,255,0.28); }
+.chip-accent {
+  background: var(--accent-soft);
+  color: var(--accent);
+  border-color: var(--accent-ring);
+  box-shadow: 0 1px 0 rgba(255,255,255,0.03) inset, 0 0 8px rgba(255,59,59,0.08);
+}
+.chip-easy   { background: rgba(110,255,214,0.09); color: var(--d-easy); border-color: rgba(110,255,214,0.22); }
+.chip-med    { background: rgba(255,184,107,0.09); color: var(--d-med);  border-color: rgba(255,184,107,0.22); }
+.chip-hard   { background: rgba(255,122,138,0.09); color: var(--d-hard); border-color: rgba(255,122,138,0.22); }
+.chip-expert { background: rgba(192,132,252,0.09); color: var(--d-expert); border-color: rgba(192,132,252,0.22); }
+.chip-mint   { background: rgba(110,255,214,0.09); color: var(--c-1); border-color: rgba(110,255,214,0.22); }
+.chip-amber  { background: rgba(255,184,107,0.09); color: var(--c-3); border-color: rgba(255,184,107,0.22); }
+.chip-coral  { background: rgba(255,122,138,0.09); color: var(--c-4); border-color: rgba(255,122,138,0.22); }
+.chip-violet { background: rgba(192,132,252,0.09); color: var(--c-5); border-color: rgba(192,132,252,0.22); }
+.chip-sky    { background: rgba(108,179,255,0.09); color: var(--c-6); border-color: rgba(108,179,255,0.22); }
 
 .chip-ico { display: inline-flex; }
