@@ -13,6 +13,7 @@ import "./styles/compat.css";
 import "./styles/dashboard.css";
 import "./styles/screens.css";
 import "./styles/proto.css";
+import "./styles/lab.css";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>

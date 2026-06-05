@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.utils.html import format_html
 from django import forms
 
 from .models import (
@@ -187,67 +188,219 @@ class RoomTagAdmin(admin.ModelAdmin):
 
 @admin.register(Room)
 class RoomAdmin(admin.ModelAdmin):
-    list_display   = ("title", "course", "level", "is_published", "is_premium", "task_count", "points", "estimated_minutes", "order")
-    list_filter    = ("level", "is_published", "is_premium", "course__category")
-    search_fields  = ("title", "summary", "description")
+    list_display   = (
+        "title", "course", "env_badge", "level_badge", "target_ip",
+        "task_count", "points", "is_published", "is_premium", "order",
+    )
+    list_filter    = ("level", "env", "is_published", "is_premium", "course__category")
+    search_fields  = ("title", "summary", "description", "target_ip")
     prepopulated_fields = {"slug": ("title",)}
     list_editable  = ("is_published", "is_premium", "order")
     filter_horizontal = ("tags",)
     inlines        = [TaskInline]
+    save_on_top    = True
+
     fieldsets = (
         ("Əsas məlumatlar", {
-            "fields": ("course", "title", "slug", "summary", "description", "icon", "cover_color"),
+            "fields": ("course", "title", "slug", "summary", "description"),
         }),
-        ("Parametrlər", {
-            "fields": ("level", "estimated_minutes", "points", "order", "is_published", "is_premium"),
+        ("Lab mühiti", {
+            "fields": ("env", "target_ip", "icon", "cover_color"),
+            "description": (
+                "Lab-ın texniki parametrləri. "
+                "<b>Target IP</b> terminalda tələbəyə göstərilir."
+            ),
+        }),
+        ("Çətinlik / Ballar", {
+            "fields": ("level", "estimated_minutes", "points", "order"),
+        }),
+        ("Yayım", {
+            "fields": ("is_published", "is_premium"),
         }),
         ("Teqlər", {
             "fields": ("tags",),
         }),
     )
 
-    @admin.display(description="Tasklar")
+    @admin.display(description="Tasklar", ordering="tasks__count")
     def task_count(self, obj):
-        return obj.tasks.count()
+        n = obj.tasks.count()
+        color = "#19c37d" if n > 0 else "#888"
+        return format_html(
+            '<span style="font-weight:700; color:{}">{} task</span>',
+            color, n,
+        )
+
+    @admin.display(description="Mühit")
+    def env_badge(self, obj):
+        COLORS = {
+            "docker":  ("#6effd6", "#0a2b24"),
+            "vm":      ("#ffb86b", "#2a1a00"),
+            "linux":   ("#adbac7", "#15202b"),
+            "windows": ("#79c0ff", "#0a1a2b"),
+            "web":     ("#ff7a8a", "#2b0a0e"),
+            "cloud":   ("#c084fc", "#1a0a2b"),
+        }
+        bg, fg = COLORS.get(obj.env or "docker", ("#888", "#fff"))
+        return format_html(
+            '<span style="background:{};color:{};padding:2px 8px;border-radius:5px;'
+            'font-family:monospace;font-size:11px;font-weight:700">{}</span>',
+            bg, fg, (obj.env or "docker").upper(),
+        )
+
+    @admin.display(description="Çətinlik")
+    def level_badge(self, obj):
+        COLORS = {
+            "beginner":     "#6effd6",
+            "intermediate": "#ffb86b",
+            "advanced":     "#ff7a8a",
+        }
+        color = COLORS.get(obj.level, "#888")
+        LABELS = {"beginner": "Asan", "intermediate": "Orta", "advanced": "Çətin"}
+        label = LABELS.get(obj.level, obj.level)
+        return format_html(
+            '<span style="color:{};font-weight:700">{}</span>',
+            color, label,
+        )
+
+    actions = ["make_published", "make_unpublished", "make_free", "make_premium"]
+
+    @admin.action(description="✓ Seçilmişləri yayımla")
+    def make_published(self, request, queryset):
+        updated = queryset.update(is_published=True)
+        self.message_user(request, f"{updated} lab yayımlandı.")
+
+    @admin.action(description="✗ Seçilmişləri gizlə")
+    def make_unpublished(self, request, queryset):
+        updated = queryset.update(is_published=False)
+        self.message_user(request, f"{updated} lab gizlədildi.")
+
+    @admin.action(description="🔓 Pulsuz et")
+    def make_free(self, request, queryset):
+        updated = queryset.update(is_premium=False)
+        self.message_user(request, f"{updated} lab pulsuz edildi.")
+
+    @admin.action(description="🔒 Premium et")
+    def make_premium(self, request, queryset):
+        updated = queryset.update(is_premium=True)
+        self.message_user(request, f"{updated} lab premium edildi.")
 
 
 @admin.register(Task)
 class TaskAdmin(admin.ModelAdmin):
-    list_display  = ("title", "room", "order", "points", "question_count")
-    list_filter   = ("room__course",)
-    search_fields = ("title", "room__title")
+    list_display  = ("title", "room_link", "order", "points", "question_count", "flag_count")
+    list_filter   = ("room__course", "room__level", "room__env")
+    search_fields = ("title", "room__title", "room__course__title")
     inlines       = [TaskQuestionInline]
+    save_on_top   = True
     fieldsets = (
-        (None, {"fields": ("room", "title", "slug", "order", "points")}),
-        ("Məzmun (Markdown)", {"fields": ("content",)}),
+        ("Əsas", {"fields": ("room", "title", "slug", "order", "points")}),
+        ("Məzmun (Markdown)", {
+            "fields": ("content",),
+            "classes": ("wide",),
+            "description": "Markdown dəstəklənir. ```bash...``` bloklarından istifadə edin.",
+        }),
     )
+
+    @admin.display(description="Lab")
+    def room_link(self, obj):
+        url = f"/admin/courses/room/{obj.room_id}/change/"
+        return format_html('<a href="{}">{}</a>', url, obj.room.title)
 
     @admin.display(description="Suallar")
     def question_count(self, obj):
         return obj.questions.count()
 
+    @admin.display(description="Flaglar")
+    def flag_count(self, obj):
+        from .models import TaskAnswerKind
+        n = obj.questions.filter(kind=TaskAnswerKind.FLAG).count()
+        if n:
+            return format_html(
+                '<span style="color:#ff3b3b;font-weight:700">🚩 {}</span>', n
+            )
+        return "—"
+
 
 @admin.register(TaskQuestion)
 class TaskQuestionAdmin(admin.ModelAdmin):
-    list_display  = ("__str__", "task", "kind", "points", "hint_cost", "case_sensitive", "order")
-    list_filter   = ("kind", "task__room__course")
-    search_fields = ("prompt", "task__title")
+    list_display  = (
+        "prompt_short", "task", "kind_badge", "answer_preview",
+        "points", "hint_cost", "case_sensitive", "order",
+    )
+    list_filter   = ("kind", "case_sensitive", "task__room__course", "task__room__level")
+    search_fields = ("prompt", "answer", "task__title", "task__room__title")
     inlines       = [TaskQuestionChoiceInline]
+    save_on_top   = True
+    fieldsets = (
+        ("Sual", {
+            "fields": ("task", "prompt", "kind", "order", "points"),
+        }),
+        ("Cavab", {
+            "fields": ("answer", "case_sensitive"),
+            "description": (
+                "<b>FLAG / TEXT / NUMERIC</b> üçün cavab aşağıda yazılır. "
+                "Flag formatı üçün adətən <code>xkr{...}</code> şablonu istifadə olunur. "
+                "<b>CHOICE</b> üçün aşağıdakı variantları doldurun."
+            ),
+        }),
+        ("İpucu / İzah", {
+            "fields": ("hint", "hint_cost", "explanation"),
+            "classes": ("collapse",),
+        }),
+    )
+
+    @admin.display(description="Sual")
+    def prompt_short(self, obj):
+        return obj.prompt[:70] + ("…" if len(obj.prompt) > 70 else "")
+
+    @admin.display(description="Növ")
+    def kind_badge(self, obj):
+        STYLES = {
+            "flag":    ("🚩", "#ff3b3b", "rgba(255,59,59,0.12)"),
+            "text":    ("📝", "#79c0ff", "rgba(121,192,255,0.12)"),
+            "numeric": ("🔢", "#ffb86b", "rgba(255,184,107,0.12)"),
+            "choice":  ("☑️", "#6effd6", "rgba(110,255,214,0.12)"),
+            "review":  ("👁",  "#c084fc", "rgba(192,132,252,0.12)"),
+        }
+        ico, fg, bg = STYLES.get(obj.kind, ("?", "#888", "transparent"))
+        return format_html(
+            '<span style="color:{};background:{};padding:2px 8px;border-radius:5px;'
+            'font-family:monospace;font-size:11px;font-weight:700">{} {}</span>',
+            fg, bg, ico, obj.get_kind_display(),
+        )
+
+    @admin.display(description="Cavab (önizləmə)")
+    def answer_preview(self, obj):
+        if not obj.answer:
+            return format_html('<span style="color:#555">—</span>')
+        preview = obj.answer[:40] + ("…" if len(obj.answer) > 40 else "")
+        return format_html(
+            '<code style="color:#ff3b3b;font-size:12px">{}</code>', preview
+        )
 
 
 @admin.register(UserTaskProgress)
 class UserTaskProgressAdmin(ReadOnlyAdminMixin, admin.ModelAdmin):
     list_display    = ("user", "task", "completed", "earned_points", "hint_used", "completed_at")
-    list_filter     = ("completed", "hint_used")
-    search_fields   = ("user__username", "task__title")
-    readonly_fields = ("user", "task", "completed", "earned_points", "hint_used", "first_attempt_at", "completed_at", "updated_at")
+    list_filter     = ("completed", "hint_used", "task__room")
+    search_fields   = ("user__username", "task__title", "task__room__title")
+    readonly_fields = (
+        "user", "task", "completed", "earned_points",
+        "hint_used", "first_attempt_at", "completed_at", "updated_at",
+    )
+    date_hierarchy  = "completed_at"
+
 
 @admin.register(UserQuestionAttempt)
 class UserQuestionAttemptAdmin(ReadOnlyAdminMixin, admin.ModelAdmin):
-    list_display    = ("user", "question", "is_correct", "awarded_points", "hint_used", "attempted_at")
-    list_filter     = ("is_correct", "hint_used")
-    search_fields   = ("user__username", "question__prompt")
-    readonly_fields = ("user", "question", "submitted_answer", "is_correct", "awarded_points", "hint_used", "attempted_at")
+    list_display    = ("user", "question", "submitted_answer", "is_correct", "awarded_points", "hint_used", "attempted_at")
+    list_filter     = ("is_correct", "hint_used", "question__task__room")
+    search_fields   = ("user__username", "question__prompt", "submitted_answer")
+    readonly_fields = (
+        "user", "question", "submitted_answer",
+        "is_correct", "awarded_points", "hint_used", "attempted_at",
+    )
     date_hierarchy  = "attempted_at"
 
 # ─── Self-Study Question ──────────────────────────────────────────────────────
@@ -335,9 +488,9 @@ class QuestionAdminForm(forms.ModelForm):
 @admin.register(Question)
 class QuestionAdmin(admin.ModelAdmin):
     form          = QuestionAdminForm
-    list_display  = ("title", "course", "question_type", "level", "points", "order", "attempt_count")
+    list_display  = ("title", "course", "type_badge", "level", "points", "order", "answer_preview", "attempt_count")
     list_filter   = ("question_type", "level", "course")
-    search_fields = ("title", "prompt", "course__title")
+    search_fields = ("title", "prompt", "course__title", "expected_answer")
     list_select_related = ("course",)
     ordering      = ("course__title", "order", "id")
     list_editable = ("order",)
@@ -347,32 +500,92 @@ class QuestionAdmin(admin.ModelAdmin):
         ("Əsas məlumatlar", {
             "fields": ("course", "title", "prompt", "question_type", "level", "points", "order"),
             "description": (
-                "<b>Closed</b> → variantlı test, "
-                "<b>Open</b> → sərbəst mətn, "
-                "<b>Terminal</b> → komanda cavabı."
+                "<b>Closed</b> → çoxseçimli test (A/B/C/D variantları).&nbsp;&nbsp;"
+                "<b>Open</b> → sərbəst mətn cavabı.&nbsp;&nbsp;"
+                "<b>Terminal</b> → tələbə real terminal əmrini yazır; düzgün əmr avtomatik XAKKER.org banner-i göstərir."
             ),
         }),
-        ("Closed suallar", {
+        ("Closed suallar — Variantlar", {
             "classes": ("question-section", "question-section-closed", "collapse"),
             "fields": ("option_a", "option_b", "option_c", "option_d", "option_e", "correct_option"),
+            "description": "Minimum 2 variant doldurun. Düzgün variantı aşağıda seçin.",
         }),
-        ("Open / Terminal cavablar", {
+        ("Open / Terminal — Düzgün cavab", {
             "classes": ("question-section", "question-section-openterminal", "collapse"),
             "fields": ("expected_answer",),
+            "description": (
+                "<b>Open:</b> Gözlənilən cavab mətni. Bir neçə düzgün variant üçün hər birini ayrı sətirdə yazın.<br>"
+                "<b>Terminal:</b> Düzgün komanda(lar). Tələbənin terminalda yazmalı olduğu əmri buraya yazın. "
+                "Məsələn: <code>cat /flag.txt</code> və ya <code>xkr{fl4g_h3r3}</code>. "
+                "Bir neçə qəbul olunan cavab üçün hər birini yeni sətirdə yazın."
+            ),
         }),
-        ("Terminal başlanğıc kodu", {
+        ("Terminal — Başlanğıc kodu (könüllü)", {
             "classes": ("question-section", "question-section-terminal", "collapse"),
             "fields": ("starter_code",),
+            "description": (
+                "Terminal sual üçün ilk açıldıqda <b>avtomatik icra ediləcək</b> əmr. "
+                "Tələbəyə kontekst vermək üçün istifadə edin. "
+                "Məsələn: <code>ls -la /challenge/</code>"
+            ),
         }),
-        ("İzah", {"fields": ("explanation",)}),
+        ("İzah", {
+            "fields": ("explanation",),
+            "description": "Cavab göndərildikdən sonra tələbəyə göstərilən izah (könüllü).",
+        }),
     )
 
     class Media:
         js = ("admin/js/question_admin.js",)
 
+    @admin.display(description="Növ")
+    def type_badge(self, obj):
+        STYLES = {
+            "closed":   ("☑",  "#79c0ff", "rgba(121,192,255,0.12)"),
+            "open":     ("📝", "#6effd6", "rgba(110,255,214,0.12)"),
+            "terminal": ("⌨",  "#ff3b3b", "rgba(255,59,59,0.12)"),
+        }
+        ico, fg, bg = STYLES.get(obj.question_type, ("?", "#888", "transparent"))
+        labels = {"closed": "Çoxseçimli", "open": "Açıq", "terminal": "Terminal"}
+        label  = labels.get(obj.question_type, obj.question_type)
+        return format_html(
+            '<span style="color:{};background:{};padding:2px 9px;border-radius:5px;'
+            'font-size:11px;font-weight:700;white-space:nowrap">{} {}</span>',
+            fg, bg, ico, label,
+        )
+
+    @admin.display(description="Düzgün cavab")
+    def answer_preview(self, obj):
+        if obj.question_type == "closed":
+            correct = obj.choices.filter(is_correct=True).values_list("text", flat=True)
+            if correct:
+                return format_html(
+                    '<code style="color:var(--accent,#ff3b3b);font-size:11px">✓ {}</code>',
+                    ", ".join(correct)[:60],
+                )
+            return format_html('<span style="color:#555">—</span>')
+        if not obj.expected_answer:
+            return format_html('<span style="color:#555">—</span>')
+        preview = obj.expected_answer.split("\n")[0][:50]
+        if len(preview) < len(obj.expected_answer):
+            preview += "…"
+        if obj.question_type == "terminal":
+            return format_html(
+                '<code style="background:rgba(255,59,59,0.1);color:#ff7b72;'
+                'padding:2px 6px;border-radius:4px;font-size:11px">{}</code>',
+                preview,
+            )
+        return format_html('<code style="color:#56d364;font-size:11px">{}</code>', preview)
+
     @admin.display(description="Cəhd sayı")
     def attempt_count(self, obj):
-        return obj.attempts.count()
+        n = obj.attempts.count()
+        if not n:
+            return format_html('<span style="color:#555">0</span>')
+        return format_html(
+            '<span style="font-weight:700;color:{}">{}</span>',
+            "#56d364" if n > 0 else "#555", n,
+        )
 
 
 @admin.register(QuestionAttempt)

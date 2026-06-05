@@ -203,11 +203,12 @@ class TaskQuestionPublicSerializer(serializers.ModelSerializer):
 
 class TaskListSerializer(serializers.ModelSerializer):
     question_count = serializers.IntegerField(source="questions.count", read_only=True)
+    questions = TaskQuestionPublicSerializer(many=True, read_only=True)
     completed = serializers.SerializerMethodField()
 
     class Meta:
         model = Task
-        fields = ["id", "title", "slug", "order", "points", "question_count", "completed"]
+        fields = ["id", "title", "slug", "order", "points", "question_count", "questions", "completed"]
 
     def get_completed(self, obj):
         user = self.context.get("request").user if self.context.get("request") else None
@@ -237,7 +238,7 @@ class TaskDetailSerializer(serializers.ModelSerializer):
 class RoomListSerializer(serializers.ModelSerializer):
     course = CourseSummarySerializer(read_only=True)
     tags = RoomTagSerializer(many=True, read_only=True)
-    task_count = serializers.IntegerField(source="tasks.count", read_only=True)
+    tasks_count = serializers.IntegerField(source="tasks.count", read_only=True)
     progress_percent = serializers.SerializerMethodField()
 
     class Meta:
@@ -250,12 +251,14 @@ class RoomListSerializer(serializers.ModelSerializer):
             "icon",
             "cover_color",
             "level",
+            "env",
+            "target_ip",
             "estimated_minutes",
             "points",
             "is_premium",
             "course",
             "tags",
-            "task_count",
+            "tasks_count",
             "progress_percent",
         ]
 
@@ -290,6 +293,8 @@ class RoomDetailSerializer(serializers.ModelSerializer):
             "icon",
             "cover_color",
             "level",
+            "env",
+            "target_ip",
             "estimated_minutes",
             "points",
             "is_premium",

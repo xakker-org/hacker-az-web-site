@@ -9,6 +9,7 @@ import EmptyState from "../components/ui/EmptyState";
 import { endpoints } from "../services/endpoints";
 import { getStoredStudyLanguage, pickByLanguage, setStoredStudyLanguage } from "../utils/selfStudyI18n";
 import { useLang } from "../contexts/LanguageContext";
+import TerminalQuestion from "../components/TerminalQuestion";
 
 const OPTION_LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
@@ -237,8 +238,8 @@ export default function QuestionDetailPage() {
             </div>
           )}
 
-          {/* Choices or textarea */}
-          <Tile>
+          {/* Choices, textarea, or terminal */}
+          <Tile style={question.question_type === "terminal" ? { padding: 0, overflow: "hidden" } : undefined}>
             {question.question_type === "closed" ? (
               <div className="xk-quiz-opts">
                 {(question.choices || []).map((choice, index) => {
@@ -265,21 +266,38 @@ export default function QuestionDetailPage() {
                   );
                 })}
               </div>
+            ) : question.question_type === "terminal" ? (
+              <TerminalQuestion
+                question={question}
+                locked={locked}
+                prevAnswer={prevAttempt?.submitted_answer}
+                prevCorrect={prevAttempt?.is_correct}
+                onAttempt={async (answerText) => {
+                  const { data } = await endpoints.submitQuestionAnswer(id, { answer_text: answerText });
+                  if (data.is_correct) {
+                    setResult(data);
+                    setAttempts(data.attempts || []);
+                    setCorrectIds(data.correct_choice_ids || []);
+                    setExpected(data.expected_answer || "");
+                    setLocked(true);
+                  }
+                  return data;
+                }}
+              />
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 <textarea
-                  rows={question.question_type === "terminal" ? 8 : 5}
+                  rows={5}
                   value={answerText}
                   onChange={(e) => !locked && setAnswerText(e.target.value)}
                   readOnly={locked}
-                  placeholder={locked ? t.previousAnswer : question.question_type === "terminal" ? t.terminalPlaceholder : t.answerPlaceholder}
+                  placeholder={locked ? t.previousAnswer : t.answerPlaceholder}
                   style={{
                     width: "100%", boxSizing: "border-box",
                     padding: "12px 14px", borderRadius: 10, resize: "vertical",
                     background: "var(--bg-elev)", border: "1px solid var(--line)",
                     color: locked ? "var(--ink-3)" : "var(--ink-1)", outline: "none", lineHeight: 1.65,
-                    fontSize: question.question_type === "terminal" ? 12 : 13,
-                    fontFamily: question.question_type === "terminal" ? "var(--font-mono)" : "inherit",
+                    fontSize: 13,
                     opacity: locked ? 0.75 : 1,
                     transition: "border-color var(--dur-1)",
                   }}
@@ -302,23 +320,27 @@ export default function QuestionDetailPage() {
               </div>
             )}
 
-            {error && (
-              <div style={{
-                padding: "10px 14px", borderRadius: 10, marginTop: 10,
-                background: "rgba(255,122,138,0.08)", border: "1px solid rgba(255,122,138,0.28)",
-                fontSize: 12, color: "var(--bad)",
-              }}>
-                {error}
-              </div>
-            )}
-
-            {!locked && (
-              <div style={{ display: "flex", gap: 8, marginTop: 14, paddingTop: 14, borderTop: "1px solid var(--line)", justifyContent: "flex-end" }}>
-                <Button variant="ghost" as={Link} to="/self-study">{t.backToList}</Button>
-                <Button variant="accent" onClick={submitAnswer} disabled={submitting}>
-                  {submitting ? t.submitSending : t.submit}
-                </Button>
-              </div>
+            {/* Error + submit only for non-terminal types */}
+            {question.question_type !== "terminal" && (
+              <>
+                {error && (
+                  <div style={{
+                    padding: "10px 14px", borderRadius: 10, marginTop: 10,
+                    background: "rgba(255,122,138,0.08)", border: "1px solid rgba(255,122,138,0.28)",
+                    fontSize: 12, color: "var(--bad)",
+                  }}>
+                    {error}
+                  </div>
+                )}
+                {!locked && (
+                  <div style={{ display: "flex", gap: 8, marginTop: 14, paddingTop: 14, borderTop: "1px solid var(--line)", justifyContent: "flex-end" }}>
+                    <Button variant="ghost" as={Link} to="/self-study">{t.backToList}</Button>
+                    <Button variant="accent" onClick={submitAnswer} disabled={submitting}>
+                      {submitting ? t.submitSending : t.submit}
+                    </Button>
+                  </div>
+                )}
+              </>
             )}
           </Tile>
 

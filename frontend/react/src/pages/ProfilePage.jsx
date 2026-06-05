@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import AppShell from "../components/AppShell";
 import Tile, { TileHead } from "../components/ui/Tile";
 import Stat from "../components/ui/Stat";
@@ -12,11 +12,60 @@ import Field, { Input, Textarea } from "../components/ui/Field";
 import EmptyState from "../components/ui/EmptyState";
 import { TileSkeleton } from "../components/ui/Skeleton";
 import { endpoints } from "../services/endpoints";
+import "../styles/profile-edit.css";
 
 const RANK_LABELS = {
   recruit: "Recruit", script_kiddie: "Script Kiddie", operative: "Operative",
   hunter: "Hunter", specialist: "Specialist", analyst: "Analyst",
   architect: "Architect", operator: "Operator", ghost: "Ghost",
+};
+
+const COVER_PRESETS = {
+  default: {
+    name: "Default",
+    gradient: `
+      radial-gradient(ellipse at 20% 50%, rgba(255,36,66,0.22) 0%, transparent 60%),
+      radial-gradient(ellipse at 80% 20%, rgba(110,255,214,0.08) 0%, transparent 50%),
+      radial-gradient(ellipse at 60% 80%, rgba(192,132,252,0.06) 0%, transparent 40%),
+      var(--bg-card-2)
+    `,
+  },
+  matrix: {
+    name: "Matrix",
+    gradient: `
+      radial-gradient(ellipse at 20% 50%, rgba(25,195,125,0.2) 0%, transparent 60%),
+      radial-gradient(ellipse at 80% 20%, rgba(110,255,214,0.08) 0%, transparent 50%),
+      radial-gradient(ellipse at 60% 80%, rgba(0,200,83,0.06) 0%, transparent 40%),
+      var(--bg-card-2)
+    `,
+  },
+  cyber: {
+    name: "Cyber",
+    gradient: `
+      radial-gradient(ellipse at 20% 50%, rgba(0,150,255,0.22) 0%, transparent 60%),
+      radial-gradient(ellipse at 80% 20%, rgba(100,200,255,0.08) 0%, transparent 50%),
+      radial-gradient(ellipse at 60% 80%, rgba(0,100,200,0.06) 0%, transparent 40%),
+      var(--bg-card-2)
+    `,
+  },
+  phantom: {
+    name: "Phantom",
+    gradient: `
+      radial-gradient(ellipse at 20% 50%, rgba(160,80,255,0.2) 0%, transparent 60%),
+      radial-gradient(ellipse at 80% 20%, rgba(200,150,255,0.08) 0%, transparent 50%),
+      radial-gradient(ellipse at 60% 80%, rgba(120,50,200,0.06) 0%, transparent 40%),
+      var(--bg-card-2)
+    `,
+  },
+  blood: {
+    name: "Blood",
+    gradient: `
+      radial-gradient(ellipse at 20% 50%, rgba(200,0,30,0.25) 0%, transparent 60%),
+      radial-gradient(ellipse at 80% 20%, rgba(255,80,80,0.1) 0%, transparent 50%),
+      radial-gradient(ellipse at 60% 80%, rgba(150,0,0,0.08) 0%, transparent 40%),
+      var(--bg-card-2)
+    `,
+  },
 };
 
 const RANK_ICONS = {
@@ -50,6 +99,9 @@ export default function ProfilePage() {
   const [error, setError]     = useState("");
   const [edit, setEdit]       = useState(false);
   const [toast, setToast]     = useState(null);
+  const [coverPreset, setCoverPreset] = useState(
+    () => localStorage.getItem("xk-cover-preset") || "default"
+  );
 
   const THIS_YEAR = new Date().getFullYear();
 
@@ -160,12 +212,7 @@ export default function ProfilePage() {
         {/* Cover banner */}
         <div style={{
           height: 160,
-          background: `
-            radial-gradient(ellipse at 20% 50%, rgba(255,36,66,0.22) 0%, transparent 60%),
-            radial-gradient(ellipse at 80% 20%, rgba(110,255,214,0.08) 0%, transparent 50%),
-            radial-gradient(ellipse at 60% 80%, rgba(192,132,252,0.06) 0%, transparent 40%),
-            var(--bg-card-2)
-          `,
+          background: COVER_PRESETS[coverPreset]?.gradient || COVER_PRESETS.default.gradient,
           position: "relative",
           overflow: "hidden",
         }}>
@@ -442,8 +489,10 @@ export default function ProfilePage() {
       </div>
 
       {edit && (
-        <EditProfileModal
+        <EditProfilePanel
           profile={profile}
+          coverPreset={coverPreset}
+          onCoverChange={setCoverPreset}
           onClose={() => setEdit(false)}
           onSaved={async (msg) => {
             setEdit(false);
@@ -458,12 +507,16 @@ export default function ProfilePage() {
 }
 
 /* ─────────────────────────────────────────────── */
-/*  Edit Profile Modal — full, ideal              */
+/*  Edit Profile Panel — full-height slide-over   */
 /* ─────────────────────────────────────────────── */
 
 const HUE_PRESETS = [0, 30, 60, 120, 160, 200, 240, 280, 320];
 
-function EditProfileModal({ profile, onClose, onSaved, onError }) {
+/* ─────────────────────────────────────────────── */
+/*  Edit Profile Panel — full-height slide-over   */
+/* ─────────────────────────────────────────────── */
+
+function EditProfilePanel({ profile, coverPreset: cp, onCoverChange, onClose, onSaved, onError }) {
   const [draft, setDraft] = useState({
     full_name:      profile.full_name || "",
     email:          profile.email || "",
@@ -475,20 +528,36 @@ function EditProfileModal({ profile, onClose, onSaved, onError }) {
     avatar_preview: profile.avatar_url || null,
     remove_avatar:  false,
   });
-  const [saving, setSaving] = useState(false);
-  const [err, setErr]       = useState("");
-  const [tab, setTab]       = useState("info");
-  const objUrl              = useRef(null);
-  const fileRef             = useRef(null);
+  const [saving, setSaving]     = useState(false);
+  const [err, setErr]           = useState("");
+  const [tab, setTab]           = useState("info");
+  const [dragOver, setDragOver] = useState(false);
+  const [tabKey, setTabKey]     = useState(0);
+  const [coverPreset, setCoverPreset] = useState(cp || "default");
+  const objUrl  = useRef(null);
+  const fileRef = useRef(null);
+
+  const submitRef = useRef(null);
 
   useEffect(() => {
-    const onKey = (e) => { if (e.key === "Escape") onClose(); };
+    const onKey = (e) => {
+      if (e.key === "Escape") onClose();
+      if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+        e.preventDefault();
+        submitRef.current?.();
+      }
+    };
     window.addEventListener("keydown", onKey);
     return () => {
       window.removeEventListener("keydown", onKey);
       if (objUrl.current) URL.revokeObjectURL(objUrl.current);
     };
   }, [onClose]);
+
+  const switchTab = useCallback((t) => {
+    setTabKey(k => k + 1);
+    setTab(t);
+  }, []);
 
   const set = (k) => (e) => setDraft(d => ({ ...d, [k]: e.target.value }));
 
@@ -506,8 +575,26 @@ function EditProfileModal({ profile, onClose, onSaved, onError }) {
     if (fileRef.current) fileRef.current.value = "";
   };
 
-  const submit = async (e) => {
+  const onDrop = (e) => {
     e.preventDefault();
+    setDragOver(false);
+    const f = e.dataTransfer?.files?.[0] || null;
+    if (f && f.type.startsWith("image/")) {
+      if (objUrl.current) { URL.revokeObjectURL(objUrl.current); objUrl.current = null; }
+      const preview = URL.createObjectURL(f);
+      objUrl.current = preview;
+      setDraft(d => ({ ...d, avatar_file: f, avatar_preview: preview, remove_avatar: false }));
+    }
+  };
+
+  const selectCover = (key) => {
+    setCoverPreset(key);
+    localStorage.setItem("xk-cover-preset", key);
+    onCoverChange?.(key);
+  };
+
+  const submit = async (e) => {
+    if (e?.preventDefault) e.preventDefault();
     setSaving(true); setErr("");
     try {
       let payload;
@@ -536,307 +623,265 @@ function EditProfileModal({ profile, onClose, onSaved, onError }) {
     }
   };
 
+  submitRef.current = submit;
+
   const previewUser = { ...profile, avatar_url: draft.avatar_preview, avatar_hue: draft.avatar_hue };
 
+  const bioLen = (draft.bio || "").length;
+
+  const TABS = [
+    { key: "info",   label: "Məlumat",  icon: "◈" },
+    { key: "avatar", label: "Avatar",    icon: "◎" },
+    { key: "look",   label: "Görünüş",  icon: "✦" },
+  ];
+
+  const coverKeys = Object.keys(COVER_PRESETS);
+
   return (
-    <div
-      onClick={onClose}
-      role="dialog" aria-modal="true" aria-label="Profili redaktə et"
-      style={{
-        position: "fixed", inset: 0, zIndex: 100,
-        background: "rgba(6,8,12,0.82)",
-        backdropFilter: "blur(6px)",
-        display: "flex", alignItems: "center", justifyContent: "center",
-        padding: "20px 16px",
-      }}
-    >
-      <form
-        onClick={(e) => e.stopPropagation()}
-        onSubmit={submit}
-        style={{
-          background: "var(--bg-card)",
-          border: "1px solid var(--line-2)",
-          borderRadius: "var(--r-tile)",
-          boxShadow: "var(--shadow-pop)",
-          width: "100%", maxWidth: 620,
-          display: "flex", flexDirection: "column",
-          maxHeight: "calc(100vh - 40px)",
-          overflow: "hidden",
-        }}
-      >
-        {/* Modal header */}
-        <div style={{
-          padding: "22px 28px 0",
-          display: "flex", alignItems: "center", justifyContent: "space-between",
-          flexShrink: 0,
-        }}>
+    <div className="edit-panel-overlay edit-overlay-fade" onClick={onClose}
+      role="dialog" aria-modal="true" aria-label="Profili redaktə et">
+      <div className="edit-panel" onClick={(e) => e.stopPropagation()}>
+
+        {/* ── Header ── */}
+        <div className="edit-header">
           <div>
-            <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, letterSpacing: "-0.02em" }}>
-              Profili redaktə et
-            </h2>
-            <div style={{ fontSize: 12, color: "var(--ink-4)", marginTop: 2 }}>
-              @{profile.username}
-            </div>
+            <h2>Profili redaktə et</h2>
+            <div className="edit-username">@{profile.username}</div>
           </div>
-          <button type="button" onClick={onClose} style={{
-            background: "var(--bg-card-2)", border: "1px solid var(--line-2)",
-            borderRadius: 10, width: 32, height: 32, cursor: "pointer",
-            color: "var(--ink-3)", fontSize: 16, display: "grid", placeItems: "center",
-            transition: "all var(--dur-1)",
-          }}>✕</button>
+          <button className="edit-close" type="button" onClick={onClose} aria-label="Bağla">✕</button>
         </div>
 
-        {/* Tabs */}
-        <div style={{
-          display: "flex", gap: 2, padding: "16px 28px 0",
-          borderBottom: "1px solid var(--line)", flexShrink: 0,
-        }}>
-          {[
-            { key: "info", label: "Şəxsi məlumat" },
-            { key: "avatar", label: "Avatar & Görünüş" },
-          ].map(t => (
-            <button key={t.key} type="button" onClick={() => setTab(t.key)}
-              style={{
-                padding: "8px 16px", background: "none",
-                border: "none", cursor: "pointer",
-                fontFamily: "var(--font-mono)", fontSize: 12, fontWeight: 600,
-                color: tab === t.key ? "var(--ink-1)" : "var(--ink-4)",
-                borderBottom: tab === t.key ? "2px solid var(--accent)" : "2px solid transparent",
-                marginBottom: -1, transition: "all var(--dur-1)",
-              }}>{t.label}</button>
+        {/* ── Tabs ── */}
+        <div className="edit-tabs">
+          {TABS.map(t => (
+            <button key={t.key} type="button"
+              className={`edit-tab-btn${tab === t.key ? " active" : ""}`}
+              onClick={() => switchTab(t.key)}>
+              <span className="tab-icon">{t.icon}</span>
+              {t.label}
+            </button>
           ))}
         </div>
 
-        {/* Error */}
+        {/* ── Error ── */}
         {err && (
-          <div style={{
-            margin: "12px 28px 0",
-            padding: "10px 14px",
-            background: "rgba(255,122,138,0.08)", border: "1px solid rgba(255,122,138,0.2)",
-            borderRadius: 10, fontSize: 13, color: "var(--bad)", flexShrink: 0,
-          }}>
+          <div className="edit-error">
+            <span>⚠</span>
             {err}
           </div>
         )}
 
-        {/* Scrollable body */}
-        <div style={{ flex: 1, overflowY: "auto", padding: "20px 28px" }}>
+        {/* ── Body ── */}
+        <div className="edit-body" key={tabKey}>
+          <div className="edit-tab-content edit-tab-enter">
 
-          {/* ── TAB: Info ── */}
-          {tab === "info" && (
-            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-              {/* Avatar preview + quick upload */}
-              <div style={{
-                display: "flex", alignItems: "center", gap: 20,
-                padding: "16px 20px",
-                background: "var(--bg-card-2)", borderRadius: 14,
-                border: "1px solid var(--line)",
-              }}>
-                <div style={{
-                  borderRadius: 16, overflow: "hidden",
-                  border: "3px solid var(--line-2)", flexShrink: 0,
-                }}>
-                  <Avatar user={previewUser} size={72} rounded="xl" />
-                </div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 14, fontWeight: 600, color: "var(--ink-1)", marginBottom: 2 }}>
-                    {draft.full_name || profile.username || "İsimsiz"}
+            {/* ════════════════ TAB: Məlumat ════════════════ */}
+            {tab === "info" && (
+              <>
+                {/* Quick preview card */}
+                <div className="edit-quick-preview">
+                  <div className="edit-qp-avatar">
+                    <Avatar user={previewUser} size={72} rounded="xl" />
                   </div>
-                  <div style={{ fontSize: 12, color: "var(--ink-4)", fontFamily: "var(--font-mono)" }}>
-                    @{profile.username}
+                  <div className="edit-qp-info">
+                    <div className="edit-qp-name">{draft.full_name || profile.username || "İsimsiz"}</div>
+                    <div className="edit-qp-handle">@{profile.username}</div>
                   </div>
-                </div>
-                <button type="button" onClick={() => setTab("avatar")}
-                  style={{
-                    padding: "7px 14px", background: "var(--bg-elev)",
-                    border: "1px solid var(--line-2)", borderRadius: 9,
-                    color: "var(--ink-2)", fontSize: 12, cursor: "pointer",
-                    fontWeight: 500, transition: "all var(--dur-1)",
-                  }}>Dəyişdir</button>
-              </div>
-
-              {/* Full name + email */}
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-                <Field label="Tam ad">
-                  <Input
-                    value={draft.full_name}
-                    onChange={set("full_name")}
-                    placeholder="Ad Soyad"
-                    maxLength={150}
-                  />
-                </Field>
-                <Field label="Email">
-                  <Input
-                    type="email"
-                    value={draft.email}
-                    onChange={set("email")}
-                    placeholder="email@example.com"
-                  />
-                </Field>
-              </div>
-
-              {/* Bio */}
-              <Field label="Bio" hint={`${(draft.bio || "").length} / 240`}>
-                <Textarea
-                  value={draft.bio}
-                  onChange={set("bio")}
-                  maxLength={240}
-                  rows={4}
-                  placeholder="Özün haqqında bir neçə söz..."
-                />
-              </Field>
-
-              {/* Country + city */}
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-                <Field label="Ölkə">
-                  <Input
-                    value={draft.country}
-                    onChange={set("country")}
-                    placeholder="Azərbaycan"
-                  />
-                </Field>
-                <Field label="Şəhər">
-                  <Input
-                    value={draft.city}
-                    onChange={set("city")}
-                    placeholder="Bakı"
-                  />
-                </Field>
-              </div>
-
-              {/* Username (readonly) */}
-              <Field label="İstifadəçi adı" hint="İstifadəçi adı dəyişdirilə bilməz">
-                <Input value={profile.username} readOnly style={{ opacity: 0.5, cursor: "not-allowed" }} />
-              </Field>
-            </div>
-          )}
-
-          {/* ── TAB: Avatar ── */}
-          {tab === "avatar" && (
-            <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-              {/* Big avatar preview */}
-              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
-                <div style={{
-                  position: "relative",
-                  borderRadius: 24, overflow: "hidden",
-                  border: "4px solid var(--line-2)",
-                  boxShadow: "0 12px 40px rgba(0,0,0,0.5)",
-                }}>
-                  <Avatar user={previewUser} size={120} rounded="xl" />
-                  <button
-                    type="button"
-                    onClick={() => fileRef.current?.click()}
-                    style={{
-                      position: "absolute", inset: 0,
-                      background: "rgba(0,0,0,0)", border: "none",
-                      cursor: "pointer", display: "flex", alignItems: "flex-end",
-                      justifyContent: "center", paddingBottom: 8,
-                      opacity: 0, transition: "all 0.2s",
-                    }}
-                    onMouseEnter={e => { e.currentTarget.style.background = "rgba(0,0,0,0.55)"; e.currentTarget.style.opacity = 1; }}
-                    onMouseLeave={e => { e.currentTarget.style.background = "rgba(0,0,0,0)"; e.currentTarget.style.opacity = 0; }}
-                  >
-                    <span style={{ background: "rgba(0,0,0,0.7)", color:"white", fontSize:11, padding:"3px 8px", borderRadius:6 }}>
-                      Foto yüklə
-                    </span>
-                  </button>
-                </div>
-
-                {/* Upload + remove buttons */}
-                <div style={{ display: "flex", gap: 8 }}>
-                  <Button variant="ghost" size="sm" type="button" onClick={() => fileRef.current?.click()}>
-                    Şəkil yüklə
+                  <Button variant="ghost" size="sm" type="button" onClick={() => switchTab("avatar")}>
+                    Avatar
                   </Button>
-                  {draft.avatar_preview && (
+                </div>
+
+                {/* Full name + email */}
+                <div className="edit-form-row">
+                  <Field label="Tam ad">
+                    <Input value={draft.full_name} onChange={set("full_name")}
+                      placeholder="Ad Soyad" maxLength={150} />
+                  </Field>
+                  <Field label="Email">
+                    <Input type="email" value={draft.email}
+                      onChange={set("email")} placeholder="email@example.com" />
+                  </Field>
+                </div>
+
+                {/* Bio */}
+                <Field label="Bio">
+                  <Textarea value={draft.bio} onChange={set("bio")}
+                    maxLength={240} rows={4} placeholder="Özün haqqında bir neçə söz..." />
+                  <div className={`edit-bio-count${bioLen > 200 ? " near" : ""}${bioLen >= 240 ? " full" : ""}`}>
+                    {bioLen} / 240
+                  </div>
+                </Field>
+
+                {/* Country + city */}
+                <div className="edit-form-row">
+                  <Field label="Ölkə">
+                    <Input value={draft.country} onChange={set("country")} placeholder="Azərbaycan" />
+                  </Field>
+                  <Field label="Şəhər">
+                    <Input value={draft.city} onChange={set("city")} placeholder="Bakı" />
+                  </Field>
+                </div>
+
+                {/* Username (readonly) */}
+                <Field label="İstifadəçi adı" hint="Dəyişdirilə bilməz">
+                  <Input value={profile.username} readOnly style={{ opacity: 0.5, cursor: "not-allowed" }} />
+                </Field>
+              </>
+            )}
+
+            {/* ════════════════ TAB: Avatar ════════════════ */}
+            {tab === "avatar" && (
+              <div className="edit-avatar-section">
+                {/* Drop zone */}
+                <div className={`edit-avatar-dropzone${dragOver ? " drag-over" : ""}`}
+                  onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+                  onDragLeave={() => setDragOver(false)}
+                  onDrop={onDrop}
+                  onClick={() => fileRef.current?.click()}>
+                  <Avatar user={previewUser} size={140} rounded="xl" />
+                  <div className="drop-hint">
+                    <span className="drop-icon">{dragOver ? "⊕" : "↻"}</span>
+                    {dragOver ? "Buraxın" : "Şəkil yüklə"}
+                  </div>
+                </div>
+
+                <input ref={fileRef} type="file" accept="image/*"
+                  onChange={onFile} style={{ display: "none" }} />
+
+                {/* Action buttons */}
+                <div className="edit-avatar-actions">
+                  <Button variant="ghost" size="sm" type="button"
+                    onClick={() => fileRef.current?.click()}>
+                    Şəkil seç
+                  </Button>
+                  {draft.avatar_file && (
+                    <Button variant="ghost" size="sm" type="button" onClick={removeAvatar}>
+                      Avatarı sil
+                    </Button>
+                  )}
+                  {draft.avatar_preview && !draft.avatar_file && (
                     <Button variant="ghost" size="sm" type="button" onClick={removeAvatar}>
                       Avatarı sil
                     </Button>
                   )}
                 </div>
 
-                <input
-                  ref={fileRef}
-                  type="file"
-                  accept="image/*"
-                  onChange={onFile}
-                  style={{ display: "none" }}
-                />
-
                 {draft.avatar_file && (
-                  <div style={{ fontSize: 12, color: "var(--ok)", fontFamily: "var(--font-mono)" }}>
+                  <div className="edit-avatar-filename">
                     ✓ {draft.avatar_file.name}
                   </div>
                 )}
-              </div>
 
-              {/* Hue presets + slider */}
-              <div>
-                <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, color: "var(--ink-4)", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 12 }}>
-                  Avatar rəng tonu
+                <div style={{ fontSize: 11, color: "var(--ink-4)", textAlign: "center", marginTop: -8 }}>
+                  PNG, JPG, WEBP · Maks 2MB
                 </div>
-                {/* Color swatches */}
-                <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 14 }}>
-                  {HUE_PRESETS.map(h => (
-                    <button
-                      key={h}
-                      type="button"
-                      onClick={() => setDraft(d => ({ ...d, avatar_hue: h }))}
-                      title={`${h}°`}
-                      style={{
-                        width: 32, height: 32,
-                        borderRadius: 8,
-                        background: `hsl(${h}, 70%, 50%)`,
-                        border: Math.abs(draft.avatar_hue - h) < 15
-                          ? "3px solid var(--ink-1)"
-                          : "3px solid transparent",
-                        cursor: "pointer",
-                        transition: "transform 0.1s, border 0.1s",
-                        transform: Math.abs(draft.avatar_hue - h) < 15 ? "scale(1.1)" : "scale(1)",
-                      }}
-                    />
-                  ))}
-                </div>
-                {/* Fine slider */}
-                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                  <input
-                    type="range" min="0" max="360"
-                    value={draft.avatar_hue}
-                    onChange={set("avatar_hue")}
-                    style={{ flex: 1 }}
-                  />
-                  <div style={{
-                    fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--ink-3)",
-                    minWidth: 36, textAlign: "right",
-                  }}>
-                    {draft.avatar_hue}°
+
+                {/* Hue */}
+                <div className="edit-hue-section">
+                  <div className="edit-section-label">Avatar rəng tonu</div>
+
+                  <div className="edit-hue-presets">
+                    {HUE_PRESETS.map(h => (
+                      <button key={h} type="button"
+                        className={`edit-hue-swatch${Math.abs(draft.avatar_hue - h) < 15 ? " selected" : ""}`}
+                        onClick={() => setDraft(d => ({ ...d, avatar_hue: h }))}
+                        title={`${h}°`}
+                        style={{ background: `hsl(${h}, 70%, 50%)` }} />
+                    ))}
                   </div>
-                  <div style={{
-                    width: 22, height: 22, borderRadius: 6,
-                    background: `hsl(${draft.avatar_hue}, 70%, 50%)`,
-                    border: "1px solid var(--line-2)", flexShrink: 0,
-                  }} />
+
+                  <div className="edit-hue-slider-row">
+                    <input type="range" min="0" max="360"
+                      value={draft.avatar_hue}
+                      onChange={set("avatar_hue")}
+                      className="edit-hue-slider" />
+                    <span className="edit-hue-value">{draft.avatar_hue}°</span>
+                    <span className="edit-hue-swatch-current"
+                      style={{ background: `hsl(${draft.avatar_hue}, 70%, 50%)` }} />
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
+            )}
+
+            {/* ════════════════ TAB: Görünüş ════════════════ */}
+            {tab === "look" && (
+              <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+                {/* Cover presets */}
+                <div className="edit-cover-section">
+                  <div className="edit-section-label" style={{ marginBottom: 12 }}>
+                    Cover gradient
+                  </div>
+                  <div className="edit-cover-grid">
+                    {coverKeys.map(key => {
+                      const c = COVER_PRESETS[key];
+                      return (
+                        <button key={key} type="button"
+                          className={`edit-cover-preset${coverPreset === key ? " active" : ""}`}
+                          onClick={() => selectCover(key)}
+                          style={{ background: c.gradient }}>
+                          <span className="cover-name">{c.name}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <div className="edit-cover-preview"
+                    style={{ background: COVER_PRESETS[coverPreset]?.gradient || COVER_PRESETS.default.gradient }} />
+                </div>
+
+                {/* Avatar hue quick preview */}
+                <div className="edit-hue-section">
+                  <div className="edit-section-label" style={{ marginBottom: 12 }}>
+                    Profil rəng tonu
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 16,
+                    padding: "14px 18px", background: "var(--bg-card-2)",
+                    borderRadius: 12, border: "1px solid var(--line)" }}>
+                    <Avatar user={previewUser} size={48} rounded="md" />
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: "var(--ink-1)" }}>
+                        {draft.full_name || profile.username || "İsimsiz"}
+                      </div>
+                      <div style={{ fontSize: 11, fontFamily: "var(--font-mono)", color: "var(--ink-4)", marginTop: 1 }}>
+                        {draft.avatar_hue}° hue
+                      </div>
+                    </div>
+                    <Button variant="ghost" size="sm" type="button"
+                      onClick={() => switchTab("avatar")}>
+                      Dəyiş
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Hint */}
+                <div style={{
+                  padding: "14px 16px", borderRadius: 10,
+                  background: "rgba(255,255,255,0.03)", border: "1px solid var(--line)",
+                  fontSize: 12, color: "var(--ink-4)", lineHeight: 1.6,
+                }}>
+                  Cover gradient and accent changes are saved locally
+                  and will appear on your profile page.
+                </div>
+              </div>
+            )}
+
+          </div>
         </div>
 
-        {/* Footer */}
-        <div style={{
-          padding: "16px 28px",
-          borderTop: "1px solid var(--line)",
-          display: "flex", gap: 8, justifyContent: "flex-end",
-          flexShrink: 0,
-          background: "var(--bg-card)",
-        }}>
+        {/* ── Footer ── */}
+        <div className="edit-footer">
+          <div className="kbd-hint">
+            <kbd>Esc</kbd> to close
+            <span style={{ marginLeft: 8 }}><kbd>{navigator.platform?.includes("Mac") ? "⌘" : "Ctrl"}+↵</kbd> to save</span>
+          </div>
           <Button variant="ghost" type="button" onClick={onClose} disabled={saving}>
             Ləğv et
           </Button>
-          <Button variant="accent" type="submit" disabled={saving}>
+          <Button variant="accent" type="button" onClick={submit} disabled={saving}>
             {saving ? "Saxlanır..." : "Dəyişiklikləri saxla"}
           </Button>
         </div>
-      </form>
+      </div>
     </div>
   );
 }

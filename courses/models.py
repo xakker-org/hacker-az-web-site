@@ -96,9 +96,28 @@ class Room(models.Model):
     slug = models.SlugField(unique=True)
     summary = models.CharField(max_length=255)
     description = models.TextField(blank=True, default="")
+    ENV_CHOICES = [
+        ("docker",   "Docker"),
+        ("vm",       "Virtual Machine"),
+        ("linux",    "Linux"),
+        ("windows",  "Windows"),
+        ("web",      "Web App"),
+        ("cloud",    "Cloud"),
+    ]
+
     icon = models.CharField(max_length=8, blank=True, default="🧪")
     cover_color = models.CharField(max_length=16, blank=True, default="#ff5672")
     level = models.CharField(max_length=20, choices=LevelChoices.choices, default=LevelChoices.BEGINNER)
+    env = models.CharField(
+        max_length=20, choices=ENV_CHOICES, default="docker", blank=True,
+        verbose_name="Lab Environment",
+        help_text="Type of isolated environment (Docker, VM, Web App…).",
+    )
+    target_ip = models.CharField(
+        max_length=40, blank=True, default="10.10.11.1",
+        verbose_name="Target IP",
+        help_text="IP address shown to students in the terminal.",
+    )
     estimated_minutes = models.PositiveIntegerField(default=45)
     points = models.PositiveIntegerField(default=100)
     is_premium = models.BooleanField(default=False)
