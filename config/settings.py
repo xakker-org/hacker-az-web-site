@@ -6,6 +6,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = config("SECRET_KEY", default="change-me-in-production")
 DEBUG = config("DEBUG", default=True, cast=bool)
+PLATFORM_URL = config("PLATFORM_URL", default="http://self-study.xakker.org:8000")
 
 
 def get_list_env(name, default):

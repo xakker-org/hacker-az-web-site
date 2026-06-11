@@ -4,6 +4,7 @@ host_patterns = patterns(
     "",
     host(r"xakker\.org", "config.urls_landing", name="landing_root"),
     host(r"www\.xakker\.org", "config.urls_landing", name="landing"),
+    host(r"hacker-az-web-site\.onrender\.com", "config.urls_landing", name="landing_render"),
     host(r".+\.ngrok-free\.dev", "config.urls_landing", name="landing_ngrok"),
     host(r".+\.vercel\.app", "config.urls_platform", name="platform_vercel"),
     #host(r".+\.vercel\.app", "config.urls_landing", name="landing_vercel"),
