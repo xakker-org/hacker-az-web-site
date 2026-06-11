@@ -33,8 +33,7 @@ COPY --from=frontend-builder /app/dist /app/static/js/spa
 
 EXPOSE 8000
 
-# Development default — override in docker-compose.prod.yml
-CMD ["sh", "-c", "python manage.py migrate --noinput && python manage.py runserver 0.0.0.0:8000"]
+CMD ["sh", "-c", "python manage.py migrate --noinput && python manage.py collectstatic --noinput && gunicorn config.wsgi:application --bind 0.0.0.0:$PORT --workers 2"]
 
 FROM node:20-alpine AS frontend
 

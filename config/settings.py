@@ -21,6 +21,7 @@ ALLOWED_HOSTS = list(
             ),
             ".ngrok-free.dev",
             ".vercel.app",
+            ".onrender.com",
         ]
     )
 )
