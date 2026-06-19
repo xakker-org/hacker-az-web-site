@@ -63,6 +63,7 @@
 
 html {
   scroll-behavior: smooth;
+  overflow-x: hidden;
 }
 
 body {
@@ -770,11 +771,6 @@ h5 {
   background: linear-gradient(180deg, var(--bg-0) 0%, var(--surface-0) 100%);
 }
 
-/* Panel-0 — centering only, no perspective here */
-.hs-panel-cs {
-  /* perspective must be on the direct parent of the rotating element */
-}
-
 /* Wrapper inside panel-0 — perspective here so cs-card is a direct child */
 .hs-cs-wrap {
   width: 100%;
@@ -800,13 +796,15 @@ h5 {
 }
 
 @media (max-width: 768px) {
-  .hscroll-section { margin-top: 0; }
-  .hscroll-panel   { padding: 0 16px; }
-  .hscroll-sticky  { height: auto; overflow: visible; }
-  .hscroll-track   { flex-direction: column; }
-  .hscroll-panel   { width: 100%; height: auto; padding: 40px 16px; }
-  .hs-panel-cs     { perspective: none; }
-  .cs-card         { transform: none !important; }
+  .hscroll-section,
+  .hscroll-sticky,
+  .hscroll-track,
+  .hscroll-panel,
+  .cs-card,
+  .hs-card,
+  .cs-screenshot-wrap {
+    display: none !important;
+  }
 }
 
 /* Hero mockup */
@@ -1951,6 +1949,10 @@ h5 {
     gap: 8px;
   }
 
+  .header-actions .btn-primary {
+    display: none;
+  }
+
   .feature-grid {
     grid-template-columns: repeat(2, 1fr);
   }
@@ -2115,6 +2117,10 @@ h5 {
     position: static;
     margin-top: 16px;
     width: 100%;
+  }
+
+  .terminal-card {
+    overflow-x: auto;
   }
 
   .mockup-header h3 {
@@ -2403,10 +2409,6 @@ h5 {
    HORIZONTAL SCROLL  (cs-card tilt → page slides RIGHT)
    ============================================================ */
 
-.hscroll-section {
-  /* GSAP adds a spacer; no height needed here */
-}
-
 /* GSAP pins this div */
 .hscroll-sticky {
   width: 100%;
@@ -2438,10 +2440,6 @@ h5 {
     0 149px 60px #0000000a,
     0 233px 65px #00000003;
   overflow: hidden;
-}
-
-@media (max-width: 768px) {
-  .hscroll-panel { padding: 0 16px; }
 }
 
 /* ============================================================
@@ -2763,4 +2761,152 @@ h5 {
 @media (max-width: 480px) {
   .gs-globe-demo { min-height: 280px; }
   .gs-globe-demo-sphere { width: min(74vw, 220px); }
+}
+
+/* ============================================================
+   MOBILE — 480px (small phones)
+   ============================================================ */
+@media (max-width: 480px) {
+  /* Typography */
+  .display { font-size: clamp(32px, 8.5vw, 40px); }
+  .section-title { font-size: clamp(22px, 6vw, 28px); }
+  .lede { font-size: 15px; }
+  .section-sub { font-size: 14px; }
+  .section-head { margin-bottom: 36px; gap: 12px; }
+
+  /* Buttons — stack on tiny screens, full width */
+  .cta-row { flex-direction: column; align-items: stretch; gap: 10px; }
+  .cta-row .btn { width: 100%; justify-content: center; }
+  .cta-row.center { align-items: stretch; }
+
+  /* Hero */
+  .hero { padding-top: 100px; }
+  #globe-canvas { width: 220px; height: 220px; }
+  .hero-globe-wrap { max-width: 220px; }
+
+  /* Features */
+  .feature-card { padding: 20px; }
+  .feature-icon { width: 40px; height: 40px; font-size: 18px; }
+
+  /* Final CTA */
+  .final-cta-card { padding: 28px 20px; }
+
+  /* Footer */
+  .footer-bottom { flex-direction: column; align-items: flex-start; gap: 10px; }
+  .footer-legal { flex-wrap: wrap; gap: 12px; }
+  .newsletter-form { flex-direction: column; gap: 8px; }
+  .newsletter-form input { width: 100%; }
+
+  /* FAQ */
+  .faq-item summary { padding: 16px 18px; font-size: 14px; }
+  .faq-item p { padding: 0 18px 18px; font-size: 14px; }
+
+  /* Process grid */
+  .process-card { padding: 20px; }
+
+  /* Hscroll panel — keep vertical breathing room */
+  .hscroll-panel { padding: 32px 12px; }
+}
+
+/* ============================================================
+   MOBILE — 400px (very small phones)
+   ============================================================ */
+@media (max-width: 400px) {
+  /* Navbar pill — prevent overflow */
+  .site-header { padding: 8px 10px 0; }
+  .site-header-inner { padding: 0 4px 0 12px; height: 48px; }
+  .brand img { height: 32px; }
+  .header-actions { gap: 6px; }
+  .lang-toggle { padding: 5px 8px; }
+  .lang-label { font-size: 10px; }
+
+  /* Shrink primary CTA button in header */
+  .header-actions .btn-sm { padding: 8px 12px; font-size: 12px; }
+
+  /* Display text */
+  .display { font-size: clamp(28px, 7.5vw, 34px); }
+  .section-title { font-size: clamp(20px, 5.5vw, 26px); }
+
+  /* Globe */
+  #globe-canvas { width: 180px; height: 180px; }
+  .hero-globe-wrap { max-width: 180px; }
+
+  /* Testimonial cards */
+  .testimonial-card { padding: 20px; }
+}
+
+/* Hscroll screenshot panels — hidden on mobile */
+/* Hscroll screenshot panels — hidden on mobile */
+/* Hscroll screenshot panels — hidden on mobile */
+@media (max-width: 768px) {
+  #hscroll-section,
+  #hscroll-sticky {
+    display: none !important;
+    position: static !important;
+    height: auto !important;
+    transform: none !important;
+  }
+
+  #hscroll-track,
+  #cs-card,
+  .hscroll-panel,
+  .hs-cs-wrap,
+  .cs-card,
+  .hs-card,
+  .cs-screenshot-wrap {
+    display: none !important;
+    transform: none !important;
+  }
+}
+
+/* ============================================================
+   TOUCH DEVICES — disable hover transforms (avoids sticky-hover)
+   ============================================================ */
+@media (hover: none) {
+  .feature-card:hover,
+  .benefit-card:hover,
+  .testimonial-card:hover {
+    transform: none;
+    border-color: var(--line-2);
+    box-shadow: none;
+  }
+
+  .btn-primary:hover,
+  .btn-ghost:hover {
+    transform: none;
+  }
+
+  .brand:hover img {
+    transform: none;
+    filter: drop-shadow(0 0 18px rgba(255, 86, 114, 0.35));
+  }
+}
+
+/* Mobile nav — language toggle row */
+.mobile-nav-lang {
+  display: none;
+}
+
+@media (max-width: 1040px) {
+  .mobile-nav-lang {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 14px 4px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+    margin-bottom: 4px;
+  }
+
+  .mobile-nav-lang .lang-toggle {
+    width: 100%;
+    justify-content: center;
+    gap: 10px;
+    padding: 12px 20px;
+    border-radius: 14px;
+    border-color: rgba(255, 255, 255, 0.10);
+  }
+
+  .mobile-nav-lang .lang-label {
+    font-size: 13px;
+  }
 }

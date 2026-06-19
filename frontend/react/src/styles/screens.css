@@ -1121,3 +1121,14 @@
   .fi-grid { grid-template-columns: 1fr; }
   .fi-podium { gap: 8px; }
 }
+@media (max-width: 480px) {
+  .fi-lb-bar-wrap { display: none; }
+  .fi-hero-body { padding: 14px 16px; }
+  .fi-podium-slot { max-width: 88px; }
+  .fi-podium { gap: 6px; }
+  .fi-podium-avatar { width: 32px; height: 32px; font-size: 12px; }
+  .fi-podium-slot.p1 .fi-podium-avatar { width: 42px; height: 42px; font-size: 16px; }
+  .fi-podium-name { font-size: 10px; }
+  .fi-podium-xp { font-size: 9.5px; }
+  .fi-lb-name { max-width: 120px; }
+}

@@ -646,3 +646,11 @@
   .xk-bot-grid   { grid-template-columns: 1fr; }
   .xk-stat-value { font-size: 36px; }
 }
+@media (max-width: 480px) {
+  .xk-stats-grid { gap: 8px; }
+  .xk-stat-value { font-size: 28px; }
+  .xk-stat-label { font-size: 10.5px; }
+  .xk-greet-name { font-size: clamp(22px, 6vw, 28px); }
+  .xk-card { padding: 16px; }
+  .xk-greet { margin-bottom: 14px; }
+}

@@ -10,7 +10,16 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@500;600;700;800&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="/static/css/landing.css" />
+    <link rel="stylesheet" href="/static/css/landing.css?v=5" />
+    <style>
+      @media (max-width: 768px) {
+        #hscroll-section { display: none !important; }
+        #hscroll-sticky  { display: none !important; position: static !important; }
+        #hscroll-track   { display: none !important; }
+        #cs-card         { display: none !important; }
+        .hscroll-panel, .hs-cs-wrap, .hs-card, .cs-screenshot-wrap { display: none !important; }
+      }
+    </style>
   </head>
   <body>
     <div class="bg-grid" aria-hidden="true"></div>
@@ -52,6 +61,13 @@
           <a href="#testimonials" data-i18n="nav-feedback">Rəylər</a>
           <a href="#faq">FAQ</a>
         </nav>
+        <div class="mobile-nav-lang">
+          <button class="lang-toggle" id="lang-toggle-mob" aria-label="Dili dəyiş">
+            <span class="lang-label lang-az-label-mob is-active">AZ</span>
+            <span class="lang-toggle-sep"></span>
+            <span class="lang-label lang-en-label-mob">EN</span>
+          </button>
+        </div>
         <div class="mobile-nav-actions">
           <a class="btn btn-ghost btn-block" href="{{ platform_url }}/auth/login" target="_blank" rel="noreferrer" data-i18n="nav-login">Daxil ol</a>
           <a class="btn btn-primary btn-block" href="{{ platform_url }}/auth/register" target="_blank" rel="noreferrer" data-i18n="nav-getstarted">Başla</a>
@@ -623,12 +639,20 @@ PORT     STATE SERVICE  VERSION
       </div>
     </footer>
 
+    <!-- Remove hscroll section on mobile before GSAP loads -->
+    <script>
+      if (window.innerWidth <= 768) {
+        var el = document.getElementById('hscroll-section');
+        if (el) el.parentNode.removeChild(el);
+      }
+    </script>
+
     <!-- GSAP + ScrollTrigger -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
     <!-- Three.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
 
-    <script src="/static/js/landing.js"></script>
+    <script src="/static/js/landing.js?v=5"></script>
   </body>
 </html>

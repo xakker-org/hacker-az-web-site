@@ -418,6 +418,7 @@
   .shell.sb-collapsed .sb .sb-brand-img { height: 36px; width: auto; max-width: 170px; }
   .shell.sb-collapsed .sb .sb-link { justify-content: flex-start; padding: 8px 10px; }
   .shell.sb-collapsed .sb .sb-user { justify-content: flex-start; padding: 10px 12px; }
+  .shell.sb-collapsed .sb.is-open .sb-brand { display: flex; }
 
   .tb-burger { display: inline-flex; }
   .content { padding: 24px 16px 64px; }

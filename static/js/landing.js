@@ -317,10 +317,12 @@ function applyLang(lang) {
   const titleEl = document.querySelector('[data-i18n-title-az]');
   if (titleEl) document.title = titleEl.getAttribute(titleAttr);
 
-  const azLabel = document.querySelector('.lang-az-label');
-  const enLabel = document.querySelector('.lang-en-label');
-  if (azLabel) azLabel.classList.toggle('is-active', lang === 'az');
-  if (enLabel) enLabel.classList.toggle('is-active', lang === 'en');
+  document.querySelectorAll('.lang-az-label, .lang-az-label-mob').forEach(el => {
+    el.classList.toggle('is-active', lang === 'az');
+  });
+  document.querySelectorAll('.lang-en-label, .lang-en-label-mob').forEach(el => {
+    el.classList.toggle('is-active', lang === 'en');
+  });
 
   localStorage.setItem('xakker-lang', lang);
 }
@@ -328,6 +330,14 @@ function applyLang(lang) {
 const langToggleBtn = document.getElementById('lang-toggle');
 if (langToggleBtn) {
   langToggleBtn.addEventListener('click', () => {
+    const current = document.documentElement.lang || 'az';
+    applyLang(current === 'az' ? 'en' : 'az');
+  });
+}
+
+const langToggleMob = document.getElementById('lang-toggle-mob');
+if (langToggleMob) {
+  langToggleMob.addEventListener('click', () => {
     const current = document.documentElement.lang || 'az';
     applyLang(current === 'az' ? 'en' : 'az');
   });
@@ -383,6 +393,19 @@ if (navToggle && mobileNav) {
     var csCard  = document.getElementById('cs-card');
     if (!section || !sticky || !track || !csCard) return;
 
+    if (window.matchMedia('(max-width: 768px)').matches) {
+      section.parentNode.removeChild(section);
+      return;
+    }
+
+    window.addEventListener('resize', function () {
+      if (window.innerWidth <= 768 && section.parentNode) {
+        var st = ScrollTrigger.getById('hscroll-pin');
+        if (st) st.kill();
+        section.parentNode.removeChild(section);
+      }
+    }, { passive: true });
+
     gsap.set(csCard, { rotateX: 20, scale: 1.05, transformOrigin: '50% 0%' });
 
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
@@ -396,6 +419,7 @@ if (navToggle && mobileNav) {
 
     var tl = gsap.timeline({
       scrollTrigger: {
+        id: 'hscroll-pin',
         trigger: section,
         start: 'top top',
         end: function () {
